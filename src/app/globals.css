@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+    overscroll-behavior-x: none;
+    scrollbar-width: none;
+    min-height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+    padding: env(safe-area-inset-top) 0 0 0;
+    --background: #FFFFFF;
+    --foreground: #000000;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+      --background: #000000;
+      --foreground: #EEEEEE;
+    }
+}
+
+body {
+    min-height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+    background: var(--background);
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button:focus-visible,div:focus-visible,p:focus-visible {
+    outline: none;
+    box-shadow: 0 0 10px 1px #aaaaaa;
+    transition: box-shadow 0.2s ease-in-out;
+}

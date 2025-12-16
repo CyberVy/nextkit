@@ -1,0 +1,33 @@
+{
+  "name": "nextkit",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev:sw & next dev -p 4000",
+    "build": "npm run build:sw & next build",
+    "start": "npx serve out",
+    "lint": "eslint",
+    "dev:sw": "esbuild src/sw/main.worker.ts --bundle --format=esm --target=esnext --outfile=public/sw.js --watch=forever",
+    "build:sw": "esbuild src/sw/main.worker.ts --bundle --format=esm --target=esnext --outfile=public/sw.js --minify"
+  },
+  "dependencies": {
+    "next": "15.4.8",
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "esbuild": "^0.27.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.8",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "type": "module",
+  "overrides": {
+    "next": "15.4.8"
+  }
+}
