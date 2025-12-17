@@ -11,7 +11,7 @@
     "build:sw": "esbuild src/sw/main.worker.ts --bundle --format=esm --target=esnext --outfile=public/sw.js --minify"
   },
   "dependencies": {
-    "next": "15.4.8",
+    "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
@@ -26,8 +26,5 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "type": "module",
-  "overrides": {
-    "next": "15.4.8"
-  }
+  "type": "module"
 }
