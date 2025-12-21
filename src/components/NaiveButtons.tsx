@@ -16,14 +16,14 @@ function Button({ width,height,icon,callback }: ButtonInputs){
 
     return (
         <button
-            className={`text-center align-middle focus-visible:outline-none focus-visible:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out select-none overflow-x-auto overflow-y-hidden bg-[#101010] border border-gray-300/20  rounded-lg hover:cursor-pointer hover:bg-[#303030] active:bg-[#303030] active:text-gray-200/70 active:border-gray-300/40`}
+            className={`relative focus-visible:outline-none focus-visible:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out select-none overflow-x-auto overflow-y-hidden bg-[#101010] border border-gray-300/20  rounded-lg hover:cursor-pointer hover:bg-[#303030] active:bg-[#303030] active:text-gray-200/70 active:border-gray-300/40`}
             style={{width:width, height:height}}
             onClick={event => {
                 vibrate()
                 callback(event)
             }}
         >
-            <span className={"inline-block"}>
+            <span className={"absolute -translate-x-1/2 -translate-y-1/2"}>
                 {icon}
             </span>
         </button>
