@@ -39,10 +39,9 @@ export function useInViewport<T extends HTMLElement,_T extends HTMLElement>(marg
 }
 
 // create an auto sync state and ref object
-export function useAutoSyncRefAndState<T>(value: T, sync_from_parent?: boolean): [RefObject<T>,(value: T | ((prev: T) => T)) => void,T] {
-    sync_from_parent = sync_from_parent != undefined ? sync_from_parent : false
+export function useAutoSyncRefAndState<T>(value: T): [RefObject<T>,(value: T | ((prev: T) => T)) => void,T] {
     const [state, set_state] = useState(value)
-    const state_ref = useRef(state)
+    const state_ref = useRef(value)
     const dispatch_func = (value: T | ((prev: T) => T)) => {
         if (typeof value !== "function"){
             set_state(value)
@@ -55,15 +54,5 @@ export function useAutoSyncRefAndState<T>(value: T, sync_from_parent?: boolean):
             state_ref.current = r
         }
     }
-    useEffect(() => {
-        if (sync_from_parent){
-            dispatch_func(value)
-        }
-    }, [value])
     return [state_ref,dispatch_func,state]
-}
-
-// copy an auto sync state and ref object from a state of a parent component
-export function useCopiedAutoSyncRefAndState<T>(value: T) {
-    return useAutoSyncRefAndState(value,true)
 }
