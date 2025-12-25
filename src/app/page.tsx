@@ -1,7 +1,13 @@
 "use client"
-import { useEffect } from "react"
+import {useEffect, useState} from "react"
+import { LaunchAnimation } from "@/components/LaunchAnimation"
 
 export default function Page(){
+    const [show_launch_animation, set_show_launch_animation] = useState(true)
+
+    useEffect(() => {
+        setTimeout(() => set_show_launch_animation(false),1500)
+    }, [])
 
     // register service worker
     useEffect(() => {
@@ -12,8 +18,17 @@ export default function Page(){
     }, [])
 
     return (
-        <div className="text-center">
-            Hello World!
-        </div>
+        <>
+            {show_launch_animation &&
+                <LaunchAnimation/>
+            }
+
+            <div className={`${show_launch_animation ? "hidden" : "block"}`}>
+                <div className="text-center">
+                    Hello World!
+                </div>
+            </div>
+
+        </>
     )
 }
