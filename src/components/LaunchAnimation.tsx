@@ -16,7 +16,9 @@ function LaunchAnimation() {
         setTimeout(() => set_welcome_sentence(welcome_sentences[Math.floor(Math.random() * welcome_sentences.length)]),500)
     }, [])
     return (
-        <div className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-[100vw]"}>
+        <div
+            className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-[100vw] overflow-hidden"}
+        >
             <div className={`text-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
                 <AnimatedGlowText
                     text={welcome_sentence}
