@@ -20,7 +20,7 @@ function LaunchAnimation() {
             className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-[100vw] overflow-hidden select-none"}
         >
             {is_amount &&
-                <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
+                <div className={`absolute text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
                     <AnimatedGlowText
                         text={welcome_sentence}
                         stagger={0.06}
