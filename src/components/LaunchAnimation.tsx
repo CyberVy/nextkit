@@ -20,7 +20,7 @@ function LaunchAnimation() {
             className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-[100vw] overflow-hidden select-none"}
         >
             {is_amount &&
-                <div className={`text-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
+                <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
                     <AnimatedGlowText
                         text={welcome_sentence}
                         stagger={0.06}
@@ -28,7 +28,7 @@ function LaunchAnimation() {
                 </div>
             }
 
-            <div className={`${is_amount ? "translate-x-[100vw]" : "-translate-x-1/1"} left-0 top-3/7 -translate-y-3/7 absolute transition duration-1500`}>
+            <div className={`${is_amount ? "translate-x-[100vw]" : "-translate-x-1/1"} left-0 top-3/7 -translate-y-1/1 absolute transition duration-1500`}>
                 <div className={"w-12 h-12"}>
                     <LabeledImage
                         src={"/icons/192x192.png"}
