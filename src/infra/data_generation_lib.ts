@@ -81,14 +81,14 @@ export function generate_pending_html(title: string,extra_information = "") {
     if (title){
         html = `
             <!DOCTYPE html>
-            <html style="background-color: black; height: 100%;">
+            <html style="background-color: black; height: 100%">
                 <head>
                     <title>
                         Searching for ${title}
                     </title>
-                    <meta name="viewport" content="initial-scale=1.0">
+                    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
                 </head>
-                <body style="height:100%; width: 100%; background-color: black; color: white; overflow: hidden;">
+                <body style="background-color: black; color: white; overflow: auto">
                     <div style="margin-top: 32px; margin-bottom: 8px; text-align: center;">
                         <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" />
