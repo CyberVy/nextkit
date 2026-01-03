@@ -27,6 +27,7 @@ function LabeledImage({
                           intersection_root_element_ref
                       }: LabeledImageInputs) {
 
+    const [is_ios, set_is_ios] = useState(false)
     const [requested_src,set_requested_src] = useState(`${image_proxy_api || ""}${src}`)
     const [is_loaded,set_is_loaded] = useState(false)
     const [is_error,set_is_error] = useState(false)
@@ -59,6 +60,7 @@ function LabeledImage({
             set_is_error(true)
             generate_cover_image(alt || "",{}).then(url => set_generated_cover_image_blob_url(url))
         }
+        set_is_ios(is_ios_device)
         return () => {
             if (generated_cover_image_blob_url_ref.current){
                 URL.revokeObjectURL(generated_cover_image_blob_url_ref.current)
@@ -111,7 +113,7 @@ function LabeledImage({
                     <>
                         <img
                             src={generated_cover_image_blob_url || requested_src || undefined}
-                            className={`w-full h-full object-cover rounded-xl [-webkit-touch-callout:none] ${is_ios_device() ? "[-webkit-user-drag:none]" : ""}`}
+                            className={`w-full h-full object-cover rounded-xl [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
                             onClick={() => {
                                 vibrate()
                                 onClickImage?.()
