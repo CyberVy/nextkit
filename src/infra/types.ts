@@ -53,3 +53,7 @@ export type GlobalSettingButtonInputs = {
     cors_proxy: string
     cors_proxy_callback: (cors_proxy: string) => void
 }
+export type ListToButtonsInputs = {
+    list: string[]
+    callback?: (item: string | null) => void
+}
