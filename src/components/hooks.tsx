@@ -56,3 +56,92 @@ export function useAutoSyncRefAndState<T>(value: T): [RefObject<T>,(value: T | (
     }
     return [state_ref,dispatch_func,state]
 }
+export function useStateWithLocalStorage<T>(init_value: T,key: string): [T,((value: (T) | ((prev: T) => T)) => void)] {
+    const [state, set_state] = useState<T>(init_value)
+    const render_counter_ref = useRef(0)
+    render_counter_ref.current += 1
+
+    useEffect(() => {
+        if (render_counter_ref.current !== 1) return
+
+        const init_value_from_local_storage = localStorage.getItem(key)
+        if (typeof init_value_from_local_storage !== "string") return
+
+        if (typeof init_value !== "string"){
+            const init_value: T = JSON.parse(init_value_from_local_storage)
+            set_state(init_value)
+        }
+        else {
+            set_state(init_value_from_local_storage as T)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (render_counter_ref.current === 1) return
+
+        if (state == undefined) {
+            localStorage.removeItem(key)
+        }
+        else {
+            if (typeof state !== "string"){
+                localStorage.setItem(key, JSON.stringify(state))
+            }
+            else {
+                localStorage.setItem(key,state)
+            }
+        }
+    }, [key,state])
+    return [state, set_state]
+}
+export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T,key: string): [RefObject<T>,(value: (T) | ((prev: T ) => T )) => void,T]{
+    const [state, set_state] = useState<T>(init_value)
+    const state_ref = useRef<T>(init_value)
+    const render_counter_ref = useRef(0)
+    render_counter_ref.current += 1
+
+    const dispatch_func = (value: (T) | ((prev: T ) => T )) => {
+        if (typeof value !== "function"){
+            set_state(value)
+            state_ref.current = value
+        }
+        else {
+            const f = value as (prev: T ) => T
+            const r = f(state_ref.current)
+            set_state(r)
+            state_ref.current = r
+        }
+    }
+
+    useEffect(() => {
+        if (render_counter_ref.current !== 1) return
+
+        const init_value_from_local_storage = localStorage.getItem(key)
+        if (typeof init_value_from_local_storage !== "string") return
+
+        if (typeof init_value !== "string"){
+            const init_value: T = JSON.parse(init_value_from_local_storage)
+            dispatch_func(init_value)
+        }
+        else {
+            dispatch_func(init_value_from_local_storage as T)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (render_counter_ref.current === 1) return
+
+        if (state == undefined) {
+            localStorage.removeItem(key)
+        }
+        else {
+            if (typeof state !== "string"){
+                localStorage.setItem(key, JSON.stringify(state))
+            }
+            else {
+                localStorage.setItem(key,state)
+            }
+        }
+    }, [key,state])
+
+    return [state_ref,dispatch_func,state]
+}
