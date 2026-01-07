@@ -43,7 +43,7 @@ export type AutoSubmitStringInputInputs = {
     need_button?: boolean
     enable_auto_execution?: boolean
 }
-export type ButtonInputs = {
+export type NaiveButtonInputs = {
     width?: string
     height?: string
     icon: React.ReactNode
@@ -56,4 +56,11 @@ export type GlobalSettingButtonInputs = {
 export type ListToButtonsInputs = {
     list: string[]
     callback?: (item: string | null) => void
+}
+export type ButtonGroupInputs = {
+    button_icons: React.ReactNode[]
+    callbacks?: (() => void)[]
+    item_width:string
+    height:string
+    default_selected_index?: number
 }
