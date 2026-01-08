@@ -64,3 +64,7 @@ export type ButtonGroupInputs = {
     height:string
     default_selected_index?: number
 }
+export type NestedRecordValue<T> = NestedRecord<T> | T | NestedRecordValue<T>[]
+export interface NestedRecord<T> {
+    [key: string]: NestedRecordValue<T>
+}
