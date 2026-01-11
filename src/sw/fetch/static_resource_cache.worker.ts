@@ -1,21 +1,29 @@
-import version, { static_resource_cache_name, is_later_version } from "@/infra/version"
+import version, { static_resource_cache_name } from "@/infra/version"
 
-export async function check_latest_with_cache(delete_legacy? :boolean){
+export async function check_latest(){
     let is_latest = true
+
+    const latest_index_html_response = await fetch("/")
+    const latest_index_html_text = await latest_index_html_response.text()
+
     const cache_keys = await caches.keys()
     for (const key of cache_keys){
         if (!key.startsWith(static_resource_cache_name)) continue
 
-        const cache_version = key.split(`${static_resource_cache_name}-v`)[1]
-        if (is_later_version(cache_version,version)){
-            is_latest =  true
-            break
-        }
-        if (is_later_version(version, cache_version)) {
-            is_latest = false
-            if (delete_legacy){
-                await caches.delete(key)
-                console.log(`The static resource cache(${key}) is deleted.`)
+        const cache = await caches.open(key)
+        const _keys = await cache.keys()
+        for (const _key of _keys){
+            if (new URL(_key.url).pathname === "/"){
+                const cached_index_html_response = await cache.match(_key)
+
+                if (!cached_index_html_response) break
+
+                if (latest_index_html_text !== await cached_index_html_response.text()){
+                    await caches.delete(key)
+                    is_latest = false
+                    console.log(`The static resource cache(${key}) is deleted.`)
+                }
+                break
             }
         }
     }
@@ -54,13 +62,7 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
         const static_resource_cache = await caches.open(latest_cache_key)
         const cached = await static_resource_cache.match(event.request)
         if (cached) {
-            if (url.pathname !== "/")
-                return cached
-            else {
-                if (await check_latest_with_cache(true)){
-                    return cached
-                }
-            }
+            return cached
         }
         const response = await fetch(event.request)
         if (response.status === 200) {
@@ -69,5 +71,8 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
         return response
     }
     event.respondWith(f())
+    if (url.pathname === "/"){
+        check_latest()
+    }
     return true
 }
