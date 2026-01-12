@@ -4,6 +4,8 @@ export async function check_latest(){
     let is_latest = true
 
     const latest_index_html_response = await fetch("/")
+    if (latest_index_html_response.status !== 200) return true
+
     const latest_index_html_text = await latest_index_html_response.text()
 
     const cache_keys = await caches.keys()
