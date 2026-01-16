@@ -37,12 +37,12 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
     const [selected_index,set_selected_index] = useState(default_selected_index || -1)
     return (
         <div
-            className="inline-block border border-white/20 rounded-xl"
+            className="inline-block border border-gray-300/20 rounded-xl bg-[#101010]"
         >
             {button_icons.map((icon,index) => {
                 return (
                     <button
-                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index ? "ring ring-white/40" : ""} rounded-xl hover:cursor-pointer`}
+                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index ? "ring ring-gray-300/30" : ""} rounded-xl hover:cursor-pointer`}
                         key={index}
                         onClick={() => {
                             vibrate()
@@ -52,6 +52,7 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
                             }
                             else {
                                 set_selected_index(-1)
+                                callbacks?.[index]?.()
                             }
                         }}
                         style={{width:item_width, height:height}}
