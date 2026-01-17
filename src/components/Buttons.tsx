@@ -32,8 +32,8 @@ function NaiveButton({ width,height,icon,callback }: NaiveButtonInputs){
     )
 }
 
-
-function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_index}: ButtonGroupInputs){
+function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_index,enable_selected_border}: ButtonGroupInputs){
+    enable_selected_border = enable_selected_border == undefined ? true : enable_selected_border
     const [selected_index,set_selected_index] = useState(default_selected_index || -1)
     return (
         <div
@@ -42,7 +42,7 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
             {button_icons.map((icon,index) => {
                 return (
                     <button
-                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index ? "ring ring-gray-300/30" : ""} rounded-xl hover:cursor-pointer`}
+                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index && enable_selected_border ? "ring ring-gray-300/50" : ""} rounded-xl hover:cursor-pointer transition duration-300  active:text-gray-200/70`}
                         key={index}
                         onClick={() => {
                             vibrate()
