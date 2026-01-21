@@ -91,7 +91,7 @@ function LabeledImage({
     // if in_view is false, the img element will be unmounted.
     // sync the state here
     useEffect(() => {
-        if (in_view)  return
+        if (in_view) return
 
         set_is_loaded(false)
     }, [in_view])
@@ -176,9 +176,9 @@ function LabeledImage({
                             <div
                                 className={`mx-2 bg-black/50 absolute bottom-10 right-2 px-2 py-1 text-white text-sm rounded-lg ${show_description ? "block" : "hidden"}`}
                             >
-                                <p className="text-center whitespace-pre-line max-h-[300px] max-w-[50vw] overflow-auto">
+                                <div className="text-center whitespace-pre-line max-h-[300px] max-w-[50vw] overflow-auto">
                                     {description}
-                                </p>
+                                </div>
                             </div>
                         </div>
 
