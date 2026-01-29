@@ -37,7 +37,7 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
     const [selected_index,set_selected_index] = useState(default_selected_index || -1)
     return (
         <div
-            className="inline-block border border-gray-300/20 rounded-xl bg-[#101010]"
+            className="inline-block select-none border border-gray-300/20 rounded-xl bg-[#101010]"
         >
             {button_icons.map((icon,index) => {
                 return (
