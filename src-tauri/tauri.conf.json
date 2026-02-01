@@ -1,8 +1,8 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "nextkit",
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nextkit",
   "version": "0.1.0",
-  "identifier": "com.nextkit.dev",
+  "identifier": "com.xsolutiontech.nextkit",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:4000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "nextkit",
+        "title": "Nextkit",
         "width": 800,
         "height": 600,
         "resizable": true,
