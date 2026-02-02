@@ -48,6 +48,10 @@ export function is_in_webview(){
     return Boolean(window.webkit && window.webkit.messageHandlers)
 }
 
+export function is_in_native(){
+    return Boolean(window.__TAURI_INTERNALS__ || window.__TAURI__)
+}
+
 export function is_service_worker_available(){
     return Boolean(navigator.serviceWorker?.controller)
 }
