@@ -12,6 +12,7 @@
     "build:sw": "esbuild src/sw/main.worker.ts --bundle --format=esm --target=esnext --outfile=public/sw.js --minify"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1"
