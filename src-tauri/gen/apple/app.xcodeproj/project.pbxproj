@@ -279,6 +279,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.xsolutiontech.nextkit;
 				PRODUCT_NAME = Nextkit;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
 			};
 			name = release;
@@ -325,6 +326,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.xsolutiontech.nextkit;
 				PRODUCT_NAME = Nextkit;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
 			};
 			name = debug;
