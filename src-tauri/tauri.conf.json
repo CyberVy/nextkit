@@ -13,6 +13,8 @@
     "withGlobalTauri": true,
     "windows": [
       {
+        "visible": false,
+        "url": "/native_entry",
         "title": "Nextkit",
         "width": 800,
         "height": 600,

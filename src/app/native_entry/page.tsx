@@ -1,0 +1,41 @@
+"use client"
+
+import { invoke } from "@tauri-apps/api/core"
+import { useLayoutEffect, useState, useEffect } from "react"
+import { is_in_native } from "@/infra/device.client"
+import { AnimatedGlowText } from "@/components/String"
+
+// The WEB_URL with an "http" prefix is only for native app to simulate a website environment for some 3rd-party services which require it.
+const WEB_URL = "/"
+
+// This is an entry for native app, which can clear the default flicker.
+export default function Page(){
+    const [in_native,set_in_native] = useState(true)
+
+    useLayoutEffect(() => {
+        if (is_in_native()){
+            const url = WEB_URL
+            if (window.location.href === url) return
+            window.location.href = url
+        }
+    },[])
+    useEffect(() => {
+        set_in_native(is_in_native())
+        if (!is_in_native()) return
+
+        invoke("show_main_window")
+    }, [])
+    return (
+        <div className="fixed left-1/2 top-1/2 -translate-1/2">
+            {!in_native ?
+                <div>
+                    This path is only for native app to simulate a website environment for some 3rd-party services which require it.
+                </div>
+                :
+                <div>
+                    <AnimatedGlowText text={"Launching... >_"}/>
+                </div>
+            }
+        </div>
+    )
+}
