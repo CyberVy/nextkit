@@ -16,7 +16,7 @@
 - **Native Bridge**: [Tauri](https://tauri.app/) (Rust)
 - **Service Worker**: [esbuild](https://esbuild.github.io/) for SW bundling
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Language**: [TypeScript,Rust](https://www.typescriptlang.org/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/), [Rust](https://www.rust-lang.org/)
 
 ## Getting Started
 
@@ -27,9 +27,8 @@
 - [Rust](https://www.rust-lang.org/)
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo install tauri-cli
 ```
-- [Tauri CLI](https://tauri.app/v2/guides/getting-started/prerequisites/)
+- [Tauri CLI](https://crates.io/crates/tauri-cli)
 ```bash
 cargo install tauri-cli
 ```
