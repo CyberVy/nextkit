@@ -80,7 +80,7 @@ npm run tauri android build
 
 - `src/app/`: Next.js App Router pages and layouts.
 - `src/components/`: Reusable React components.
-- `src/infra/`: Core infrastructure, types, and utility libraries.
+- `src/infra/`: Core TypeScript infrastructure, types, and utility libraries.
 - `src/sw/`: Service Worker source code.
 - `src-tauri/`: Rust backend and native configuration.
 - `public/`: Static assets, including icons and the bundled `sw.js`.
@@ -91,9 +91,7 @@ To learn more about Next.js, take a look at the following resources:
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Learn Tauri](https://tauri.app/learn/) - a framework for building tiny, fast binaries for all major desktop and mobile platforms
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Learn Tauri](https://tauri.app/learn/) - a framework for building tiny, fast binaries for all major desktop and mobile platforms.
 
 ## Deploy on Vercel
 
