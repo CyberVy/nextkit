@@ -14,4 +14,7 @@ public func on_webview_created(_ webviewPtr: UnsafeRawPointer?, _ controllerPtr:
     webview.isOpaque = false
     webview.backgroundColor = bg
     webview.scrollView.backgroundColor = bg
+
+    // Enable edge-swipe back/forward like Safari.
+    webview.allowsBackForwardNavigationGestures = true
 }

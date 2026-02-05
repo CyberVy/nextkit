@@ -16,7 +16,8 @@ export default function Page(){
         if (is_in_native()){
             const url = WEB_URL
             if (window.location.href === url) return
-            window.location.href = url
+
+            location.replace(url)
         }
     },[])
     useEffect(() => {
