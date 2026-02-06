@@ -11,5 +11,8 @@ public func on_webview_created(_ webviewPtr: UnsafeRawPointer?, _ controllerPtr:
     // Enable edge-swipe back/forward like Safari.
     webview.allowsBackForwardNavigationGestures = true
 
+    // Handle window.open/_blank without replacing the current page.
+    installExternalOpenDelegate(webView: webview, controller: controller)
+
     applyNoFlickerStyle(to: webview, in: controller)
 }
