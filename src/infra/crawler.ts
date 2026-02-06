@@ -41,7 +41,7 @@ export async function smart_fetch(input : string | URL | Request,init?: RequestI
     }
 
     if (is_in_native() && !cors_proxy){
-        // now only support "Get" method
+        // now only support "GET" method
         return await invoke("fetch",{req: {url: url}}) as {body:string, headers:object, status:number}
     }
     else {

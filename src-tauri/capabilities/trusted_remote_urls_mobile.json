@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "trusted-remote-urls-mobile",
+  "description": "Allow IPC on trusted remote URLs for mobile builds.",
+  "windows": [
+    "main"
+  ],
+  "platforms": [
+    "iOS",
+    "Android"
+  ],
+  "remote": {
+    "urls": []
+  },
+  "permissions": [],
+  "capabilities": []
+}
