@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "trusted-remote-urls",
+  "description": "Allow the main window to use IPC when navigating to trusted remote pages.",
+  "windows": [
+    "main"
+  ],
+  "remote": {
+    "urls": []
+  },
+  "permissions": []
+}
