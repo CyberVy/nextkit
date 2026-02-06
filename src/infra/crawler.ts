@@ -1,4 +1,6 @@
 import { NestedRecordValue } from "@/infra/types"
+import { is_in_native } from "@/infra/device.client"
+import { invoke } from "@tauri-apps/api/core"
 
 export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:string): NestedRecordValue<T>[] {
     const r: NestedRecordValue<T>[]  = []
@@ -23,4 +25,38 @@ export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:st
     }
     visit(node)
     return r
+}
+
+export async function smart_fetch(input : string | URL | Request,init?: RequestInit, cors_proxy = ""){
+
+    let url: string = ""
+    if (typeof input === "string"){
+        url = input
+    }
+    else if(input instanceof URL){
+        url = input.href
+    }
+    else if (input instanceof Request){
+        url = input.url
+    }
+
+    if (is_in_native() && !cors_proxy){
+        // now only support "Get" method
+        return await invoke("fetch",{req: {url: url}}) as {body:string, headers:object, status:number}
+    }
+    else {
+
+        if (typeof window !== "undefined"){
+            if (init){
+                init.credentials = "include"
+            }
+            else {
+                init = new Request(url,{credentials: "include"})
+            }
+            return await fetch(`${cors_proxy}${url}`, init)
+        }
+        else {
+            return await fetch(url, init)
+        }
+    }
 }
