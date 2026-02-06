@@ -1,5 +1,5 @@
 "use client"
-import {useEffect, useState} from "react"
+import { useEffect, useState } from "react"
 import { LaunchAnimation } from "@/components/LaunchAnimation"
 
 export default function Page(){
@@ -24,8 +24,8 @@ export default function Page(){
             }
 
             <div className={`${show_launch_animation ? "hidden" : "block"}`}>
-                <div className="text-center">
-                    Hello World!
+                <div className="fixed left-1/2 top-1/2 -translate-1/2">
+                    Hello from Nextkit! {">_"}
                 </div>
             </div>
 
