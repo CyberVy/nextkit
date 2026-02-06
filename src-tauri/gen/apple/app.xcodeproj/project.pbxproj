@@ -19,6 +19,7 @@
 		C6BD59C055C986EA4A77FDA2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */; };
 		C869023DDFE275D42F3FBF29 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 39EEC6A55698228E08917A52 /* libapp.a */; };
 		E21B46132F35F06B004EA2CD /* webview_setting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21B46122F35F06B004EA2CD /* webview_setting.swift */; };
+		E21B461B2F3608D0004EA2CD /* webview_external_open.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21B461A2F3608D0004EA2CD /* webview_external_open.swift */; };
 		E2E800222F35046C0005CE0E /* no_flicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E800212F35046C0005CE0E /* no_flicker.swift */; };
 		E68F6CFDAED6503ABB4044A5 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE1209BFDECB28E00189B168 /* Metal.framework */; };
 /* End PBXBuildFile section */
@@ -41,6 +42,7 @@
 		CE1209BFDECB28E00189B168 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D8F57162F5CC7AEDD55F173D /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		E21B46122F35F06B004EA2CD /* webview_setting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = webview_setting.swift; sourceTree = "<group>"; };
+		E21B461A2F3608D0004EA2CD /* webview_external_open.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = webview_external_open.swift; sourceTree = "<group>"; };
 		E2E800212F35046C0005CE0E /* no_flicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = no_flicker.swift; sourceTree = "<group>"; };
 		F3673D372C5ABDD1AD6E7067 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FBC720DFA1D01F55B0A32344 /* Nextkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nextkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -152,6 +154,7 @@
 				329C38BE5E8B40354375D0D0 /* bindings */,
 				E2E800212F35046C0005CE0E /* no_flicker.swift */,
 				E21B46122F35F06B004EA2CD /* webview_setting.swift */,
+				E21B461A2F3608D0004EA2CD /* webview_external_open.swift */,
 			);
 			path = app;
 			sourceTree = "<group>";
@@ -251,6 +254,7 @@
 			files = (
 				E21B46132F35F06B004EA2CD /* webview_setting.swift in Sources */,
 				53CDD0ACFBE8BDF1550B2E53 /* main.mm in Sources */,
+				E21B461B2F3608D0004EA2CD /* webview_external_open.swift in Sources */,
 				E2E800222F35046C0005CE0E /* no_flicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
