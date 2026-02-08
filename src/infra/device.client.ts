@@ -91,3 +91,35 @@ export function vibrate(){
         navigator.vibrate(50)
     }
 }
+
+export async function open_url(url: string, target: "_self" | "_blank" ,dom_string = ""){
+    if (is_in_native()){
+        if (target === "_blank"){
+            if (is_touch_device()){
+                return window.open(url, "_blank","popup")
+            }
+            else {
+                const WebviewWindow = await import('@tauri-apps/api/webviewWindow').then(m => m.WebviewWindow)
+                return new WebviewWindow("Extra", {
+                    url: url,
+                    width: 800,
+                    height: 600,
+                    x:0,
+                    y:0
+                })
+            }
+        }
+        // AFAIK, only "_self" makes it possible to share 3rd cookies on iOS native app.
+        else if (target === "_self"){
+            return window.open(url, "_self","popup")
+        }
+        return
+    }
+    // only support pending document string for the browser environments
+    const new_window = window.open("about:blank", target,"popup")
+    if (!new_window) return
+
+    new_window.document.documentElement.innerHTML = dom_string || `<body style="background-color: black;"></body>` // avoid flicker on iOS devices
+    new_window.location.replace(url)
+    return new_window
+}
