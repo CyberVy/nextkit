@@ -37,7 +37,6 @@ fn default_method() -> String {
 #[tauri::command]
 pub async fn fetch(_app: AppHandle, req: FetchRequest) -> Result<FetchResponse, String> {
     let client = Client::builder()
-        .user_agent("Rust")
         .build()
         .map_err(|e| e.to_string())?;
 

@@ -30,19 +30,36 @@ export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:st
 export async function smart_fetch(input : string | URL | Request,init?: RequestInit, cors_proxy = ""){
 
     let url: string = ""
+    let headers: Headers = new Headers()
+    let request_method: string = "GET"
     if (typeof input === "string"){
         url = input
+        headers = new Headers(init?.headers)
+        request_method = init?.method || "GET"
     }
     else if(input instanceof URL){
         url = input.href
+        headers = new Headers(init?.headers)
+        request_method = init?.method || "GET"
     }
     else if (input instanceof Request){
         url = input.url
+        headers = new Headers(input.headers)
+        request_method = input.method
     }
 
+    if (!headers.get("user-agent")){
+        headers.set("user-agent", navigator.userAgent)
+    }
+
+    const headers_record: Record<string,string | number> = {}
+    headers.forEach((v,k) => {
+        headers_record[k] = v
+    })
+
+
     if (is_in_native() && !cors_proxy){
-        // now only support "GET" method
-        return await invoke("fetch",{req: {url: url}}) as {body:string, headers:object, status:number}
+        return await invoke("fetch",{req: {url: url,headers:headers_record,method:request_method}}) as {body:string, headers:HeadersInit, status:number}
     }
     else {
 
