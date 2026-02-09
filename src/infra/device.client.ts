@@ -92,7 +92,8 @@ export function vibrate(){
     }
 }
 
-export async function open_url(url: string, target: "_self" | "_blank" ,dom_string = ""){
+// the default dom string is to  avoid flicker on iOS devices
+export async function open_url(url: string, target: "_self" | "_blank" ,dom_string = `<body style="background-color: black;"></body>`){
     if (is_in_native()){
         if (target === "_blank"){
             if (is_touch_device()){
@@ -119,7 +120,7 @@ export async function open_url(url: string, target: "_self" | "_blank" ,dom_stri
     const new_window = window.open("about:blank", target,"popup")
     if (!new_window) return
 
-    new_window.document.documentElement.innerHTML = dom_string || `<body style="background-color: black;"></body>` // avoid flicker on iOS devices
+    new_window.document.documentElement.innerHTML = dom_string
     new_window.location.replace(url)
     return new_window
 }
