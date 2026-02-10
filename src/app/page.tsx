@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { LaunchAnimation } from "@/components/LaunchAnimation"
+import { Device } from "@/components/Device"
 
 export default function Page(){
     const [show_launch_animation, set_show_launch_animation] = useState(true)
@@ -25,7 +26,11 @@ export default function Page(){
 
             <div className={`${show_launch_animation ? "hidden" : "block"}`}>
                 <div className="fixed left-1/2 top-1/2 -translate-1/2">
-                    Hello from Nextkit! {">_"}
+                    <div className="pb-1 border-b dark:border-white/30 mb-1 border-black/30"
+                    >
+                        Hello from Nextkit! {">_"}
+                    </div>
+                    <Device/>
                 </div>
             </div>
 
