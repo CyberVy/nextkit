@@ -13,6 +13,8 @@ export const string_icons = {
     reset: "↻",
     success: "✓",
     error: "✗",
+    true: "✓",
+    false: "✗",
     info: "𝐢",
     del: "∅",
     setting: "⌘"
