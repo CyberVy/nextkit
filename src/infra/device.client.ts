@@ -27,6 +27,10 @@ export function is_iphone(){
     return user_agent.includes("iphone")
 }
 
+export function is_mac(){
+    return is_apple_device() && !is_touch_device()
+}
+
 export function is_ipad(){
     const user_agent = navigator.userAgent.toLowerCase()
     const mobile_ua = user_agent.includes("ipad")
