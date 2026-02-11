@@ -24,6 +24,7 @@ function Version(){
             >
                 {clear_cache_icon}
             </button>
+            <p className="text-xs">{`Build at: ${process.env.NEXT_PUBLIC_BUILD_TIME}`}</p>
         </div>
     )
 }
