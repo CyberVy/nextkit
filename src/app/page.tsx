@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import { LaunchAnimation } from "@/components/LaunchAnimation"
 import { Device } from "@/components/Device"
+import { Version } from "@/components/Version"
 
 export default function Page(){
     const [show_launch_animation, set_show_launch_animation] = useState(true)
@@ -30,6 +31,7 @@ export default function Page(){
                     >
                         Hello from Nextkit! {">_"}
                     </div>
+                    <Version/>
                     <Device/>
                 </div>
             </div>

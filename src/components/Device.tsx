@@ -40,8 +40,8 @@ function Device(){
             className="text-xs select-text"
         >
             <p>{`UA: ${ua}`}</p>
-            <p>{`Mobile Device: ${is_touch_device ? string_icons.true : string_icons.false}`}</p>
             <p>{`Width: ${client_width}, Height: ${client_height}`}</p>
+            <p>{`Mobile Device: ${is_touch_device ? string_icons.true : string_icons.false}`}</p>
             <p>{`PWA: ${is_in_pwa ? string_icons.true : string_icons.false}`}</p>
             <p>{`Webview: ${is_in_webview ? string_icons.true : string_icons.false}`}</p>
             <p>{`Service Worker Available: ${is_service_worker_available ? string_icons.true : string_icons.false}`}</p>
