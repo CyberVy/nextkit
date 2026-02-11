@@ -8,5 +8,8 @@
   "remote": {
     "urls": []
   },
-  "permissions": []
+  "permissions": [
+    "core:default",
+    "core:webview:allow-create-webview-window"
+  ]
 }
