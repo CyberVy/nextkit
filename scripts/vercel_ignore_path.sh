@@ -1,0 +1,1 @@
+if git diff --name-only "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" "${VERCEL_GIT_COMMIT_SHA:-HEAD}" | grep -vq '^src-tauri/'; then exit 1; else echo   "Only src-tauri changed; skip build"; exit 0; fi
