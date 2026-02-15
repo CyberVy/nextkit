@@ -114,7 +114,7 @@ export async function open_url(url: string, target: "_self" | "_blank" ,dom_stri
                 })
             }
         }
-        // AFAIK, only "_self" makes it possible to share 3rd cookies on iOS native app.
+        // Keep "_self" for flows that intentionally replace the current page.
         else if (target === "_self"){
             return window.open(url, "_self","popup")
         }
