@@ -116,7 +116,7 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
 
         let popupWebView = WKWebView(frame: .zero, configuration: configuration)
         popupWebView.customUserAgent = webView.customUserAgent
-        popupWebView.allowsBackForwardNavigationGestures = false
+        popupWebView.allowsBackForwardNavigationGestures = true
         popupWebView.uiDelegate = self
 
         let popupController = PopupWebViewController(webView: popupWebView)
