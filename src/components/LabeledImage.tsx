@@ -8,24 +8,24 @@ import { is_ios_device, vibrate } from "@/infra/device.client"
 import { useInViewport } from "@/components/hooks"
 
 function LabeledImage({
-                          src,
-                          label_left,
-                          label_left_background_color,
-                          label_right,
-                          label_right_background_color,
-                          alt,
-                          top_information,
-                          top_information_background_color,
-                          bottom_information,
-                          bottom_information_background_color,
-                          onClickImage,
-                          onClickDelete,
-                          description,
-                          image_proxy_api,
-                          clear_margin,
-                          protected_padding,
-                          intersection_root_element_ref
-                      }: LabeledImageInputs) {
+    src,
+    label_left,
+    label_left_background_color,
+    label_right,
+    label_right_background_color,
+    alt,
+    top_information,
+    top_information_background_color,
+    bottom_information,
+    bottom_information_background_color,
+    onClickImage,
+    onClickDelete,
+    description,
+    image_proxy_api,
+    clear_margin,
+    protected_padding,
+    intersection_root_element_ref
+}: LabeledImageInputs) {
 
     const [is_ios, set_is_ios] = useState(false)
     const [requested_src,set_requested_src] = useState(`${image_proxy_api || ""}${src}`)

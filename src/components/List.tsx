@@ -15,10 +15,10 @@ function ListToButtons({ list, callback }: ListToButtonsInputs) {
     return (
         <div className="select-none">
             <button className={`text-2xl px-2 border-gray-300/20 hover:cursor-pointer border rounded-xl`}
-                    onClick={() => {
-                        vibrate()
-                        set_is_collapsed(!is_collapsed)
-                    }}>
+                onClick={() => {
+                    vibrate()
+                    set_is_collapsed(!is_collapsed)
+                }}>
                 <span className={`${selected_item ? highlight : ""}`}>
                     {string_icons.menu} {is_collapsed ? string_icons.down_triangle : string_icons.up_triangle} {list.length}
                 </span>
