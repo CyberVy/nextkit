@@ -18,11 +18,10 @@ function AutoSubmitStringInput({ default_url,callback,description, need_button, 
                     onClick={() => {
                         vibrate()
                         set_is_collapsed(!is_collapsed)
-                    }
-                    }>
+                    }}
+                >
                     {description} {is_collapsed ? string_icons.up_triangle : string_icons.down_triangle}
-                </button>
-            }
+                </button>}
 
             <div className={`${is_collapsed ? "hidden" : "block"} mb-1`}>
                 <input

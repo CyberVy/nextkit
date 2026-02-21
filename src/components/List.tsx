@@ -18,7 +18,8 @@ function ListToButtons({ list, callback }: ListToButtonsInputs) {
                 onClick={() => {
                     vibrate()
                     set_is_collapsed(!is_collapsed)
-                }}>
+                }}
+            >
                 <span className={`${selected_item ? highlight : ""}`}>
                     {string_icons.menu} {is_collapsed ? string_icons.down_triangle : string_icons.up_triangle} {list.length}
                 </span>
@@ -33,7 +34,8 @@ function ListToButtons({ list, callback }: ListToButtonsInputs) {
                             vibrate()
                             set_selected_item(item === selected_item ? null : item)
                             callback?.(item === selected_item ? null : item)
-                        }}>
+                        }}
+                    >
                         {item}
                     </button>
                 ))}
