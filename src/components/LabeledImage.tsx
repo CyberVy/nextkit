@@ -102,8 +102,7 @@ function LabeledImage({
                 <div
                     ref={intersection_div_ref}
                 >
-                </div>
-            }
+                </div>}
 
             <main
                 className={`w-full h-full relative`}
@@ -171,8 +170,7 @@ function LabeledImage({
                                     }}
                                 >
                                     {string_icons.info}
-                                </button>
-                            }
+                                </button>}
                             <div
                                 className={`mx-2 bg-black/50 absolute bottom-10 right-2 px-2 py-1 text-white text-sm rounded-lg ${show_description ? "block" : "hidden"}`}
                             >
@@ -191,8 +189,7 @@ function LabeledImage({
                         >
                             {string_icons.del}
                         </button>}
-                    </>
-                }
+                    </>}
             </main>
         </div>
     )

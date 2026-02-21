@@ -35,8 +35,7 @@ export default function Page(){
                 :
                 <div>
                     <AnimatedGlowText text={"Launching... >_"}/>
-                </div>
-            }
+                </div>}
         </div>
     )
 }
