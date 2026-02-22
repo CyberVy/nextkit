@@ -2,7 +2,9 @@ import UIKit
 import WebKit
 import ObjectiveC.runtime
 
-private final class PopupWebViewController: UIViewController, WKNavigationDelegate {
+private final class PopupWebViewController: UIViewController, WKNavigationDelegate, UIGestureRecognizerDelegate {
+    private let closeSwipeProgressThreshold: CGFloat = 0.5
+    private let closeSwipeMaxDistanceThreshold: CGFloat = 240
     private let popupWebView: WKWebView
     private lazy var closeButton = UIBarButtonItem(
         barButtonSystemItem: .close,
@@ -21,6 +23,7 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
         target: self,
         action: #selector(goForward)
     )
+    private let closeOnEdgeSwipeGesture = UIScreenEdgePanGestureRecognizer()
 
     init(webView: WKWebView) {
         self.popupWebView = webView
@@ -49,6 +52,11 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
 
         navigationItem.leftBarButtonItem = closeButton
         navigationItem.rightBarButtonItems = [forwardButton, backButton]
+        closeOnEdgeSwipeGesture.edges = .left
+        closeOnEdgeSwipeGesture.delegate = self
+        closeOnEdgeSwipeGesture.cancelsTouchesInView = false
+        closeOnEdgeSwipeGesture.addTarget(self, action: #selector(handleCloseOnEdgeSwipe(_:)))
+        view.addGestureRecognizer(closeOnEdgeSwipeGesture)
         updateNavigationButtons()
     }
 
@@ -62,6 +70,56 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
 
     @objc private func goForward() {
         popupWebView.goForward()
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === closeOnEdgeSwipeGesture else { return true }
+        // Only enable the close swipe when there is no web history to go back to.
+        return !popupWebView.canGoBack
+    }
+
+    @objc private func handleCloseOnEdgeSwipe(_ recognizer: UIScreenEdgePanGestureRecognizer) {
+        // Re-check at trigger time in case navigation state changed mid-gesture.
+        guard !popupWebView.canGoBack else { return }
+
+        let container: UIView = navigationController?.view ?? self.view
+        let width = max(container.bounds.width, 1)
+        let translationX = max(recognizer.translation(in: container).x, 0)
+        let progress = min(translationX / width, 1)
+
+        switch recognizer.state {
+        case .began, .changed:
+            container.transform = CGAffineTransform(translationX: translationX, y: 0)
+            container.alpha = 1 - (0.25 * progress)
+
+        case .ended:
+            let closeDistance = min(width * closeSwipeProgressThreshold, closeSwipeMaxDistanceThreshold)
+            if translationX >= closeDistance {
+                animateSwipeContainer(container, x: width, alpha: 0.75, duration: 0.2) { [weak self] in
+                    self?.dismiss(animated: false) {
+                        container.transform = .identity
+                        container.alpha = 1
+                    }
+                }
+            } else {
+                animateSwipeContainer(container, x: 0, alpha: 1, duration: 0.22)
+            }
+
+        case .cancelled, .failed:
+            animateSwipeContainer(container, x: 0, alpha: 1, duration: 0.18)
+
+        default:
+            break
+        }
+    }
+
+    private func animateSwipeContainer(_ container: UIView, x: CGFloat, alpha: CGFloat, duration: TimeInterval, completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: duration, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+            container.transform = CGAffineTransform(translationX: x, y: 0)
+            container.alpha = alpha
+        } completion: { _ in
+            completion?()
+        }
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
@@ -102,11 +160,11 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
 
     /// Intercept requests that would create a new window and present an in-app WKWebView.
     func webView(_ webView: WKWebView,
-    createWebViewWith configuration: WKWebViewConfiguration,
-    for navigationAction: WKNavigationAction,
-    windowFeatures: WKWindowFeatures) -> WKWebView? {
+                 createWebViewWith configuration: WKWebViewConfiguration,
+                 for navigationAction: WKNavigationAction,
+                 windowFeatures: WKWindowFeatures) -> WKWebView? {
         guard navigationAction.targetFrame == nil,
-        let controller = topMostController() else {
+              let controller = topMostController() else {
             return nil
         }
 
@@ -121,7 +179,8 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
 
         let popupController = PopupWebViewController(webView: popupWebView)
         let navigationController = UINavigationController(rootViewController: popupController)
-        navigationController.modalPresentationStyle = .fullScreen
+        navigationController.modalPresentationStyle = .overFullScreen
+        navigationController.view.backgroundColor = .clear
 
         popupControllers.setObject(navigationController, forKey: popupWebView)
         controller.present(navigationController, animated: true)
