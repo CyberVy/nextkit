@@ -2,6 +2,16 @@ import UIKit
 import WebKit
 import ObjectiveC.runtime
 
+private let appBoundDomainSet: Set<String> = {
+    let raw = Bundle.main.object(forInfoDictionaryKey: "WKAppBoundDomains") as? [String] ?? []
+    return Set(raw.map { $0.lowercased() })
+}()
+
+private func shouldEnableAppBound(for url: URL?) -> Bool {
+    guard let host = url?.host?.lowercased() else { return false }
+    return appBoundDomainSet.contains(host)
+}
+
 private final class PopupWebViewController: UIViewController, WKNavigationDelegate, UIGestureRecognizerDelegate {
     private let closeSwipeProgressThreshold: CGFloat = 0.5
     private let closeSwipeMaxDistanceThreshold: CGFloat = 240
@@ -171,6 +181,15 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
         // Share the same cookie/process context as the main WKWebView.
         configuration.processPool = webView.configuration.processPool
         configuration.websiteDataStore = webView.configuration.websiteDataStore
+        if #available(iOS 14.0, *) {
+            let enableAppBound = shouldEnableAppBound(for: navigationAction.request.url)
+            configuration.limitsNavigationsToAppBoundDomains = enableAppBound
+        }
+        isolatePopupUserContentControllerIfNeeded(
+            hostConfiguration: webView.configuration,
+            popupConfiguration: configuration
+        )
+        installExternalInjectScript(on: configuration)
 
         let popupWebView = WKWebView(frame: .zero, configuration: configuration)
         popupWebView.customUserAgent = webView.customUserAgent
