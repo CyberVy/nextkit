@@ -1,10 +1,16 @@
 export function is_apple_device(){
+    if (typeof window === "undefined") {
+        return false
+    }
     const user_agent = navigator.userAgent.toLowerCase()
     return (user_agent.includes("iphone") || user_agent.includes("ipad") || user_agent.includes("macintosh") || user_agent.includes("applewebkit"))
         && !(user_agent.includes("windows") || user_agent.includes("linux") || user_agent.includes("cros"))
 }
 
 export function is_touch_device(){
+    if (typeof window === "undefined") {
+        return false
+    }
     return (("ontouchend" in document) || navigator.maxTouchPoints > 0)
 }
 
@@ -32,6 +38,9 @@ export function is_mac(){
 }
 
 export function is_ipad(){
+    if (typeof window === "undefined") {
+        return false
+    }
     const user_agent = navigator.userAgent.toLowerCase()
     const mobile_ua = user_agent.includes("ipad")
     const desk_ua = user_agent.includes("macintosh") && (("ontouchend" in document) || navigator.maxTouchPoints > 0)
@@ -39,6 +48,9 @@ export function is_ipad(){
 }
 
 export function is_in_pwa(){
+    if (typeof window === "undefined") {
+        return false
+    }
     // Chrome can install a non-PWA as a PWA with display-mode: minimal-ui,
     // and this function also regards it as a PWA
     return (
@@ -49,22 +61,37 @@ export function is_in_pwa(){
 }
 
 export function is_in_webview(){
+    if (typeof window === "undefined") {
+        return false
+    }
     return Boolean(window.webkit && window.webkit.messageHandlers)
 }
 
 export function is_in_native(){
+    if (typeof window === "undefined") {
+        return false
+    }
     return Boolean(window.__TAURI_INTERNALS__ || window.__TAURI__)
 }
 
 export function is_service_worker_available(){
+    if (typeof window === "undefined") {
+        return false
+    }
     return Boolean(navigator.serviceWorker?.controller)
 }
 
 export function is_in_background(){
+    if (typeof window === "undefined") {
+        return false
+    }
     return document.visibilityState === "hidden"
 }
 
 export function is_viewport_portrait(){
+    if (typeof window === "undefined") {
+        return false
+    }
     const height = document.documentElement.clientHeight
     const width = document.documentElement.clientWidth
     return height > width
