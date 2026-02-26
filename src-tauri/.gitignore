@@ -3,3 +3,6 @@
 .idea
 /target/
 /gen/schemas
+/src/inject.js
+/gen/apple/assets/webview_external_inject.js
+

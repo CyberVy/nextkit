@@ -1,0 +1,6 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run dev:main_window_injection & npm run dev:ios_external_window_injection & npm run dev",
+    "beforeBuildCommand": "npm run build:main_window_injection & npm run build:ios_external_window_injection & npm run build"
+  }
+}
