@@ -123,35 +123,22 @@ export function vibrate(){
     }
 }
 
-// the default dom string is to  avoid flicker on iOS devices
-export async function open_url(url: string, target: "_self" | "_blank" ,dom_string = `<body style="background-color: black;"></body>`){
-    if (is_in_native()){
-        if (target === "_blank"){
-            if (is_touch_device()){
-                return window.open(url, "_blank","popup")
-            }
-            else {
-                const WebviewWindow = await import('@tauri-apps/api/webviewWindow').then(m => m.WebviewWindow)
-                return new WebviewWindow("Extra", {
-                    url: url,
-                    width: 800,
-                    height: 600,
-                    x:0,
-                    y:0
-                })
-            }
-        }
-        // Keep "_self" for flows that intentionally replace the current page.
-        else if (target === "_self"){
-            return window.open(url, "_self","popup")
-        }
+// Keep a loading placeholder in the popup before navigating to target URL.
+export function open_url(url: string, target: "_self" | "_blank", dom_string = `<body style="background-color: black;"></body>`){
+    if (typeof window === "undefined") {
         return
     }
-    // only support pending document string for the browser environments
-    const new_window = window.open("about:blank", target,"popup")
+    if (target === "_self"){
+        return window.open(url, "_self", "popup")
+    }
+
+    const new_window = window.open(url, "_blank", "popup")
     if (!new_window) return
 
-    new_window.document.documentElement.innerHTML = dom_string
+    try {
+        new_window.document.documentElement.innerHTML = dom_string
+    }
+    catch {}
     new_window.location.replace(url)
     return new_window
 }
