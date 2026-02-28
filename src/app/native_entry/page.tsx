@@ -1,6 +1,5 @@
 "use client"
 
-import { invoke } from "@tauri-apps/api/core"
 import { useLayoutEffect, useState, useEffect } from "react"
 import { is_in_native } from "@/infra/device.client"
 import { AnimatedGlowText } from "@/components/String"
@@ -24,7 +23,6 @@ export default function Page(){
         set_in_native(is_in_native())
         if (!is_in_native()) return
 
-        invoke("show_main_window")
     }, [])
     return (
         <div className="fixed left-1/2 top-1/2 -translate-1/2">

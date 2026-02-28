@@ -1,5 +1,4 @@
 mod fetch;
-mod no_flicker;
 
 const INJECT_SCRIPT: &str = include_str!("./inject.js");
 
@@ -8,7 +7,13 @@ pub fn run() {
     let mut builder = tauri::Builder::default();
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_window_state::Builder::new().build());
+        let state_flags = tauri_plugin_window_state::StateFlags::all()
+            & !tauri_plugin_window_state::StateFlags::VISIBLE;
+        builder = builder.plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(state_flags)
+                .build(),
+        );
     }
 
     builder
@@ -36,10 +41,19 @@ pub fn run() {
 
             #[cfg(desktop)]
             {
-                webview_builder = webview_builder.on_new_window(move |_url, _features| {
-                    // Let WKWebView create the popup with its default path so opener is preserved.
-                    tauri::webview::NewWindowResponse::Allow
-                });
+                webview_builder = webview_builder
+                    .background_color(tauri::webview::Color(0, 0, 0, 255))
+                    .visible(false)
+                    .on_page_load(|window, payload| {
+                        if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    })
+                    .on_new_window(move |_url, _features| {
+                        // Let WKWebView create the popup with its default path so opener is preserved.
+                        tauri::webview::NewWindowResponse::Allow
+                    });
             }
             if !inject_script.is_empty() {
                 webview_builder =
@@ -49,10 +63,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            no_flicker::show_main_window,
-            fetch::fetch
-        ])
+        .invoke_handler(tauri::generate_handler![fetch::fetch])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
