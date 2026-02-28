@@ -33,6 +33,14 @@ pub fn run() {
             let inject_script = INJECT_SCRIPT.trim();
             let mut webview_builder =
                 tauri::WebviewWindowBuilder::from_config(app, main_window_config)?;
+
+            #[cfg(desktop)]
+            {
+                webview_builder = webview_builder.on_new_window(move |_url, _features| {
+                    // Let WKWebView create the popup with its default path so opener is preserved.
+                    tauri::webview::NewWindowResponse::Allow
+                });
+            }
             if !inject_script.is_empty() {
                 webview_builder =
                     webview_builder.initialization_script_for_all_frames(inject_script);
