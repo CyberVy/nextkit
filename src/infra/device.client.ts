@@ -74,6 +74,13 @@ export function is_in_native(){
     return Boolean(window.__TAURI_INTERNALS__ || window.__TAURI__)
 }
 
+export function is_in_browser(){
+    if (typeof window === "undefined") {
+        return false
+    }
+    return !is_in_native() && !is_in_pwa()
+}
+
 export function is_service_worker_available(){
     if (typeof window === "undefined") {
         return false
