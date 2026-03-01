@@ -71,3 +71,5 @@ This guide documents the current project structure and code style. It is for dev
 - Prioritize human readability: keep logic simple, direct, and minimal.
 - Do not add verbose or convoluted logic just to make code "work".
 - Avoid unnecessary fallback mechanisms; this is a maintainable application, not a script.
+- Prefer minimal implementation over defensive coding by default.
+- For non-critical risks, add a concise comment about the caveat instead of implementing extra defensive branches unless explicitly requested.
