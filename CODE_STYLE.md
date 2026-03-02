@@ -7,14 +7,28 @@ This guide documents the current project structure and code style. It is for dev
 - `src/app/`: Next.js App Router entry points.
     - `layout.tsx`: app shell and global metadata.
     - `page.tsx`: main page (client component).
+    - `native_entry/page.tsx`: native/Tauri entry route.
     - `globals.css`: global styles and Tailwind setup.
 - `src/components/`: UI components (mostly client components).
 - `src/infra/`: data, device, player, and YouTube helpers.
     - `*.client.ts`: browser-only utilities.
     - `types.ts`: shared types.
 - `src/sw/`: service worker source (build/packaged to `public/sw.js`).
+    - `fetch/`: fetch/cache worker modules.
 - `public/`: static assets, icons, `manifest.json`, and built SW entry.
 - `scripts/`: local scripts.
+- `src-tauri/`: Tauri (Rust) backend and native app configuration.
+    - `src/main.rs`: desktop/mobile app entry point.
+    - `src/lib.rs`: shared Tauri command/runtime wiring.
+    - `src/fetch.rs`: Rust-side fetch/network helpers.
+    - `src/inject.ts` and `src/inject.js`: WebView injection script source/output.
+    - `Cargo.toml` and `Cargo.lock`: Rust package manifest and lockfile.
+    - `build.rs`: Tauri/Rust build script.
+    - `tauri.conf.json`, `tauri.ios.conf.json`, `tauri.macos.conf.json`: platform configs.
+    - `capabilities/`: Tauri capability allowlists.
+    - `icons/`: app icons for desktop/mobile targets.
+    - `gen/`: generated native project artifacts.
+    - `target/`: Rust build outputs (generated).
 
 ## Naming Conventions
 
