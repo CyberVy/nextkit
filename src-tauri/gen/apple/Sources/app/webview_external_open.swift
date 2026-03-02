@@ -12,6 +12,15 @@ private func shouldEnableAppBound(for url: URL?) -> Bool {
     return appBoundDomainSet.contains(host)
 }
 
+// static const WKNavigationActionPolicy WK_API_AVAILABLE(macos(10.11), ios(9.0)) _WKNavigationActionPolicyAllowWithoutTryingAppLink = (WKNavigationActionPolicy)(WKNavigationActionPolicyAllow + 2);
+// according to https://github.com/WebKit/WebKit/blob/995f6b1595611c934e742a4f3a9af2e678bc6b8d/Source/WebKit/UIProcess/API/Cocoa/WKNavigationDelegatePrivate.h#L61
+private func allowWithoutTryingAppLinkPolicy() -> WKNavigationActionPolicy {
+    if let policy = WKNavigationActionPolicy(rawValue: WKNavigationActionPolicy.allow.rawValue + 2) {
+        return policy
+    }
+    return .allow
+}
+
 private final class PopupWebViewController: UIViewController, WKNavigationDelegate, UIGestureRecognizerDelegate {
     private let closeSwipeProgressThreshold: CGFloat = 0.5
     private let closeSwipeMaxDistanceThreshold: CGFloat = 240
@@ -136,6 +145,14 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
         updateNavigationButtons()
     }
 
+    // Use WebKit's internal "allow without App Link" policy to keep Universal Links in-app.
+    func webView(_ webView: WKWebView,
+                 decidePolicyFor navigationAction: WKNavigationAction,
+                 preferences: WKWebpagePreferences,
+                 decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void) {
+        decisionHandler(allowWithoutTryingAppLinkPolicy(), preferences)
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         title = webView.title
         updateNavigationButtons()
@@ -193,7 +210,7 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
 
         let popupWebView = WKWebView(frame: .zero, configuration: configuration)
         popupWebView.customUserAgent = webView.customUserAgent
-        popupWebView.allowsBackForwardNavigationGestures = true
+        popupWebView.allowsBackForwardNavigationGestures = webView.allowsBackForwardNavigationGestures
         popupWebView.uiDelegate = self
 
         let popupController = PopupWebViewController(webView: popupWebView)
