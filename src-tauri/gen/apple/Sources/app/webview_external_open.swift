@@ -58,7 +58,6 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
 
-        popupWebView.navigationDelegate = self
         applyNoFlickerStyle(to: popupWebView, in: self)
         popupWebView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(popupWebView)
@@ -214,6 +213,9 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
         popupWebView.uiDelegate = self
 
         let popupController = PopupWebViewController(webView: popupWebView)
+        // Install navigation delegate before returning the popup webview, so the
+        // very first navigation can be intercepted.
+        popupWebView.navigationDelegate = popupController
         let navigationController = UINavigationController(rootViewController: popupController)
         navigationController.modalPresentationStyle = .overFullScreen
         navigationController.view.backgroundColor = .clear
