@@ -18,7 +18,7 @@ function NaiveButton({ width,height,icon,callback }: NaiveButtonInputs){
 
     return (
         <button
-            className={`relative focus-visible:outline-none align-middle focus-visible:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out select-none overflow-x-auto overflow-y-hidden bg-[#101010] border border-gray-300/20  rounded-lg hover:cursor-pointer hover:bg-[#303030] active:bg-[#303030] active:text-gray-200/70 active:border-gray-300/40`}
+            className={`relative focus-visible:outline-none align-middle focus-visible:shadow-[0_0_10px_1px_#aaaaaa] transition duration-300 ease-in-out select-none overflow-x-auto overflow-y-hidden bg-[#101010] border border-gray-300/20  rounded-lg hover:cursor-pointer hover:bg-[#303030] active:bg-[#303030] active:text-gray-200/70 active:border-gray-300/40`}
             style={{width:width, height:height}}
             onClick={event => {
                 vibrate()
@@ -42,7 +42,7 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
             {button_icons.map((icon,index) => {
                 return (
                     <button
-                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index && enable_selected_border ? "ring ring-gray-300/50" : ""} rounded-xl hover:cursor-pointer transition duration-300  active:text-gray-200/70`}
+                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index && enable_selected_border ? "ring ring-gray-300/50" : ""} rounded-xl hover:cursor-pointer transition duration-300 ease-in-out  active:text-gray-200/70`}
                         key={index}
                         onClick={() => {
                             vibrate()
