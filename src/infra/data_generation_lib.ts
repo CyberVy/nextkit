@@ -1,6 +1,6 @@
 import type { CoverImageOptions } from "@/infra/types"
 
-export function generate_silent_wav_base64(durationSec = 2, sampleRate = 44100) {
+export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000) {
 
     const numChannels = 1
     const bitsPerSample = 16
