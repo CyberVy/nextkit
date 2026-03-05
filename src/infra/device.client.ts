@@ -136,7 +136,7 @@ export function open_url(url: string, target: "_self" | "_blank", dom_string = `
         return
     }
     if (target === "_self"){
-        return window.open(url, "_self", "popup")
+        return window.open(url, "_self")
     }
 
     const new_window = window.open(url, "_blank", "popup")
