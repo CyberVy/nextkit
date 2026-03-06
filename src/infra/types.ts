@@ -39,7 +39,7 @@ export type CoverImageOptions = {
     fontFamily?: string
 }
 export type AutoSubmitStringInputInputs = {
-    default_url?: string
+    default_value?: string
     callback: (url: string) => void
     description: string
     need_button?: boolean
