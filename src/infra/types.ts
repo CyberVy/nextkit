@@ -13,7 +13,7 @@ declare global {
 
 export type LabeledImageInputs = {
     src: string
-    top_information?: React.ReactNode,
+    top_information?: React.ReactNode
     top_information_background_color?: string
     bottom_information?: React.ReactNode,
     bottom_information_background_color?: string
@@ -27,8 +27,9 @@ export type LabeledImageInputs = {
     onClickImage?: () => void
     onClickDelete?: () => void
     clear_margin?: number
-    protected_padding?: number,
+    protected_padding?: number
     intersection_root_element_ref?: React.RefObject<HTMLElement | null>
+    className?: string
 }
 export type CoverImageOptions = {
     width?: number

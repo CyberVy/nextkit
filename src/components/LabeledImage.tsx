@@ -24,7 +24,8 @@ function LabeledImage({
     image_proxy_api,
     clear_margin,
     protected_padding,
-    intersection_root_element_ref
+    intersection_root_element_ref,
+    className
 }: LabeledImageInputs) {
 
     const [is_ios, set_is_ios] = useState(false)
@@ -112,7 +113,7 @@ function LabeledImage({
                     <>
                         <img
                             src={generated_cover_image_blob_url || requested_src || undefined}
-                            className={`w-full h-full object-cover rounded-xl [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
+                            className={`${className || ""} w-full h-full object-cover [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
                             onClick={() => {
                                 vibrate()
                                 onClickImage?.()
