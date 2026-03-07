@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { pulse, string_icons } from "@/infra/custom_ui_constants"
+import { pulse, string_icons } from "@/infra/ui_constants"
 import type {
     AutoSubmitStringInputInputs
 } from "@/infra/types"

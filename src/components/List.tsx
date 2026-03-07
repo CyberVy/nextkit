@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { highlight, string_icons } from "@/infra/custom_ui_constants"
+import { highlight, string_icons } from "@/infra/ui_constants"
 import type { ListToButtonsInputs } from "@/infra/types"
 import { vibrate } from "@/infra/device.client"
 

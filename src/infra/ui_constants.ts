@@ -17,8 +17,15 @@ export const string_icons = {
     false: "✗",
     info: "𝐢",
     del: "∅",
-    setting: "⌘"
+    setting: "⌘",
+    shot: "⌖",
+    left_double_arrow: "≪",
+    right_double_arrow: "≫",
+    left_dashed_arrow: "⇠",
+    right_dashed_arrow: "⇢",
+    expand:"⛶",
+    target: "⌖"
 }
 
-export const highlight = "text-orange-300"
-export const pulse = "focus:outline-none focus:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out"
+export const highlight = "text-orange-400 dark:text-orange-300"
+export const pulse = "active:outline-none active:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out"
