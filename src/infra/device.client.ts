@@ -104,6 +104,10 @@ export function is_viewport_portrait(){
     return height > width
 }
 
+export function is_in_dark(){
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
 export function ios_haptic(){
     if (!is_ios_device()) return
 
@@ -131,7 +135,7 @@ export function vibrate(){
 }
 
 // Keep a loading placeholder in the popup before navigating to target URL.
-export function open_url(url: string, target: "_self" | "_blank", dom_string = `<body style="background-color: black;"></body>`){
+export function open_url(url: string, target: "_self" | "_blank", dom_string = ""){
     if (typeof window === "undefined") {
         return
     }
@@ -142,6 +146,14 @@ export function open_url(url: string, target: "_self" | "_blank", dom_string = `
     const new_window = window.open(url, "_blank", "popup")
     if (!new_window) return
 
+    if (!dom_string) {
+        if (is_in_dark()){
+            dom_string = `<body style="background-color: black;"></body>`
+        }
+        else {
+            dom_string = `<body style="background-color: white;"></body>`
+        }
+    }
     try {
         new_window.document.documentElement.innerHTML = dom_string
     }
