@@ -1,4 +1,5 @@
 import type { CoverImageOptions } from "@/infra/types"
+import { is_in_dark } from "@/infra/device.client"
 
 export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000) {
 
@@ -77,21 +78,24 @@ export function generate_cover_image(title: string, options:CoverImageOptions) {
 }
 
 export function generate_pending_html(title: string,extra_information = "") {
+
+    const background_color = is_in_dark() ? "#000000" : "#FFFFFF"
+    const text_color = is_in_dark() ? "#FFFFFF" : "#000000"
     let html = ""
     if (title){
         html = `
             <!DOCTYPE html>
-            <html style="background-color: black; height: 100%">
+            <html style="background-color: ${background_color}; height: 100%">
                 <head>
                     <title>
                         Searching for ${title}
                     </title>
                     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
                 </head>
-                <body style="background-color: black; color: white; overflow: auto">
+                <body style="background-color: ${background_color}; color: ${text_color}; overflow: auto">
                     <div style="margin-top: 32px; margin-bottom: 8px; text-align: center;">
                         <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" />
+                            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" fill="none" />
                             <path d="M15 15L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </div>
