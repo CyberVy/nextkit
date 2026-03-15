@@ -1,0 +1,19 @@
+use tauri::{Builder, Runtime};
+
+pub fn register<R: Runtime>(builder: Builder<R>) -> Builder<R> {
+    #[cfg(desktop)]
+    {
+        let state_flags = tauri_plugin_window_state::StateFlags::all()
+            & !tauri_plugin_window_state::StateFlags::VISIBLE;
+
+        builder.plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(state_flags)
+                .build(),
+        )
+    }
+    #[cfg(not(desktop))]
+    {
+        builder
+    }
+}
