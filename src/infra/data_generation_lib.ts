@@ -1,6 +1,15 @@
 import type { CoverImageOptions } from "@/infra/types"
 import { is_in_dark } from "@/infra/device.client"
 
+type PendingHtmlIcon = "search" | "loading" | "clipboard" | "chat" | "external_link" | "none"
+
+type PendingHtmlOptions = {
+    title: string
+    message: string
+    note?: string
+    icon?: PendingHtmlIcon
+}
+
 export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000) {
 
     const numChannels = 1
@@ -77,42 +86,88 @@ export function generate_cover_image(title: string, options:CoverImageOptions) {
     })
 }
 
-export function generate_pending_html(title: string,extra_information = "") {
+function escape_html(text: string) {
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;")
+}
+
+function escape_html_with_line_break(text: string) {
+    return escape_html(text).replaceAll("\n", "<br>")
+}
+
+function generate_pending_html_icon(icon: PendingHtmlIcon) {
+    if (icon === "search") {
+        return `
+            <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" fill="none" />
+                <path d="M15 15L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>`
+    }
+    if (icon === "clipboard") {
+        return `
+            <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="7" y="5" width="10" height="15" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none" />
+                <path d="M9 5.5H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <rect x="9" y="2.5" width="6" height="4" rx="1.5" ry="1.5" stroke="currentColor" stroke-width="2" fill="none" />
+            </svg>`
+    }
+    if (icon === "chat") {
+        return `
+            <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M6 18L4 20V6C4 4.9 4.9 4 6 4H18C19.1 4 20 4.9 20 6V16C20 17.1 19.1 18 18 18H6Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" />
+                <path d="M8 9H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M8 13H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>`
+    }
+    if (icon === "external_link") {
+        return `
+            <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M14 5H19V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                <path d="M19 5L10 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M19 13V18C19 19.1 18.1 20 17 20H6C4.9 20 4 19.1 4 18V7C4 5.9 4.9 5 6 5H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            </svg>`
+    }
+    if (icon === "none") {
+        return ""
+    }
+
+    return `
+        <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" opacity="0.35" />
+            <path d="M12 3A9 9 0 0 1 21 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" />
+        </svg>`
+}
+
+export function generate_pending_html({ title, message, note = "", icon = "loading" }: PendingHtmlOptions) {
 
     const background_color = is_in_dark() ? "#000000" : "#FFFFFF"
-    const text_color = is_in_dark() ? "#FFFFFF" : "#000000"
-    let html = ""
-    if (title){
-        html = `
-            <!DOCTYPE html>
-            <html style="background-color: ${background_color}; height: 100%">
-                <head>
-                    <title>
-                        Searching for ${title}
-                    </title>
-                    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-                </head>
-                <body style="background-color: ${background_color}; color: ${text_color}; overflow: auto">
-                    <div style="margin-top: 32px; margin-bottom: 8px; text-align: center;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" fill="none" />
-                            <path d="M15 15L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </div>
-                    <div style="margin-top: 8px; margin-bottom: 8px; font-size: 20px; text-align: center">
-                        Searching for
-                    </div>
-                    <div style="margin-top: 8px; margin-bottom: 8px; font-size: 20px; text-align: center;">
-                        ${title}
-                    </div>
-                    <div style="margin-top: 8px; margin-bottom: 8px; font-size: 20px; text-align: center;">
-                        ${extra_information}
-                    </div>
-                    <div style="margin-top: 8px; margin-bottom: 8px; font-size: 20px; text-align: center;">
-                        Please wait for a moment...
-                    </div>
-                </body>
-            </html>`
-    }
-    return html
+    const text_color = is_in_dark() ? "#EEEEEE" : "#000000"
+    const safe_title = escape_html(title)
+    const safe_message = escape_html_with_line_break(message)
+    const safe_note = escape_html_with_line_break(note)
+
+    return `
+        <!DOCTYPE html>
+        <html style="background-color: ${background_color}; height: 100%">
+            <head>
+                <title>${safe_title}</title>
+                <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+            </head>
+            <body style="background-color: ${background_color}; color: ${text_color}; overflow: auto">
+                <div style="margin-top: 32px; margin-bottom: 8px; text-align: center;">
+                    ${generate_pending_html_icon(icon)}
+                </div>
+                <div style="margin-top: 8px; margin-bottom: 8px; font-size: 20px; text-align: center;">
+                    ${safe_message}
+                </div>
+                ${note ? `
+                    <div style="left: 16px; right: 16px; padding: 12px 16px; border: 1px solid ${text_color}; border-radius: 16px; background-color: ${background_color}; opacity: 0.8; font-size: 18px; text-align: center;">
+                        ${safe_note}
+                    </div>` : ""}
+            </body>
+        </html>`
 }
