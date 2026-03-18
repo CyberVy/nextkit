@@ -14,10 +14,12 @@ pub fn create<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
 
     let webview_builder = WebviewWindowBuilder::from_config(app, main_window_config)?;
     let webview_builder = webview::storage::configure(app, webview_builder)?;
+    let webview_builder = window::appearance::configure_builder(webview_builder);
     let webview_builder = window::no_flicker::configure(webview_builder);
     let webview_builder = webview::external_open::configure(webview_builder);
     let webview_builder = webview::inject::configure(webview_builder);
 
-    webview_builder.build()?;
+    let window = webview_builder.build()?;
+    window::appearance::sync(&window)?;
     Ok(())
 }
