@@ -3,6 +3,8 @@ use tauri::{App, Runtime, WebviewWindowBuilder};
 use crate::{webview, window};
 
 pub fn create<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
+    webview::itp::disable();
+
     let main_window_config = app
         .config()
         .app
