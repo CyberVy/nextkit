@@ -50,7 +50,9 @@ if [[ ! -f "${INPUT_PNG}" ]]; then
   exit 1
 fi
 
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/metuber-mac-icon.XXXXXX")"
+TMP_BASE="${TMPDIR:-/tmp}"
+TMP_BASE="${TMP_BASE%/}"
+TMP_DIR="$(mktemp -d "${TMP_BASE}/mac-icon.XXXXXX")"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
 ROUNDED_PNG="${TMP_DIR}/app-icon-rounded-mac.png"
