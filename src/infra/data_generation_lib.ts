@@ -165,9 +165,12 @@ export function generate_pending_html({ title, message, note = "", icon = "loadi
                     ${safe_message}
                 </div>
                 ${note ? `
-                    <div style="left: 16px; right: 16px; padding: 12px 16px; border: 1px solid ${text_color}; border-radius: 16px; background-color: ${background_color}; opacity: 0.8; font-size: 18px; text-align: center;">
-                        ${safe_note}
-                    </div>` : ""}
+                    <div style="text-align: center;">
+                        <div style="padding: 8px 16px; border: 1px solid ${text_color}; border-radius: 16px; background-color: ${background_color}; opacity: 0.8; font-size: 18px;  display: inline-block">
+                            ${safe_note}
+                        </div>
+                    </div>
+                    ` : ""}
             </body>
         </html>`
 }
