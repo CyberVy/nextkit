@@ -33,9 +33,10 @@ export function keep_alive_for_once(metadata?: MediaMetadata){
     return audio_element.play()
 }
 
+// beta
 // window.document should be the context that contains the target
 // media elements, including `HTMLAudioElement` and `HTMLVideoElement`.
-export function auto_keep_alive_by_media_states(){
+export function auto_keep_alive_by_video_states(){
 
     if (!is_touch_device()) return
 
@@ -46,7 +47,9 @@ export function auto_keep_alive_by_media_states(){
 
     for (const type of unplaying_states) {
         document.addEventListener(type, event => {
-            keep_alive_for_once()
+            if (event.target instanceof HTMLVideoElement){
+                keep_alive_for_once()
+            }
         }, { capture: true })
     }
 }
