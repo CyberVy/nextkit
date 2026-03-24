@@ -43,7 +43,4 @@ next-env.d.ts
 /certificates
 /.idea
 /public/sw.js
-/src/app/test
-/scripts/exec.ts
-/scripts/*.html
-/scripts/_*
+/draft
