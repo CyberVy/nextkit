@@ -24,24 +24,21 @@ private func allowWithoutTryingAppLinkPolicy() -> WKNavigationActionPolicy {
 private final class PopupWebViewController: UIViewController, WKNavigationDelegate, UIGestureRecognizerDelegate {
     private let closeSwipeProgressThreshold: CGFloat = 0.5
     private let closeSwipeMaxDistanceThreshold: CGFloat = 240
+    private let toolbarHorizontalInset: CGFloat = 14
+    private let toolbarBottomSpacing: CGFloat = 12
+    private let toolbarContentInset = NSDirectionalEdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)
+    private let toolbarButtonSize: CGFloat = 36
     private let popupWebView: WKWebView
-    private lazy var closeButton = UIBarButtonItem(
-        barButtonSystemItem: .close,
-        target: self,
-        action: #selector(closeTapped)
-    )
-    private lazy var backButton = UIBarButtonItem(
-        title: "Back",
-        style: .plain,
-        target: self,
-        action: #selector(goBack)
-    )
-    private lazy var forwardButton = UIBarButtonItem(
-        title: "Forward",
-        style: .plain,
-        target: self,
-        action: #selector(goForward)
-    )
+    private let toolbarView = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
+    private let titleLabel = UILabel()
+    private let navButtons = UIStackView()
+    private let contentStack = UIStackView()
+    private var titleMinimumWidthConstraint: NSLayoutConstraint?
+    private var isToolbarCollapsed = false
+    private lazy var closeButton = makeToolbarButton(symbolName: "xmark", action: #selector(closeTapped))
+    private lazy var backButton = makeToolbarButton(symbolName: "chevron.left", action: #selector(goBack))
+    private lazy var forwardButton = makeToolbarButton(symbolName: "chevron.right", action: #selector(goForward))
+    private lazy var collapseButton = makeToolbarButton(symbolName: "chevron.down", action: #selector(toggleToolbarCollapsed))
     private let closeOnEdgeSwipeGesture = UIScreenEdgePanGestureRecognizer()
 
     init(webView: WKWebView) {
@@ -62,20 +59,26 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
         popupWebView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(popupWebView)
         NSLayoutConstraint.activate([
-            popupWebView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            popupWebView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            popupWebView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            popupWebView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             popupWebView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             popupWebView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
-        navigationItem.leftBarButtonItem = closeButton
-        navigationItem.rightBarButtonItems = [forwardButton, backButton]
+        configureToolbar()
+        updateWebViewInsets()
         closeOnEdgeSwipeGesture.edges = .left
         closeOnEdgeSwipeGesture.delegate = self
         closeOnEdgeSwipeGesture.cancelsTouchesInView = false
         closeOnEdgeSwipeGesture.addTarget(self, action: #selector(handleCloseOnEdgeSwipe(_:)))
         view.addGestureRecognizer(closeOnEdgeSwipeGesture)
         updateNavigationButtons()
+        updateDisplayedTitle()
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        updateWebViewInsets()
     }
 
     @objc private func closeTapped() {
@@ -88,6 +91,11 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
 
     @objc private func goForward() {
         popupWebView.goForward()
+    }
+
+    @objc private func toggleToolbarCollapsed() {
+        isToolbarCollapsed.toggle()
+        applyToolbarCollapsedState(animated: true)
     }
 
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -141,6 +149,7 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        updateDisplayedTitle()
         updateNavigationButtons()
     }
 
@@ -153,21 +162,143 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        title = webView.title
+        updateDisplayedTitle()
         updateNavigationButtons()
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        updateDisplayedTitle()
         updateNavigationButtons()
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        updateDisplayedTitle()
         updateNavigationButtons()
     }
 
     private func updateNavigationButtons() {
-        backButton.isEnabled = popupWebView.canGoBack
-        forwardButton.isEnabled = popupWebView.canGoForward
+        updateButtonState(backButton, enabled: popupWebView.canGoBack)
+        updateButtonState(forwardButton, enabled: popupWebView.canGoForward)
+    }
+
+    private func configureToolbar() {
+        toolbarView.translatesAutoresizingMaskIntoConstraints = false
+        toolbarView.layer.cornerRadius = 22
+        toolbarView.layer.cornerCurve = .continuous
+        toolbarView.layer.masksToBounds = true
+        toolbarView.layer.borderWidth = 1 / UIScreen.main.scale
+        toolbarView.layer.borderColor = UIColor.white.withAlphaComponent(0.18).cgColor
+
+        let blurEffect = (toolbarView.effect as? UIBlurEffect) ?? UIBlurEffect(style: .systemChromeMaterial)
+        let vibrancyView = UIVisualEffectView(effect: UIVibrancyEffect(blurEffect: blurEffect))
+        vibrancyView.translatesAutoresizingMaskIntoConstraints = false
+        toolbarView.contentView.addSubview(vibrancyView)
+        NSLayoutConstraint.activate([
+            vibrancyView.leadingAnchor.constraint(equalTo: toolbarView.contentView.leadingAnchor),
+            vibrancyView.trailingAnchor.constraint(equalTo: toolbarView.contentView.trailingAnchor),
+            vibrancyView.topAnchor.constraint(equalTo: toolbarView.contentView.topAnchor),
+            vibrancyView.bottomAnchor.constraint(equalTo: toolbarView.contentView.bottomAnchor)
+        ])
+
+        navButtons.axis = .horizontal
+        navButtons.alignment = .center
+        navButtons.spacing = 8
+        navButtons.translatesAutoresizingMaskIntoConstraints = false
+        navButtons.addArrangedSubview(backButton)
+        navButtons.addArrangedSubview(forwardButton)
+
+        titleLabel.font = .preferredFont(forTextStyle: .subheadline)
+        titleLabel.textAlignment = .center
+        titleLabel.textColor = .label
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        contentStack.axis = .horizontal
+        contentStack.alignment = .center
+        contentStack.spacing = 12
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.addArrangedSubview(closeButton)
+        contentStack.addArrangedSubview(titleLabel)
+        contentStack.addArrangedSubview(navButtons)
+        contentStack.addArrangedSubview(collapseButton)
+
+        vibrancyView.contentView.addSubview(contentStack)
+        view.addSubview(toolbarView)
+
+        NSLayoutConstraint.activate([
+            toolbarView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: toolbarHorizontalInset),
+            toolbarView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -toolbarHorizontalInset),
+            toolbarView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toolbarView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -toolbarBottomSpacing),
+
+            contentStack.leadingAnchor.constraint(equalTo: vibrancyView.contentView.leadingAnchor, constant: toolbarContentInset.leading),
+            contentStack.trailingAnchor.constraint(equalTo: vibrancyView.contentView.trailingAnchor, constant: -toolbarContentInset.trailing),
+            contentStack.topAnchor.constraint(equalTo: vibrancyView.contentView.topAnchor, constant: toolbarContentInset.top),
+            contentStack.bottomAnchor.constraint(equalTo: vibrancyView.contentView.bottomAnchor, constant: -toolbarContentInset.bottom),
+
+            closeButton.widthAnchor.constraint(equalToConstant: toolbarButtonSize),
+            closeButton.heightAnchor.constraint(equalToConstant: toolbarButtonSize),
+            backButton.widthAnchor.constraint(equalToConstant: toolbarButtonSize),
+            backButton.heightAnchor.constraint(equalToConstant: toolbarButtonSize),
+            forwardButton.widthAnchor.constraint(equalToConstant: toolbarButtonSize),
+            forwardButton.heightAnchor.constraint(equalToConstant: toolbarButtonSize),
+            collapseButton.widthAnchor.constraint(equalToConstant: toolbarButtonSize),
+            collapseButton.heightAnchor.constraint(equalToConstant: toolbarButtonSize)
+        ])
+
+        titleMinimumWidthConstraint = titleLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 120)
+        titleMinimumWidthConstraint?.isActive = true
+        applyToolbarCollapsedState(animated: false)
+    }
+
+    private func makeToolbarButton(symbolName: String, action: Selector) -> UIButton {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = .label
+        button.backgroundColor = UIColor.secondarySystemBackground.withAlphaComponent(0.55)
+        button.layer.cornerRadius = toolbarButtonSize / 2
+        button.layer.cornerCurve = .continuous
+        button.layer.borderWidth = 1 / UIScreen.main.scale
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.12).cgColor
+        button.setImage(UIImage(systemName: symbolName), for: .normal)
+        button.addTarget(self, action: action, for: .touchUpInside)
+        return button
+    }
+
+    private func updateButtonState(_ button: UIButton, enabled: Bool) {
+        button.isEnabled = enabled
+        button.alpha = enabled ? 1 : 0.42
+    }
+
+    private func applyToolbarCollapsedState(animated: Bool) {
+        let updates = {
+            self.titleLabel.isHidden = self.isToolbarCollapsed
+            self.navButtons.isHidden = self.isToolbarCollapsed
+            self.titleMinimumWidthConstraint?.isActive = !self.isToolbarCollapsed
+
+            let symbolName = self.isToolbarCollapsed ? "chevron.up" : "chevron.down"
+            self.collapseButton.setImage(UIImage(systemName: symbolName), for: .normal)
+            self.view.layoutIfNeeded()
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut, .allowUserInteraction], animations: updates)
+        } else {
+            updates()
+        }
+    }
+
+    private func updateDisplayedTitle() {
+        let fallbackTitle = popupWebView.url?.host?.replacingOccurrences(of: "www.", with: "") ?? "Loading..."
+        let currentTitle = popupWebView.title?.trimmingCharacters(in: .whitespacesAndNewlines)
+        titleLabel.text = (currentTitle?.isEmpty == false) ? currentTitle : fallbackTitle
+    }
+
+    private func updateWebViewInsets() {
+        popupWebView.scrollView.contentInsetAdjustmentBehavior = .never
+        popupWebView.scrollView.contentInset = .zero
+        popupWebView.scrollView.scrollIndicatorInsets = .zero
     }
 }
 
@@ -216,12 +347,11 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
         // Install navigation delegate before returning the popup webview, so the
         // very first navigation can be intercepted.
         popupWebView.navigationDelegate = popupController
-        let navigationController = UINavigationController(rootViewController: popupController)
-        navigationController.modalPresentationStyle = .overFullScreen
-        navigationController.view.backgroundColor = .clear
+        popupController.modalPresentationStyle = .overFullScreen
+        popupController.modalTransitionStyle = .coverVertical
 
-        popupControllers.setObject(navigationController, forKey: popupWebView)
-        controller.present(navigationController, animated: true)
+        popupControllers.setObject(popupController, forKey: popupWebView)
+        controller.present(popupController, animated: true)
         return popupWebView
     }
 
