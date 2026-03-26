@@ -135,7 +135,7 @@ export function vibrate(){
 }
 
 // Keep a loading placeholder in the popup before navigating to target URL.
-export function open_url(url: string, target: "_self" | "_blank", dom_string = ""){
+export function open_url(url: string, target: "_self" | "_blank" | string, dom_string = ""){
     if (typeof window === "undefined") {
         return
     }
@@ -143,7 +143,7 @@ export function open_url(url: string, target: "_self" | "_blank", dom_string = "
         return window.open(url, "_self")
     }
 
-    const new_window = window.open(url, "_blank", "popup")
+    const new_window = window.open(url, target, "popup")
     if (!new_window) return
 
     if (!dom_string) {
@@ -158,6 +158,6 @@ export function open_url(url: string, target: "_self" | "_blank", dom_string = "
         new_window.document.documentElement.innerHTML = dom_string
     }
     catch {}
-    new_window.location.replace(url)
+
     return new_window
 }
