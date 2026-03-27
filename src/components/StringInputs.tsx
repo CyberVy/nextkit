@@ -2,9 +2,7 @@
 
 import { useState } from "react"
 import { pulse, string_icons } from "@/infra/ui_constants"
-import type {
-    AutoSubmitStringInputInputs
-} from "@/infra/types"
+import type { AutoSubmitStringInputInputs } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 
 function AutoSubmitStringInput({ default_value,callback,description, need_button, enable_auto_execution }: AutoSubmitStringInputInputs){
