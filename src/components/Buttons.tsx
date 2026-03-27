@@ -2,7 +2,7 @@
 
 "use client"
 
-import { ButtonGroupInputs, NaiveButtonInputs } from "@/infra/types"
+import type { ButtonGroupInputs, NaiveButtonInputs } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 import { useState } from "react"
 

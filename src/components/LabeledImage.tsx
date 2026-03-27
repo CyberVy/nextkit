@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { string_icons } from "@/infra/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
-import type { LabeledImageInputs } from "@/infra/types"
+import type { LabeledImageInputs } from "@/components/types"
 import { is_ios_device, vibrate } from "@/infra/device.client"
 import { useInViewport } from "@/components/hooks"
 

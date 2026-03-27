@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { highlight, string_icons } from "@/infra/ui_constants"
-import type { ListToButtonsInputs } from "@/infra/types"
+import type { ListToButtonsInputs } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 
 function ListToButtons({ list, callback }: ListToButtonsInputs) {
