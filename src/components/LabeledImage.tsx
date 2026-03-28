@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { string_icons } from "@/infra/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
 import type { LabeledImageInputs } from "@/components/types"
@@ -25,72 +25,59 @@ function LabeledImage({
     clear_margin,
     protected_padding,
     intersection_root_element_ref,
-    className
+    image_props,
+    image_className,
+    className,
+    ...props
 }: LabeledImageInputs) {
-
-    const [is_ios, set_is_ios] = useState(false)
-    const [requested_src,set_requested_src] = useState(`${image_proxy_api || ""}${src}`)
+    const [is_ios,set_is_ios] = useState(false)
     const [is_loaded,set_is_loaded] = useState(false)
-    const [is_error,set_is_error] = useState(false)
     const [show_description,set_show_description] = useState(false)
-    const [generated_cover_image_blob_url, set_generated_cover_image_blob_url] = useState("")
+    const [fallback_blob_url,set_fallback_blob_url] = useState("")
     const {element_ref: intersection_div_ref, in_view, root_element_ref: _root_element_ref} = useInViewport<HTMLDivElement,HTMLElement>(clear_margin,protected_padding,0)
-    if (intersection_root_element_ref){
-        _root_element_ref.current  = intersection_root_element_ref.current
-    }
     const [img_size, set_img_size] = useState([0,0])
-
-    const clear_image_blob_url = useCallback(function clear_image_blob_url() {
-        if (generated_cover_image_blob_url_ref.current){
-            URL.revokeObjectURL(generated_cover_image_blob_url_ref.current)
-        }
-        set_generated_cover_image_blob_url("")
-    },[])
-
-    const generated_cover_image_blob_url_ref = useRef(generated_cover_image_blob_url)
-    useEffect(() => {
-        clear_image_blob_url()
-        generated_cover_image_blob_url_ref.current = generated_cover_image_blob_url
-        set_generated_cover_image_blob_url(generated_cover_image_blob_url)
-    }, [generated_cover_image_blob_url])
-
+    const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
+    const resolved_src = fallback_blob_url || requested_src || undefined
 
     useEffect(() => {
-        // if an empty src is an input, a cover will be generated and used directly
-        if (!src){
-            set_is_error(true)
-            generate_cover_image(alt || "",{}).then(url => set_generated_cover_image_blob_url(url))
-        }
-        set_is_ios(is_ios_device)
-        return () => {
-            if (generated_cover_image_blob_url_ref.current){
-                URL.revokeObjectURL(generated_cover_image_blob_url_ref.current)
-            }
-        }
+        if (!intersection_root_element_ref) return
+
+        _root_element_ref.current = intersection_root_element_ref.current
+    }, [_root_element_ref, intersection_root_element_ref])
+
+    useEffect(() => {
+        set_is_ios(is_ios_device())
     }, [])
 
     useEffect(() => {
-        if (!src) return
+        if (!fallback_blob_url) return
 
-        // if the image is not loaded, or it is loaded with an error,
-        // a new requested src will be set to fetch the image
-        if (!is_loaded || is_error){
-            set_is_error(false)
-            clear_image_blob_url()
-            set_requested_src(`${image_proxy_api || ""}${src}`)
+        return () => {
+            URL.revokeObjectURL(fallback_blob_url)
         }
-    }, [image_proxy_api])
+    }, [fallback_blob_url])
 
     useEffect(() => {
-        if (!src) return
+        let ignore = false
 
-        set_is_error(false)
-        clear_image_blob_url()
-        set_requested_src(`${image_proxy_api || ""}${src}`)
-    }, [src])
+        if (src){
+            set_fallback_blob_url("")
+            return
+        }
 
-    // if in_view is false, the img element will be unmounted.
-    // sync the state here
+        generate_cover_image(alt || "",{}).then(url => {
+            if (ignore){
+                URL.revokeObjectURL(url)
+                return
+            }
+            set_fallback_blob_url(url)
+        })
+
+        return () => {
+            ignore = true
+        }
+    }, [alt, src])
+
     useEffect(() => {
         if (in_view) return
 
@@ -98,34 +85,42 @@ function LabeledImage({
     }, [in_view])
 
     return (
-        <div className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"}`}>
+        <div
+            className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} ${className || ""}`}
+            {...props}
+        >
             {clear_margin != undefined &&
                 <div
                     ref={intersection_div_ref}
                 >
                 </div>}
 
-            <main
+            <div
                 className={`w-full h-full relative`}
             >
-                {!in_view && <img style={{visibility:"hidden",width: img_size[0],height:img_size[1]}}/>}
+                {!in_view && <img alt="" style={{visibility:"hidden",width: img_size[0],height:img_size[1]}}/>}
                 {in_view &&
                     <>
                         <img
-                            src={generated_cover_image_blob_url || requested_src || undefined}
-                            className={`${className || ""} w-full h-full object-cover [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
-                            onClick={() => {
+                            {...image_props}
+                            alt={alt || ""}
+                            src={resolved_src}
+                            className={`${image_className || ""} w-full h-full object-cover [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
+                            onClick={event => {
+                                image_props?.onClick?.(event)
+                                if (event.defaultPrevented) return
                                 vibrate()
                                 onClickImage?.()
                             }}
                             onLoad={event => {
                                 set_is_loaded(true)
                                 set_img_size([event.currentTarget.width,event.currentTarget.height])
+                                image_props?.onLoad?.(event)
                             }}
                             onError={async event => {
-                                set_is_error(true)
-                                if (alt && in_view){
-                                    set_generated_cover_image_blob_url(await generate_cover_image(alt, {}))
+                                image_props?.onError?.(event)
+                                if (src && alt && in_view && !fallback_blob_url){
+                                    await generate_cover_image(alt,{}).then(set_fallback_blob_url)
                                 }
                                 set_is_loaded(true)
                             }}
@@ -191,7 +186,7 @@ function LabeledImage({
                             {string_icons.del}
                         </button>}
                     </>}
-            </main>
+            </div>
         </div>
     )
 }
