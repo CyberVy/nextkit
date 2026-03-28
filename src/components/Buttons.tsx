@@ -42,7 +42,7 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
             {button_icons.map((icon,index) => {
                 return (
                     <button
-                        className={`relative align-middle ${index !== 0 ? "ml-[-4px]" : ""} px-4 bg-black/0 ${selected_index === index && enable_selected_border ? "ring-[0.5px] ring-black/40 dark:ring-white/40" : ""} rounded-xl hover:cursor-pointer transition duration-300 ease-in-out  active:text-black/40 dark:active:text-white/40`}
+                        className={`relative align-middle px-4 bg-black/0 ${selected_index === index && enable_selected_border ? "ring-[0.5px] ring-black/40 dark:ring-white/40" : ""} rounded-xl hover:cursor-pointer  transition duration-300 ease-in-out  active:text-black/40 dark:active:text-white/40`}
                         key={index}
                         onClick={() => {
                             vibrate()
