@@ -41,17 +41,14 @@ export type LabeledImageInputs = Omit<React.ComponentPropsWithoutRef<"div">, "ch
     className?: string
 }
 
-export type NaiveButtonInputs = {
-    width?: string
-    height?: string
-    icon: React.ReactNode
-    callback: (event: React.MouseEvent<HTMLButtonElement>) => void
-    background_color?: string
-    background_color_dark?: string
-    border_color?: string
-    border_color_dark?: string
-    text_color?: string
-    text_color_dark?: string
+export type ScrollButtonInputs = {
+    element_ref?: React.RefObject<HTMLDivElement | null>
+    callback?: () => void
+    position_class_name?: string
+}
+
+export type SearchWordInputInputs = {
+    callback: (word: string) => void
 }
 
 export type ButtonGroupInputs = {
@@ -73,4 +70,17 @@ export type ButtonGroupInputs = {
     selected_border_color_dark?: string
     selected_text_color?: string
     selected_text_color_dark?: string
+}
+
+export type NaiveButtonInputs = {
+    width?: string
+    height?: string
+    icon: React.ReactNode
+    callback: (event: React.MouseEvent<HTMLButtonElement>) => void
+    background_color?: string
+    background_color_dark?: string
+    border_color?: string
+    border_color_dark?: string
+    text_color?: string
+    text_color_dark?: string
 }
