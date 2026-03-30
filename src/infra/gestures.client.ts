@@ -8,6 +8,7 @@ type PressGestureActionInputs<TEvent extends { clientX: number, clientY: number 
 }
 
 type LongPressInputs<TEvent extends { clientX: number, clientY: number }> = PressGestureActionInputs<TEvent> & {
+    on_end?: (event: TEvent) => void
     ms?: number
 }
 
@@ -104,6 +105,10 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
 
         const did_long_press = long_pressing
 
+        if (did_long_press) {
+            long_press?.on_end?.(event)
+        }
+
         reset_press()
         if (did_long_press) {
             on_success?.(event)
@@ -119,6 +124,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
 
     const on_pointer_cancel = (event: TEvent) => {
         if (long_pressing) {
+            long_press?.on_end?.(event)
             reset_press()
             return
         }
@@ -128,6 +134,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
 
     const on_pointer_leave = (event: TEvent) => {
         if (long_pressing) {
+            long_press?.on_end?.(event)
             reset_press()
             return
         }

@@ -65,11 +65,9 @@ function LabeledImage({
     const press_gesture = useMemo(() => {
         return create_press_gesture<ReactPointerEvent<HTMLImageElement>>({
             enabled: event => event.button === 0,
-            on_success: () => {
-                vibrate()
-            },
             click: {
                 on_trigger: () => {
+                    vibrate()
                     onClickImage?.()
                 },
             },
@@ -77,6 +75,9 @@ function LabeledImage({
                 enabled: event => event.pointerType === "touch",
                 on_trigger: event => {
                     open_context_menu(event.clientX, event.clientY)
+                },
+                on_end: () => {
+                    vibrate()
                 },
                 ms: context_menu?.long_press_ms ?? 300,
             } : undefined,
