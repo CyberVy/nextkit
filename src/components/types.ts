@@ -46,6 +46,12 @@ export type NaiveButtonInputs = {
     height?: string
     icon: React.ReactNode
     callback: (event: React.MouseEvent<HTMLButtonElement>) => void
+    background_color?: string
+    background_color_dark?: string
+    border_color?: string
+    border_color_dark?: string
+    text_color?: string
+    text_color_dark?: string
 }
 
 export type ButtonGroupInputs = {
@@ -55,4 +61,16 @@ export type ButtonGroupInputs = {
     height: string
     default_selected_index?: number
     enable_selected_border?: boolean
+    background_color?: string
+    background_color_dark?: string
+    border_color?: string
+    border_color_dark?: string
+    text_color?: string
+    text_color_dark?: string
+    selected_background_color?: string
+    selected_background_color_dark?: string
+    selected_border_color?: string
+    selected_border_color_dark?: string
+    selected_text_color?: string
+    selected_text_color_dark?: string
 }

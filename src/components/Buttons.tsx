@@ -1,25 +1,52 @@
-// this file defines some naive buttons
-
 "use client"
 
 import type { ButtonGroupInputs, NaiveButtonInputs } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
+import type { CSSProperties } from "react"
 import { useState } from "react"
 
+const join_classes = (...classes: (string | false | null | undefined)[]) => {
+    return classes.filter(Boolean).join(" ")
+}
 
-function NaiveButton({ width,height,icon,callback }: NaiveButtonInputs){
-
-    if (!width){
-        width = "56px"
-    }
-    if (!height){
-        height = "28px"
-    }
+function NaiveButton({
+    width,
+    height,
+    icon,
+    callback,
+    background_color = "rgba(244,244,244,0.40)",
+    background_color_dark = "rgba(24,24,24,0.40)",
+    border_color = "rgba(0,0,0,0.10)",
+    border_color_dark = "rgba(255,255,255,0.10)",
+    text_color = "rgba(48,48,48,0.80)",
+    text_color_dark = "rgba(255,255,255,0.80)",
+}: NaiveButtonInputs){
+    const resolved_width = width || "56px"
+    const resolved_height = height || "28px"
 
     return (
         <button
-            className={`relative focus-visible:outline-none align-middle focus-visible:shadow-[0_0_10px_1px_#aaaaaa] transition duration-300 ease-in-out select-none overflow-x-auto overflow-y-hidden bg-[#FFFFFF]/80 dark:bg-[#101010]/80 border border-black/20 dark:border-white/20  rounded-lg hover:cursor-pointer hover:bg-[#D0D0D0] dark:hover:bg-[#303030] dark:active:bg-[#303030] active:text-black/40 dark:active:text-white/40`}
-            style={{width:width, height:height}}
+            type="button"
+            className={join_classes(
+                "relative align-middle select-none overflow-x-auto overflow-y-hidden rounded-[18px] border backdrop-blur-xl",
+                "bg-[var(--button-background-color)] text-[var(--button-text-color)] border-[var(--button-border-color)]",
+                "shadow-[0_6px_18px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.28)]",
+                "transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
+                "hover:cursor-pointer hover:shadow-[0_8px_22px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.28)]",
+                "active:scale-[0.97] active:text-black/44",
+                "dark:bg-[var(--button-background-color-dark)] dark:text-[var(--button-text-color-dark)] dark:border-[var(--button-border-color-dark)]",
+                "dark:shadow-[0_8px_20px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0_10px_24px_rgba(120,120,120,0.10),inset_0_1px_0_rgba(255,255,255,0.3)] dark:active:text-white/44"
+            )}
+            style={{
+                width: resolved_width,
+                height: resolved_height,
+                "--button-background-color": background_color,
+                "--button-background-color-dark": background_color_dark,
+                "--button-border-color": border_color,
+                "--button-border-color-dark": border_color_dark,
+                "--button-text-color": text_color,
+                "--button-text-color-dark": text_color_dark,
+            } as CSSProperties}
             onClick={event => {
                 vibrate()
                 callback(event)
@@ -32,17 +59,66 @@ function NaiveButton({ width,height,icon,callback }: NaiveButtonInputs){
     )
 }
 
-function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_index,enable_selected_border}: ButtonGroupInputs){
-    enable_selected_border = enable_selected_border == undefined ? true : enable_selected_border
-    const [selected_index,set_selected_index] = useState(default_selected_index || -1)
+function ButtonGroup({
+    button_icons,
+    callbacks,
+    item_width,
+    height,
+    default_selected_index,
+    enable_selected_border,
+    background_color = "rgba(244,244,244,0.40)",
+    background_color_dark = "rgba(24,24,24,0.40)",
+    border_color = "rgba(0,0,0,0.10)",
+    border_color_dark = "rgba(255,255,255,0.10)",
+    text_color = "rgba(48,48,48,0.80)",
+    text_color_dark = "rgba(255,255,255,0.80)",
+    selected_background_color = "rgba(0,0,0,0)",
+    selected_background_color_dark = "rgba(255,255,255,0)",
+    selected_border_color = "rgba(0,0,0,0.10)",
+    selected_border_color_dark = "rgba(255,255,255,0.10)",
+    selected_text_color = "rgba(48,48,38,0.95)",
+    selected_text_color_dark = "rgba(244,244,244,0.95)",
+}: ButtonGroupInputs){
+    const should_show_selected_state = enable_selected_border == undefined ? true : enable_selected_border
+    const [selected_index,set_selected_index] = useState(default_selected_index ?? -1)
+
     return (
         <div
-            className="inline-block select-none border border-black/20 dark:border-white/20 rounded-xl bg-[#FFFFFF]/80 dark:bg-[#101010]/80"
+            className={join_classes(
+                "inline-block select-none rounded-[22px] border p-1 backdrop-blur-2xl",
+                "bg-[var(--button-group-background-color)] border-[var(--button-group-border-color)]",
+                "shadow-[0_8px_22px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.24)]",
+                "dark:bg-[var(--button-group-background-color-dark)] dark:border-[var(--button-group-border-color-dark)]",
+                "dark:shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.03)]"
+            )}
+            style={{
+                "--button-group-background-color": background_color,
+                "--button-group-background-color-dark": background_color_dark,
+                "--button-group-border-color": border_color,
+                "--button-group-border-color-dark": border_color_dark,
+                "--button-group-text-color": text_color,
+                "--button-group-text-color-dark": text_color_dark,
+                "--button-group-selected-background-color": selected_background_color,
+                "--button-group-selected-background-color-dark": selected_background_color_dark,
+                "--button-group-selected-border-color": selected_border_color,
+                "--button-group-selected-border-color-dark": selected_border_color_dark,
+                "--button-group-selected-text-color": selected_text_color,
+                "--button-group-selected-text-color-dark": selected_text_color_dark,
+            } as CSSProperties}
         >
             {button_icons.map((icon,index) => {
+                const is_selected = should_show_selected_state && selected_index === index
+
                 return (
                     <button
-                        className={`relative align-middle px-4 bg-black/0 ${selected_index === index && enable_selected_border ? "ring-[0.5px] ring-black/40 dark:ring-white/40" : ""} rounded-xl hover:cursor-pointer  transition duration-300 ease-in-out  active:text-black/40 dark:active:text-white/40`}
+                        type="button"
+                        className={join_classes(
+                            "relative align-middle px-4 overflow-hidden rounded-[18px] transition duration-300 ease-in-out hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
+                            "text-[var(--button-group-current-text-color)] dark:text-[var(--button-group-current-text-color-dark)]",
+                            is_selected
+                                ? "border bg-[var(--button-group-selected-background-color)] border-[var(--button-group-selected-border-color)] shadow-[0_4px_12px_rgba(0,0,0,0.035),inset_0_1px_0_rgba(255,255,255,0.30)] dark:bg-[var(--button-group-selected-background-color-dark)] dark:border-[var(--button-group-selected-border-color-dark)] dark:shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.03)]"
+                                : "border border-transparent hover:shadow-[0_3px_10px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.30)] dark:hover:shadow-[0_4px_12px_rgba(120,120,120,0.30),inset_0_1px_0_rgba(255,255,255,0.10)] active:scale-[0.975] active:text-black/44 dark:active:text-white/44"
+                        )}
                         key={index}
                         onClick={() => {
                             vibrate()
@@ -55,7 +131,12 @@ function ButtonGroup({button_icons,callbacks,item_width,height,default_selected_
                                 callbacks?.[index]?.()
                             }
                         }}
-                        style={{width:item_width, height:height}}
+                        style={{
+                            width: item_width,
+                            height: height,
+                            "--button-group-current-text-color": is_selected ? selected_text_color : text_color,
+                            "--button-group-current-text-color-dark": is_selected ? selected_text_color_dark : text_color_dark,
+                        } as CSSProperties}
                     >
                         <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"}>
                             {icon}
