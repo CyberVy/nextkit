@@ -32,6 +32,12 @@ function scroll_element({element_ref,callback}: ScrollButtonInputs, position: "t
     vibrate()
     if (!element_ref?.current) {
         const { documentElement } = document
+        // use window.outerHeight
+        // or use window.innerHeight instead of documentElement.clientHeight
+        // to get the correct viewport height with
+        // css: min-height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+        // for Apple Webkit
+        // https://bugs.webkit.org/show_bug.cgi?id=210009
         documentElement.scrollTop = position === "top" ? 0 : documentElement.scrollHeight - window.innerHeight - 1
         callback?.()
         return
