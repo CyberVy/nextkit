@@ -10,19 +10,17 @@ const join_classes = (...classes: (string | false | null | undefined)[]) => {
 }
 
 function NaiveButton({
-    width,
-    height,
-    icon,
-    callback,
-    background_color = "rgba(244,244,244,0.40)",
-    background_color_dark = "rgba(24,24,24,0.40)",
-    border_color = "rgba(0,0,0,0.10)",
-    border_color_dark = "rgba(255,255,255,0.10)",
-    text_color = "rgba(48,48,48,0.80)",
-    text_color_dark = "rgba(255,255,255,0.80)",
-}: NaiveButtonInputs){
-    const resolved_width = width || "56px"
-    const resolved_height = height || "28px"
+                         width = "56px",
+                         height = "32px",
+                         icon,
+                         callback,
+                         background_color = "rgba(244,244,244,0.40)",
+                         background_color_dark = "rgba(24,24,24,0.40)",
+                         border_color = "rgba(0,0,0,0.10)",
+                         border_color_dark = "rgba(255,255,255,0.10)",
+                         text_color = "rgba(48,48,48,0.80)",
+                         text_color_dark = "rgba(255,255,255,0.80)",
+                     }: NaiveButtonInputs){
 
     return (
         <button
@@ -38,8 +36,8 @@ function NaiveButton({
                 "dark:shadow-[0_8px_20px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0_10px_24px_rgba(120,120,120,0.10),inset_0_1px_0_rgba(255,255,255,0.3)] dark:active:text-white/44"
             )}
             style={{
-                width: resolved_width,
-                height: resolved_height,
+                width: width,
+                height: height,
                 "--button-background-color": background_color,
                 "--button-background-color-dark": background_color_dark,
                 "--button-border-color": border_color,
@@ -60,25 +58,25 @@ function NaiveButton({
 }
 
 function ButtonGroup({
-    button_icons,
-    callbacks,
-    item_width,
-    height,
-    default_selected_index,
-    enable_selected_border,
-    background_color = "rgba(244,244,244,0.40)",
-    background_color_dark = "rgba(24,24,24,0.40)",
-    border_color = "rgba(0,0,0,0.10)",
-    border_color_dark = "rgba(255,255,255,0.10)",
-    text_color = "rgba(48,48,48,0.80)",
-    text_color_dark = "rgba(255,255,255,0.80)",
-    selected_background_color = "rgba(0,0,0,0)",
-    selected_background_color_dark = "rgba(255,255,255,0)",
-    selected_border_color = "rgba(0,0,0,0.10)",
-    selected_border_color_dark = "rgba(255,255,255,0.10)",
-    selected_text_color = "rgba(48,48,38,0.95)",
-    selected_text_color_dark = "rgba(244,244,244,0.95)",
-}: ButtonGroupInputs){
+                         button_icons,
+                         callbacks,
+                         item_width,
+                         height,
+                         default_selected_index,
+                         enable_selected_border,
+                         background_color = "rgba(244,244,244,0.40)",
+                         background_color_dark = "rgba(24,24,24,0.40)",
+                         border_color = "rgba(0,0,0,0.10)",
+                         border_color_dark = "rgba(255,255,255,0.10)",
+                         text_color = "rgba(48,48,48,0.80)",
+                         text_color_dark = "rgba(255,255,255,0.80)",
+                         selected_background_color = "rgba(0,0,0,0)",
+                         selected_background_color_dark = "rgba(255,255,255,0)",
+                         selected_border_color = "rgba(0,0,0,0.10)",
+                         selected_border_color_dark = "rgba(255,255,255,0.10)",
+                         selected_text_color = "rgba(48,48,38,0.95)",
+                         selected_text_color_dark = "rgba(244,244,244,0.95)",
+                     }: ButtonGroupInputs){
     const should_show_selected_state = enable_selected_border == undefined ? true : enable_selected_border
     const [selected_index,set_selected_index] = useState(default_selected_index ?? -1)
 
