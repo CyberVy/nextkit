@@ -20,20 +20,22 @@ function NaiveButton({
     border_color_dark = "rgba(255,255,255,0.10)",
     text_color = "rgba(48,48,48,0.80)",
     text_color_dark = "rgba(255,255,255,0.80)",
+    className
 }: NaiveButtonInputs){
 
     return (
         <button
             type="button"
             className={join_classes(
-                "relative align-middle select-none overflow-x-auto overflow-y-hidden rounded-[18px] border backdrop-blur-xl",
+                "relative align-middle select-none overflow-hidden rounded-[18px] border backdrop-blur-xl",
                 "bg-[var(--button-background-color)] text-[var(--button-text-color)] border-[var(--button-border-color)]",
                 "shadow-[0_6px_18px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.28)]",
                 "transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
                 "hover:cursor-pointer hover:shadow-[0_8px_22px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.28)]",
                 "active:scale-[0.97] active:text-black/44",
                 "dark:bg-[var(--button-background-color-dark)] dark:text-[var(--button-text-color-dark)] dark:border-[var(--button-border-color-dark)]",
-                "dark:shadow-[0_8px_20px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0_10px_24px_rgba(120,120,120,0.10),inset_0_1px_0_rgba(255,255,255,0.3)] dark:active:text-white/44"
+                "dark:shadow-[0_8px_20px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0_10px_24px_rgba(120,120,120,0.10),inset_0_1px_0_rgba(255,255,255,0.3)] dark:active:text-white/44",
+                className
             )}
             style={{
                 width: width,
@@ -50,7 +52,7 @@ function NaiveButton({
                 callback(event)
             }}
         >
-            <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"}>
+            <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
                 {icon}
             </span>
         </button>
@@ -76,6 +78,7 @@ function ButtonGroup({
     selected_border_color_dark = "rgba(255,255,255,0.10)",
     selected_text_color = "rgba(48,48,38,0.95)",
     selected_text_color_dark = "rgba(244,244,244,0.95)",
+    className
 }: ButtonGroupInputs){
     const should_show_selected_state = enable_selected_border == undefined ? true : enable_selected_border
     const [selected_index,set_selected_index] = useState(default_selected_index ?? -1)
@@ -87,7 +90,8 @@ function ButtonGroup({
                 "bg-[var(--button-group-background-color)] border-[var(--button-group-border-color)]",
                 "shadow-[0_8px_22px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.24)]",
                 "dark:bg-[var(--button-group-background-color-dark)] dark:border-[var(--button-group-border-color-dark)]",
-                "dark:shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.03)]"
+                "dark:shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.03)]",
+                className
             )}
             style={{
                 "--button-group-background-color": background_color,
@@ -136,7 +140,7 @@ function ButtonGroup({
                             "--button-group-current-text-color-dark": is_selected ? selected_text_color_dark : text_color_dark,
                         } as CSSProperties}
                     >
-                        <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"}>
+                        <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
                             {icon}
                         </span>
                     </button>
