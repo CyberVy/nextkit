@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { PointerEvent as ReactPointerEvent } from "react"
 import { string_icons } from "@/infra/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
@@ -10,6 +10,16 @@ import { create_press_gesture } from "@/infra/gestures.client"
 import { useInViewport } from "@/components/hooks"
 import { FullscreenModalContainer } from "@/components/FullscreenModalContainer"
 import { VerticalMenuBar } from "@/components/VerticalMenuBar"
+
+function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number,number]): [number,number] {
+    const safe_padding = 12
+    const max_x = Math.max(safe_padding, window.innerWidth - context_menu_element.offsetWidth - safe_padding)
+    const max_y = Math.max(safe_padding, window.innerHeight - context_menu_element.offsetHeight - safe_padding)
+    const next_x = Math.min(Math.max(context_menu_point[0], safe_padding), max_x)
+    const next_y = Math.min(Math.max(context_menu_point[1], safe_padding), max_y)
+
+    return [next_x,next_y]
+}
 
 
 function LabeledImage({
@@ -41,11 +51,10 @@ function LabeledImage({
     const [show_description,set_show_description] = useState(false)
     const [fallback_blob_url,set_fallback_blob_url] = useState("")
     const [show_context_menu,set_show_context_menu] = useState(false)
-    const [context_menu_point,set_context_menu_point] = useState([0,0])
-    const [context_menu_render_point,set_context_menu_render_point] = useState([0,0])
+    const [context_menu_point,set_context_menu_point] = useState<[number,number]>([0,0])
+    const [context_menu_render_point,set_context_menu_render_point] = useState<[number,number]>([0,0])
     const {element_ref: intersection_div_ref, in_view, root_element_ref: _root_element_ref} = useInViewport<HTMLDivElement,HTMLElement>(clear_margin,protected_padding,0)
     const [img_size, set_img_size] = useState([0,0])
-    const context_menu_ref = useRef<HTMLElement | null>(null)
     const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
     const resolved_src = fallback_blob_url || requested_src || undefined
     const has_context_menu = Boolean(context_menu?.sections.length)
@@ -62,12 +71,30 @@ function LabeledImage({
         set_show_context_menu(true)
     }, [has_context_menu])
 
+    const set_context_menu_element = useCallback((context_menu_element: HTMLElement | null) => {
+        if (!context_menu_element) return
+
+        const next_context_menu_render_point = get_context_menu_render_point(context_menu_element, context_menu_point)
+        set_context_menu_render_point(current_context_menu_render_point => {
+            if (
+                current_context_menu_render_point[0] === next_context_menu_render_point[0]
+                && current_context_menu_render_point[1] === next_context_menu_render_point[1]
+            ){
+                return current_context_menu_render_point
+            }
+
+            return next_context_menu_render_point
+        })
+    }, [context_menu_point])
+
     const press_gesture = useMemo(() => {
         return create_press_gesture<ReactPointerEvent<HTMLImageElement>>({
             enabled: event => event.button === 0,
+            on_success: () => {
+                vibrate()
+            },
             click: {
                 on_trigger: () => {
-                    vibrate()
                     onClickImage?.()
                 },
             },
@@ -75,9 +102,6 @@ function LabeledImage({
                 enabled: event => event.pointerType === "touch",
                 on_trigger: event => {
                     open_context_menu(event.clientX, event.clientY)
-                },
-                on_end: () => {
-                    vibrate()
                 },
                 ms: context_menu?.long_press_ms ?? 300,
             } : undefined,
@@ -134,23 +158,6 @@ function LabeledImage({
 
         set_is_loaded(false)
     }, [in_view])
-
-    useEffect(() => {
-        if (!show_context_menu) return
-
-        const context_menu_element = context_menu_ref.current
-        if (!context_menu_element) return
-
-        const safe_padding = 12
-        const max_x = Math.max(safe_padding, window.innerWidth - context_menu_element.offsetWidth - safe_padding)
-        const max_y = Math.max(safe_padding, window.innerHeight - context_menu_element.offsetHeight - safe_padding)
-        const next_x = Math.min(Math.max(context_menu_point[0], safe_padding), max_x)
-        const next_y = Math.min(Math.max(context_menu_point[1], safe_padding), max_y)
-
-        if (next_x === context_menu_render_point[0] && next_y === context_menu_render_point[1]) return
-
-        set_context_menu_render_point([next_x,next_y])
-    }, [context_menu_point, context_menu_render_point, show_context_menu])
 
     useEffect(() => {
         if (!show_context_menu) return
@@ -325,7 +332,7 @@ function LabeledImage({
                         onTouchEnd={event => {
                             event.stopPropagation()
                         }}
-                        ref={context_menu_ref}
+                        ref={set_context_menu_element}
                         sections={context_menu?.sections || []}
                         header={context_menu?.header}
                         footer={context_menu?.footer}

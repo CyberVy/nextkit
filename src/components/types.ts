@@ -1,11 +1,14 @@
 import React from "react"
 import type { VerticalMenuBarProps } from "@/components/VerticalMenuBar"
 
-export type AutoSubmitStringInputInputs = {
+export type StringInputInputs = {
     default_value?: string
     callback: (url: string) => void
     description: string
     need_button?: boolean
+    button_title?: string
+    button_height?: string
+    button_width?: string
     enable_auto_execution?: boolean
 }
 
@@ -70,6 +73,7 @@ export type ButtonGroupInputs = {
     selected_border_color_dark?: string
     selected_text_color?: string
     selected_text_color_dark?: string
+    className?: string
 }
 
 export type NaiveButtonInputs = {
@@ -83,4 +87,5 @@ export type NaiveButtonInputs = {
     border_color_dark?: string
     text_color?: string
     text_color_dark?: string
+    className?: string
 }
