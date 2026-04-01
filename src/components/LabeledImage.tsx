@@ -10,6 +10,7 @@ import { create_press_gesture } from "@/infra/gestures.client"
 import { useInViewport } from "@/components/hooks"
 import { FullscreenModalContainer } from "@/components/FullscreenModalContainer"
 import { VerticalMenuBar } from "@/components/VerticalMenuBar"
+import { AnimationContainer } from "@/components/animation/AnimationContainer"
 
 function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number,number]): [number,number] {
     const safe_padding = 12
@@ -58,6 +59,14 @@ function LabeledImage({
     const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
     const resolved_src = fallback_blob_url || requested_src || undefined
     const has_context_menu = Boolean(context_menu?.sections.length)
+
+    const context_menu_enter_from = useMemo(() => {
+        return {transform:"scale(0.0)"}
+    }, [])
+
+    const context_menu_enter_to = useMemo(() => {
+        return {transform:"scale(1.0)"}
+    }, [])
 
     const close_context_menu = useCallback(() => {
         set_show_context_menu(false)
@@ -239,24 +248,36 @@ function LabeledImage({
 
                         {label_left && <div
                             className={`absolute top-1 left-1 px-2 text-white text-xs font-bold rounded-md ${label_left_background_color || ""} ${is_loaded ? "block" : "hidden"}`}
+                            onTouchEnd={event => {
+                                event.stopPropagation()
+                            }}
                         >
                             {label_left}
                         </div>}
 
                         {label_right && <div
                             className={`absolute top-1 right-2 px-2 text-white text-xs font-bold rounded-md ${label_right_background_color || ""} ${is_loaded ? "block" : "hidden"}`}
+                            onTouchEnd={event => {
+                                event.stopPropagation()
+                            }}
                         >
                             {label_right}
                         </div>}
 
                         {top_information && <div
                             className={`absolute ${label_left ? "top-6" : "top-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${top_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden max-h-[48px] max-w-1/2`}
+                            onTouchEnd={event => {
+                                event.stopPropagation()
+                            }}
                         >
                             {top_information}
                         </div>}
 
                         {bottom_information && <div
                             className={`absolute ${onClickDelete ? "bottom-6" : "bottom-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${bottom_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden  max-h-[16px] max-w-4/5`}
+                            onTouchEnd={event => {
+                                event.stopPropagation()
+                            }}
                         >
                             {bottom_information}
                         </div>}
@@ -304,49 +325,65 @@ function LabeledImage({
                         </button>}
                     </>}
             </div>
-            {has_context_menu && show_context_menu &&
-                <FullscreenModalContainer
-                    className={"z-40 overflow-hidden"}
-                    onContextMenu={event => {
-                        event.preventDefault()
-                    }}
-                    onClick={() => {
-                        close_context_menu()
-                    }}
-                    onTouchEnd={event => {
-                        // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
-                        event.preventDefault()
-                        event.currentTarget.click()
+            {has_context_menu &&
+                <AnimationContainer
+                    duration={300}
+                    enter_from={context_menu_enter_from}
+                    enter_to={context_menu_enter_to}
+                    show={show_context_menu}
+                    unmount_on_exit={true}
+                    className={"fixed inset-0 z-40"}
+                    style={{
+                        transformOrigin: `${context_menu_point[0]}px ${context_menu_point[1]}px`
                     }}
                 >
-                    <VerticalMenuBar
-                        className={"fixed w-[min(320px,calc(100vw-24px))]"}
-                        style={{left: context_menu_render_point[0], top: context_menu_render_point[1]}}
+                    <FullscreenModalContainer
                         onContextMenu={event => {
                             event.preventDefault()
-                            event.stopPropagation()
                         }}
-                        onClick={event => {
-                            event.stopPropagation()
-                        }}
-                        onTouchEnd={event => {
-                            event.stopPropagation()
-                        }}
-                        ref={set_context_menu_element}
-                        sections={context_menu?.sections || []}
-                        header={context_menu?.header}
-                        footer={context_menu?.footer}
-                        compact={context_menu?.compact}
-                        accent_color={context_menu?.accent_color}
-                        enable_vibration={context_menu?.enable_vibration}
-                        onSelect={(key, item) => {
-                            context_menu?.onSelect?.(key, item)
-                            if (context_menu?.close_after_select === false) return
-
+                        onClick={() => {
                             close_context_menu()
                         }}
-                    />
-                </FullscreenModalContainer>}
+                        onTouchEnd={event => {
+                            // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
+                            event.preventDefault()
+                            event.currentTarget.click()
+                        }}
+                    >
+
+                        <VerticalMenuBar
+                            className={"fixed w-[min(320px,calc(100vw-24px))]"}
+                            style={{
+                                left: context_menu_render_point[0],
+                                top: context_menu_render_point[1],
+                            }}
+                            onContextMenu={event => {
+                                event.preventDefault()
+                                event.stopPropagation()
+                            }}
+                            onClick={event => {
+                                event.stopPropagation()
+                            }}
+                            onTouchEnd={event => {
+                                event.stopPropagation()
+                            }}
+                            ref={set_context_menu_element}
+                            sections={context_menu?.sections || []}
+                            header={context_menu?.header}
+                            footer={context_menu?.footer}
+                            compact={context_menu?.compact}
+                            accent_color={context_menu?.accent_color}
+                            enable_vibration={context_menu?.enable_vibration}
+                            onSelect={(key, item) => {
+                                context_menu?.onSelect?.(key, item)
+                                if (context_menu?.close_after_select === false) return
+
+                                close_context_menu()
+                            }}
+                        />
+
+                    </FullscreenModalContainer>
+                </AnimationContainer>}
         </div>
     )
 }

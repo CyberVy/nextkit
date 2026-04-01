@@ -1,0 +1,26 @@
+import type { CSSProperties, ReactNode } from "react"
+
+type AnimationStyle = Pick<CSSProperties, "opacity" | "transform" | "filter">
+
+type AnimationContainerProps = {
+    show?: boolean
+    children: ReactNode
+    className?: string
+    style?: CSSProperties
+    duration?: number
+    delay?: number
+    easing?: string
+    enter_from: AnimationStyle
+    enter_to: AnimationStyle
+    exit_from?: AnimationStyle
+    exit_to?: AnimationStyle
+    on_enter_end?: () => void
+    on_exit_end?: () => void
+    unmount_on_exit?: boolean
+    animate_on_mount?: boolean
+}
+
+export type {
+    AnimationStyle,
+    AnimationContainerProps,
+}
