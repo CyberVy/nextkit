@@ -3,7 +3,7 @@
 import { useState,useRef } from "react"
 import {  string_icons } from "@/infra/ui_constants"
 import type { SearchWordInputInputs, StringInputInputs } from "@/components/types"
-import { svg_icons } from "@/components/icons"
+import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/Buttons"
 
@@ -11,7 +11,7 @@ function StringInput({ default_value,callback,description, need_button, button_t
     const [is_collapsed,set_is_collapsed] = useState(false)
     return (
         <div className="">
-            {Boolean(need_button) &&
+            {Boolean(need_button) && (
                 <NaiveButton
                     className={"mb-2"}
                     width={button_width}
@@ -26,7 +26,7 @@ function StringInput({ default_value,callback,description, need_button, button_t
                         set_is_collapsed(!is_collapsed)
                     }}
                 />
-            }
+            )}
             <div className={`${is_collapsed ? "hidden" : "block"} mb-1`}>
                 <input
                     type="text"
@@ -71,7 +71,7 @@ function SearchWordInput({ callback }: SearchWordInputInputs){
             />
 
             <NaiveButton
-                icon={svg_icons.search}
+                icon={search_icon}
                 callback={() => {
                     vibrate()
                     callback(input_ref.current?.value || "")
