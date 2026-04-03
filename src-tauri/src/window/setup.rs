@@ -4,8 +4,10 @@ use tauri::{App, AppHandle, Manager, Runtime, WebviewUrl, WebviewWindow, Webview
 
 use crate::{webview, window};
 
+#[cfg(desktop)]
 static POPUP_WINDOW_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
+#[cfg(desktop)]
 fn default_popup_size<R: Runtime>(app: &AppHandle<R>) -> (f64, f64) {
     let main_window_config = app
         .config()
@@ -30,6 +32,7 @@ where
 {
     let builder = webview::storage::configure(manager, builder)?;
     let builder = window::appearance::configure_builder(builder);
+    #[cfg(desktop)]
     let builder = builder.visible(false);
     let builder = webview::external_open::configure(manager, builder);
     let builder = webview::inject::configure(builder);
