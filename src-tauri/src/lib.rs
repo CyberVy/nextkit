@@ -1,6 +1,5 @@
 mod fetch;
 mod logging;
-mod main_window_setup;
 mod webview;
 mod window;
 
@@ -9,7 +8,7 @@ pub fn run() {
     window::state_persistence::register(tauri::Builder::default())
         .setup(|app| {
             logging::init(app)?;
-            main_window_setup::create(app)?;
+            window::setup::create_main(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![fetch::fetch])
