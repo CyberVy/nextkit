@@ -26,7 +26,7 @@ where
 }
 
 pub fn sync<R: Runtime>(window: &WebviewWindow<R>) -> tauri::Result<()> {
-    #[cfg(target_os = "macos")]
+    #[cfg(desktop)]
     {
         let theme = window.theme().unwrap_or(Theme::Light);
         window.set_background_color(Some(background_color_for_theme(theme)))?;
@@ -38,6 +38,21 @@ pub fn sync<R: Runtime>(window: &WebviewWindow<R>) -> tauri::Result<()> {
                     .set_background_color(Some(background_color_for_theme(*theme)));
             }
         });
+    }
+
+    Ok(())
+}
+
+pub fn reveal<R: Runtime>(window: &WebviewWindow<R>, focus: bool) -> tauri::Result<()> {
+    #[cfg(desktop)]
+    {
+        if !window.is_visible()? {
+            window.show()?;
+        }
+
+        if focus {
+            let _ = window.set_focus();
+        }
     }
 
     Ok(())

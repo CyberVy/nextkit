@@ -1,14 +1,15 @@
-use tauri::{App, Manager, Runtime, WebviewWindowBuilder};
+use tauri::{Manager, Runtime, WebviewWindowBuilder};
 
-pub fn configure<'a, R, M>(
-    app: &App<R>,
+pub fn configure<'a, R, M, C>(
+    manager: &C,
     mut builder: WebviewWindowBuilder<'a, R, M>,
 ) -> tauri::Result<WebviewWindowBuilder<'a, R, M>>
 where
     R: Runtime,
     M: Manager<R>,
+    C: Manager<R>,
 {
-    let _ = app;
+    let _ = manager;
 
     #[cfg(target_os = "macos")]
     {
@@ -17,7 +18,7 @@ where
 
     #[cfg(target_os = "windows")]
     {
-        let shared_dir = app.path().app_data_dir()?.join("shared-webview");
+        let shared_dir = manager.path().app_data_dir()?.join("shared-webview");
         std::fs::create_dir_all(&shared_dir)?;
         builder = builder.data_directory(shared_dir).incognito(false);
     }

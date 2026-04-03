@@ -9,6 +9,13 @@ pub fn register<R: Runtime>(builder: Builder<R>) -> Builder<R> {
         builder.plugin(
             tauri_plugin_window_state::Builder::new()
                 .with_state_flags(state_flags)
+                .map_label(|label| {
+                    if label.starts_with("popup-") {
+                        "popup"
+                    } else {
+                        label
+                    }
+                })
                 .build(),
         )
     }
