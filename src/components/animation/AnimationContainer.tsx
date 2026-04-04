@@ -39,9 +39,9 @@ function AnimationContainer({
             }
             else if (render_mode === "entering"){ return }
             else if (render_mode === "visible"){ return }
-            else if (render_mode === "exiting_to_hidden"){ return }
+            else if (render_mode === "exiting_to_hidden"){ set_render_mode("entering") }
             else if (render_mode === "hidden") { set_render_mode("entering") }
-            else if (render_mode === "exiting_to_unmount"){ return }
+            else if (render_mode === "exiting_to_unmount"){ set_render_mode("entering") }
             else if (render_mode === "unmount"){ set_render_mode("entering")}
         }
         else {
@@ -71,6 +71,10 @@ function AnimationContainer({
 
         animation_ref.current = animation
 
+        if (show){
+            set_render_mode("visible")
+        }
+
         animation.finished.then(() => {
             if (animation_ref.current !== animation) return
 
@@ -78,7 +82,6 @@ function AnimationContainer({
 
             if (show) {
                 on_enter_end?.()
-                set_render_mode("visible")
             }
             else {
                 on_exit_end?.()
