@@ -79,7 +79,10 @@ function AnimationContainer({
         animation_ref.current = animation
 
         if (show){
-            set_render_mode("visible")
+            set_render_mode("entering")
+        }
+        else {
+            set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden")
         }
 
         animation.finished.then(() => {
@@ -89,6 +92,7 @@ function AnimationContainer({
 
             if (show) {
                 on_enter_end?.()
+                set_render_mode("visible")
             }
             else {
                 on_exit_end?.()
