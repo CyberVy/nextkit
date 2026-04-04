@@ -3,9 +3,6 @@
 import { useEffect, useRef, useState } from "react"
 import type { AnimationContainerProps } from "@/components/animation/types"
 
-const default_exit_from = {opacity : 1}
-const default_exit_to = {opacity : 0}
-
 /**
  * Ensure the container and its children stay visually aligned before using this wrapper.
  * This is especially important when children include `absolute`, `fixed`, or other positioned content.
@@ -14,9 +11,11 @@ const default_exit_to = {opacity : 0}
  * The failure mode may also differ across browser engines because their implementations are not identical.
  */
 function AnimationContainer({
-    show = true, children, className, style, duration = 300, delay = 0,
-    easing = "ease-in-out", enter_from, enter_to, exit_from = default_exit_from, exit_to = default_exit_to,
-    on_enter_end, on_exit_end, unmount_on_exit = false, animate_on_mount = true
+    show = true, children, className, style,
+    duration = 300, delay = 0, easing = "ease-in-out",
+    enter_from, enter_to, exit_from, exit_to,
+    on_enter_start, on_enter_end, on_exit_start, on_exit_end,
+    unmount_on_exit = false, animate_on_mount = true
 }: AnimationContainerProps) {
 
     const element_ref = useRef<HTMLDivElement>(null)
@@ -67,7 +66,7 @@ function AnimationContainer({
         animation_ref.current?.cancel()
 
         const animation = element.animate(
-            show ? [enter_from, enter_to] : [exit_from, exit_to],
+            show ? [enter_from, enter_to] : [exit_from || enter_to, exit_to || enter_from],
             {
                 duration,
                 delay,
@@ -79,9 +78,11 @@ function AnimationContainer({
         animation_ref.current = animation
 
         if (show){
+            on_enter_start?.()
             set_render_mode("entering")
         }
         else {
+            on_exit_start?.()
             set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden")
         }
 
