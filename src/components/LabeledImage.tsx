@@ -8,7 +8,7 @@ import type { LabeledImageInputs } from "@/components/types"
 import { is_ios_device, vibrate } from "@/infra/device.client"
 import { create_press_gesture } from "@/infra/gestures.client"
 import { useInViewport } from "@/components/hooks"
-import { FullscreenModalContainer } from "@/components/FullscreenModalContainer"
+import { FullscreenModalContainer } from "@/components/ModalContainer"
 import { VerticalMenuBar } from "@/components/VerticalMenuBar"
 import { AnimationContainer } from "@/components/animation/AnimationContainer"
 

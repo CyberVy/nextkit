@@ -6,6 +6,13 @@ import type { AnimationContainerProps } from "@/components/animation/types"
 const default_exit_from = {opacity : 1}
 const default_exit_to = {opacity : 0}
 
+/**
+ * Ensure the container and its children stay visually aligned before using this wrapper.
+ * This is especially important when children include `absolute`, `fixed`, or other positioned content.
+ * If the children are laid out against a different coordinate system than the container,
+ * the animation's reference coordinates can become incorrect.
+ * The failure mode may also differ across browser engines because their implementations are not identical.
+ */
 function AnimationContainer({
     show = true, children, className, style, duration = 300, delay = 0,
     easing = "ease-in-out", enter_from, enter_to, exit_from = default_exit_from, exit_to = default_exit_to,
