@@ -14,7 +14,9 @@ type AnimationContainerProps = {
     enter_to: AnimationStyle
     exit_from?: AnimationStyle
     exit_to?: AnimationStyle
+    on_enter_start?: () => void
     on_enter_end?: () => void
+    on_exit_start?: () => void
     on_exit_end?: () => void
     unmount_on_exit?: boolean
     animate_on_mount?: boolean
