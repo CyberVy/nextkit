@@ -1,11 +1,25 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { is_in_browser } from "@/infra/device.client"
+import { ScrollToBottomButton, ScrollToTopButton } from "@/components/FixedScrollButtons"
 
-const FullscreenModalContainer = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
-    function FullscreenModalContainer({ className = "", ...props }, ref) {
+const FullscreenModalContainer = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & {enable_scroll_button?: boolean}>(
+    function FullscreenModalContainer({ className = "", children, enable_scroll_button = false, ...props }, ref) {
+
         const [in_browser,set_in_browser] = useState(true)
+        const container_ref = useRef<HTMLDivElement | null>(null)
+
+        const set_container_ref = useCallback((node: HTMLDivElement | null) => {
+            container_ref.current = node
+            if (typeof ref === "function") {
+                ref(node)
+                return
+            }
+            if (ref) {
+                ref.current = node
+            }
+        }, [ref])
 
         useEffect(() => {
             set_in_browser(is_in_browser())
@@ -13,7 +27,7 @@ const FullscreenModalContainer = React.forwardRef<HTMLDivElement, React.Componen
 
         return (
             <div
-                ref={ref}
+                ref={set_container_ref}
                 className={[
                     "fixed left-0 top-0 w-[100vw] overflow-auto [scrollbar-width:none] overscroll-none",
                     "h-[100vh]",
@@ -25,7 +39,18 @@ const FullscreenModalContainer = React.forwardRef<HTMLDivElement, React.Componen
                     className
                 ].filter(Boolean).join(" ")}
                 {...props}
-            />
+            >
+                {children}
+                {enable_scroll_button &&
+                    <div>
+                        <ScrollToTopButton
+                            element_ref={container_ref}
+                        />
+                        <ScrollToBottomButton
+                            element_ref={container_ref}
+                        />
+                    </div>}
+            </div>
         )
     }
 )
@@ -36,7 +61,7 @@ export { FullscreenModalContainer }
 
 
 const FloatingModalContainer = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
-    function FullscreenModalContainer({ className = "", children,...props }, ref) {
+    function FloatingModalContainer({ className = "", children,...props }, ref) {
         return (
             <div
                 ref={ref}
