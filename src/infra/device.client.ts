@@ -111,6 +111,8 @@ export function is_in_dark(){
 export function ios_haptic(){
     if (!is_ios_device()) return
 
+    // This browser-side workaround is only reliable after a completed tap-like gesture.
+    // Early gesture phases such as touchstart/pointerdown usually cannot trigger it on iOS.
     const label_element = document.createElement("label")
     label_element.style.display = "none"
     const input_element = document.createElement("input")
@@ -135,13 +137,23 @@ export function vibrate(){
 }
 
 // Keep a loading placeholder in the popup before navigating to target URL.
-export function open_url(url: string, target: "_self" | "_blank" | string, dom_string = ""){
+type OpenUrlOptions = {
+    dom_string?: string
+    on_close?: () => void
+    keep_gesture?: boolean
+}
+
+export function open_url(url: string, target: "_self" | "_blank" | string, options?: OpenUrlOptions){
     if (typeof window === "undefined") {
         return
     }
     if (target === "_self"){
         return window.open(url, "_self")
     }
+
+    let dom_string = options?.dom_string || ""
+    const on_close = options?.on_close
+    const keep_gesture = options?.keep_gesture || false
 
     const new_window = window.open(url, target, "popup")
     if (!new_window) return
@@ -158,6 +170,34 @@ export function open_url(url: string, target: "_self" | "_blank" | string, dom_s
         new_window.document.documentElement.innerHTML = dom_string
     }
     catch {}
+
+    if (!keep_gesture){
+        if (!on_close) return new_window
+
+        if (!is_ios_device()){
+            const callback = () => {
+                if (new_window.closed) {
+                    window.removeEventListener("focus", callback)
+                    on_close()
+                }
+            }
+            window.addEventListener("focus", callback)
+        }
+        // the focus event will be triggered instantly after opening a new window on iOS
+        else {
+            setTimeout(() => window.addEventListener("focus",on_close,{once: true}),17)
+        }
+    }
+    else {
+        if (!on_close) return new_window
+        // setInterval can keep the gesture
+        const i = window.setInterval(() => {
+            if (new_window.closed){
+                clearInterval(i)
+                on_close()
+            }
+        },167)
+    }
 
     return new_window
 }
