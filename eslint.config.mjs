@@ -106,6 +106,7 @@ export default defineConfig([{
     },
     rules: {
         indent: ["warn", 4],
+        "react-hooks/exhaustive-deps": "off",
         "react/jsx-closing-bracket-location": ["warn", "line-aligned"],
         "react/jsx-curly-newline": ["warn", {
             multiline: "consistent",
