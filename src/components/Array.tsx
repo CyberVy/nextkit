@@ -103,6 +103,7 @@ function ListToButtons({ list, callback }: ListToButtonsInputs) {
 
     const [selected_item,set_selected_item] = useState<string | number | null>(null)
     const [is_collapsed,set_is_collapsed] = useState(true)
+    const item_base_style = "px-2 py-1  rounded-xl border border-black/20 dark:border-white/20 hover:bg-black/30 dark:hover:bg-white/30 transition duration-300 ease-in-out"
 
     return (
         <div className="select-none">
@@ -122,22 +123,17 @@ function ListToButtons({ list, callback }: ListToButtonsInputs) {
 
             {<div className={`flex flex-wrap text-xs gap-1 py-2 pl-2 pr-2 max-h-[100px] overflow-auto ${is_collapsed ? 'hidden' : 'block'}`}>
                 {list.map((item, index) => (
-
-                    <NaiveButton
-                        className={"!backdrop-blur-none"}
+                    <button
                         key={index}
-                        icon={
-                            <span className={item === selected_item ? highlight : ""}>
-                                {item}
-                            </span>
-                        }
-                        callback={() => {
+                        className={item === selected_item ? `${highlight} ${item_base_style}` : item_base_style}
+                        onClick={event => {
                             vibrate()
                             set_selected_item(item === selected_item ? null : item)
                             callback?.(item === selected_item ? null : item)
                         }}
-                        width={"72px"}
-                    />
+                    >
+                        {item}
+                    </button>
                 ))}
             </div>}
         </div>
