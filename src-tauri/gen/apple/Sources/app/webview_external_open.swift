@@ -332,12 +332,9 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
             let enableAppBound = shouldEnableAppBound(for: navigationAction.request.url)
             configuration.limitsNavigationsToAppBoundDomains = enableAppBound
         }
-        isolatePopupUserContentControllerIfNeeded(
-            hostConfiguration: webView.configuration,
-            popupConfiguration: configuration
-        )
-        installExternalInjectScript(on: configuration)
-
+        // Keep the same WKUserContentController from configuration as the host webview so Wry/Tauri
+        // script message handlers and initialization scripts remain available in popup.
+        // iOS-side extra inject script is intentionally disabled; all inject logic is centralized in Rust/Tauri.
         let popupWebView = WKWebView(frame: .zero, configuration: configuration)
         popupWebView.customUserAgent = webView.customUserAgent
         popupWebView.allowsBackForwardNavigationGestures = webView.allowsBackForwardNavigationGestures
