@@ -48,11 +48,10 @@ where
     M: Manager<R>,
     C: Manager<R>,
 {
-    let builder = webview::storage::configure(manager, builder)?;
-    let builder = window::appearance::configure_builder(builder);
+    // Reuse the shared window/webview setup so injection and base behavior
+    // stay aligned across main window and popups.
+    let builder = configure_builder(manager, builder)?;
     let builder = window::no_flicker::configure(builder);
-    let builder = webview::external_open::configure(manager, builder);
-    let builder = webview::inject::configure(builder);
     Ok(builder)
 }
 
