@@ -74,7 +74,8 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
     }
     event.respondWith(f())
     if (url.pathname === "/"){
-        check_latest()
+        // avoid resources racing
+        setTimeout(() => check_latest(),500)
     }
     return true
 }
