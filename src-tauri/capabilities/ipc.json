@@ -7,9 +7,7 @@
     "main"
   ],
   "remote": {
-    "urls": [
-      "https://metuber.vercel.app/"
-    ]
+    "urls": []
   },
   "permissions": [
     "core:default"
