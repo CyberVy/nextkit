@@ -6,7 +6,7 @@ import React, {
     type ReactNode,
     type Ref, useState,
 } from "react"
-import { ListToButtonsInputs } from "@/components/types"
+import { ListToButtonsProps } from "@/components/types"
 import { NaiveButton } from "@/components/Buttons"
 import { vibrate } from "@/infra/device.client"
 import { highlight, string_icons } from "@/infra/ui_constants"
@@ -99,7 +99,7 @@ export type { StringArrayProps }
 export { StringArray }
 
 
-function ListToButtons({ list, callback }: ListToButtonsInputs) {
+function ListToButtons({ list, callback }: ListToButtonsProps) {
 
     const [selected_item,set_selected_item] = useState<string | number | null>(null)
     const [is_collapsed,set_is_collapsed] = useState(true)

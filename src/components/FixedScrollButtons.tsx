@@ -3,7 +3,7 @@
 import { ButtonGroup } from "@/components/Buttons"
 import { string_icons } from "@/infra/ui_constants"
 import React from "react"
-import type { ScrollButtonInputs } from "@/components/types"
+import type { ScrollButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 
 const join_classes = (...classes: (string | false | null | undefined)[]) => {
@@ -28,7 +28,7 @@ const scroll_button_group_props = {
     selected_text_color_dark: "rgba(244,244,244,0.95)",
 }
 
-function scroll_element({element_ref,callback}: ScrollButtonInputs, position: "top" | "bottom"){
+function scroll_element({element_ref,callback}: ScrollButtonProps, position: "top" | "bottom"){
     vibrate()
     if (!element_ref?.current) {
         const { documentElement } = document
@@ -47,7 +47,7 @@ function scroll_element({element_ref,callback}: ScrollButtonInputs, position: "t
     callback?.()
 }
 
-const ScrollToTopButton = React.memo(function ScrollToTopButton({element_ref,callback,position_class_name}: ScrollButtonInputs) {
+const ScrollToTopButton = React.memo(function ScrollToTopButton({element_ref,callback,position_class_name}: ScrollButtonProps) {
     return (
         <div className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4")}>
             <ButtonGroup
@@ -59,7 +59,7 @@ const ScrollToTopButton = React.memo(function ScrollToTopButton({element_ref,cal
     )
 })
 
-const ScrollToBottomButton = React.memo(function ScrollToBottomButton({element_ref,callback,position_class_name}: ScrollButtonInputs) {
+const ScrollToBottomButton = React.memo(function ScrollToBottomButton({element_ref,callback,position_class_name}: ScrollButtonProps) {
     return (
         <div className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-17")}>
             <ButtonGroup
@@ -71,7 +71,7 @@ const ScrollToBottomButton = React.memo(function ScrollToBottomButton({element_r
     )
 })
 
-const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({element_ref,callback,position_class_name}: ScrollButtonInputs){
+const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({element_ref,callback,position_class_name}: ScrollButtonProps){
     return (
         <div className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4")}>
             <ButtonGroup

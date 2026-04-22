@@ -2,12 +2,12 @@
 
 import { useState,useRef } from "react"
 import {  string_icons } from "@/infra/ui_constants"
-import type { SearchWordInputInputs, StringInputInputs } from "@/components/types"
+import type { SearchWordInputProps, StringInputProps } from "@/components/types"
 import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/Buttons"
 
-function StringInput({ default_value,callback,description, need_button, button_title, button_height, button_width, enable_auto_execution = true }: StringInputInputs){
+function StringInput({ default_value,callback,description, need_button, button_title, button_height, button_width, enable_auto_execution = true }: StringInputProps){
     const [is_collapsed,set_is_collapsed] = useState(false)
     return (
         <div className="">
@@ -48,7 +48,7 @@ function StringInput({ default_value,callback,description, need_button, button_t
     )
 }
 
-function SearchWordInput({ callback }: SearchWordInputInputs){
+function SearchWordInput({ callback }: SearchWordInputProps){
     const input_ref = useRef<HTMLInputElement>(null)
     return (
         <div className={`px-4 py-3 flex gap-2`}>

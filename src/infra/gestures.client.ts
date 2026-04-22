@@ -2,22 +2,22 @@ export type PressCancelReason = "move" | "leave" | "cancel"
 
 type GestureEnabled<TEvent> = boolean | ((event: TEvent) => boolean)
 
-type PressGestureActionInputs<TEvent extends { clientX: number, clientY: number }> = {
+type PressGestureActionParams<TEvent extends { clientX: number, clientY: number }> = {
     on_trigger: (event: TEvent) => void
     enabled?: GestureEnabled<TEvent>
 }
 
-type LongPressInputs<TEvent extends { clientX: number, clientY: number }> = PressGestureActionInputs<TEvent> & {
+type LongPressParams<TEvent extends { clientX: number, clientY: number }> = PressGestureActionParams<TEvent> & {
     on_end?: (event: TEvent) => void
     ms?: number
 }
 
-type PressGestureInputs<TEvent extends { clientX: number, clientY: number }> = {
-    click?: PressGestureActionInputs<TEvent>
+type PressGestureParams<TEvent extends { clientX: number, clientY: number }> = {
+    click?: PressGestureActionParams<TEvent>
     on_cancel?: (reason: PressCancelReason, event: TEvent) => void
     on_success?: (event: TEvent) => void
     enabled?: GestureEnabled<TEvent>
-    long_press?: LongPressInputs<TEvent>
+    long_press?: LongPressParams<TEvent>
     move_threshold?: number
 }
 
@@ -36,7 +36,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     enabled,
     long_press,
     move_threshold = 10,
-}: PressGestureInputs<TEvent>) {
+}: PressGestureParams<TEvent>) {
     let timer = 0
     let start_event: TEvent | null = null
     let start_client_x = 0

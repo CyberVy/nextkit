@@ -1,6 +1,6 @@
 "use client"
 
-import type { ButtonGroupInputs, NaiveButtonInputs } from "@/components/types"
+import type { ButtonGroupProps, NaiveButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 import type { CSSProperties } from "react"
 import { useState } from "react"
@@ -21,7 +21,7 @@ function NaiveButton({
     text_color = "rgba(48,48,48,0.80)",
     text_color_dark = "rgba(255,255,255,0.80)",
     className
-}: NaiveButtonInputs){
+}: NaiveButtonProps){
 
     return (
         <button
@@ -79,7 +79,7 @@ function ButtonGroup({
     selected_text_color = "rgba(48,48,38,0.95)",
     selected_text_color_dark = "rgba(244,244,244,0.95)",
     className
-}: ButtonGroupInputs){
+}: ButtonGroupProps){
     const should_show_selected_state = enable_selected_border == undefined ? true : enable_selected_border
     const [selected_index,set_selected_index] = useState(default_selected_index ?? -1)
 

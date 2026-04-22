@@ -1,7 +1,7 @@
 import React from "react"
 import type { VerticalMenuBarProps } from "@/components/VerticalMenuBar"
 
-export type StringInputInputs = {
+export type StringInputProps = {
     default_value?: string
     callback: (url: string) => void
     description: string
@@ -12,12 +12,12 @@ export type StringInputInputs = {
     enable_auto_execution?: boolean
 }
 
-export type ListToButtonsInputs = {
+export type ListToButtonsProps = {
     list: string[]
     callback?: (item: string | null) => void
 }
 
-export type LabeledImageInputs = Omit<React.ComponentPropsWithoutRef<"div">, "children"> & {
+export type LabeledImageProps = Omit<React.ComponentPropsWithoutRef<"div">, "children"> & {
     src?: string
     top_information?: React.ReactNode
     top_information_background_color?: string
@@ -44,17 +44,17 @@ export type LabeledImageInputs = Omit<React.ComponentPropsWithoutRef<"div">, "ch
     className?: string
 }
 
-export type ScrollButtonInputs = {
+export type ScrollButtonProps = {
     element_ref?: React.RefObject<HTMLDivElement | null>
     callback?: () => void
     position_class_name?: string
 }
 
-export type SearchWordInputInputs = {
+export type SearchWordInputProps = {
     callback: (word: string) => void
 }
 
-export type ButtonGroupInputs = {
+export type ButtonGroupProps = {
     button_icons: React.ReactNode[]
     callbacks?: (() => void)[]
     item_width: string
@@ -76,7 +76,7 @@ export type ButtonGroupInputs = {
     className?: string
 }
 
-export type NaiveButtonInputs = {
+export type NaiveButtonProps = {
     width?: string
     height?: string
     icon: React.ReactNode

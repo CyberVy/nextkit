@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { PointerEvent as ReactPointerEvent } from "react"
 import { string_icons } from "@/infra/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
-import type { LabeledImageInputs } from "@/components/types"
+import type { LabeledImageProps } from "@/components/types"
 import { is_ios_device, vibrate } from "@/infra/device.client"
 import { create_press_gesture } from "@/infra/gestures.client"
 import { useInViewport } from "@/components/hooks"
@@ -46,7 +46,7 @@ function LabeledImage({
     image_className,
     className,
     ...props
-}: LabeledImageInputs) {
+}: LabeledImageProps) {
     const [is_ios,set_is_ios] = useState(false)
     const [is_loaded,set_is_loaded] = useState(false)
     const [show_description,set_show_description] = useState(false)
