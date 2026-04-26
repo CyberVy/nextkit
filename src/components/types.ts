@@ -36,7 +36,7 @@ export type LabeledImageProps = Omit<React.ComponentPropsWithoutRef<"div">, "chi
     onClickDelete?: () => void
     clear_margin?: number
     protected_padding?: number
-    intersection_root_element_ref?: React.RefObject<HTMLElement | null>
+    intersection_root_element?: HTMLElement | null
     context_menu?: Pick<VerticalMenuBarProps, "sections" | "header" | "footer" | "compact" | "accent_color" | "enable_vibration" | "onSelect"> & {
         long_press_ms?: number
         close_after_select?: boolean
