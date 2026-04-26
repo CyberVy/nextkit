@@ -40,7 +40,7 @@ function LabeledImage({
     image_proxy_api,
     clear_margin,
     protected_padding,
-    intersection_root_element_ref,
+    intersection_root_element,
     context_menu,
     image_props,
     image_className,
@@ -54,7 +54,13 @@ function LabeledImage({
     const [show_context_menu,set_show_context_menu] = useState(false)
     const [context_menu_point,set_context_menu_point] = useState<[number,number]>([0,0])
     const [context_menu_render_point,set_context_menu_render_point] = useState<[number,number]>([0,0])
-    const {element_ref: intersection_div_ref, in_view, root_element_ref: _root_element_ref} = useInViewport<HTMLDivElement,HTMLElement>(clear_margin,protected_padding,0)
+    const {ref: intersection_div_ref, in_view} = useInViewport<HTMLDivElement>({
+        enabled: clear_margin != undefined,
+        root: intersection_root_element,
+        root_margin: clear_margin ?? 0,
+        protected_padding: protected_padding ?? 0,
+        initial_in_view: clear_margin == undefined,
+    })
     const [img_size, set_img_size] = useState([0,0])
     const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
     const resolved_src = fallback_blob_url || requested_src || undefined
@@ -122,12 +128,6 @@ function LabeledImage({
             press_gesture.reset_press()
         }
     }, [press_gesture])
-
-    useEffect(() => {
-        if (!intersection_root_element_ref) return
-
-        _root_element_ref.current = intersection_root_element_ref.current
-    }, [_root_element_ref, intersection_root_element_ref])
 
     useEffect(() => {
         set_is_ios(is_ios_device())
