@@ -21,6 +21,36 @@ fn default_popup_size<R: Runtime>(app: &AppHandle<R>) -> (f64, f64) {
     (main_window_config.width, main_window_config.height)
 }
 
+fn configure_external_open<'a, R, M, C>(
+    manager: &C,
+    builder: WebviewWindowBuilder<'a, R, M>,
+) -> WebviewWindowBuilder<'a, R, M>
+where
+    R: Runtime,
+    M: Manager<R>,
+    C: Manager<R>,
+{
+    #[cfg(desktop)]
+    {
+        let app = manager.app_handle().clone();
+
+        builder.on_new_window(
+            move |url, features| match create_popup(&app, &url, features) {
+                Ok(window) => tauri::webview::NewWindowResponse::Create { window },
+                Err(error) => {
+                    log::error!("failed to create popup window for {url}: {error}");
+                    tauri::webview::NewWindowResponse::Deny
+                }
+            },
+        )
+    }
+    #[cfg(not(desktop))]
+    {
+        let _ = manager;
+        builder
+    }
+}
+
 pub fn configure_builder<'a, R, M, C>(
     manager: &C,
     builder: WebviewWindowBuilder<'a, R, M>,
@@ -34,7 +64,7 @@ where
     let builder = window::appearance::configure_builder(builder);
     #[cfg(desktop)]
     let builder = builder.visible(false);
-    let builder = webview::external_open::configure(manager, builder);
+    let builder = configure_external_open(manager, builder);
     let builder = webview::inject::configure(builder);
     Ok(builder)
 }
@@ -56,7 +86,6 @@ where
 }
 
 pub fn create_main<R: Runtime>(app: &mut App<R>) -> tauri::Result<()> {
-    webview::itp::disable();
 
     let main_window_config = app
         .config()
@@ -91,7 +120,11 @@ pub fn create_popup<R: Runtime>(
     let mut webview_builder = WebviewWindowBuilder::new(
         app,
         popup_label,
-        WebviewUrl::External("about:blank".parse().expect("about:blank should always parse")),
+        WebviewUrl::External(
+            "about:blank"
+                .parse()
+                .expect("about:blank should always parse"),
+        ),
     )
     .title(url.as_str())
     .on_document_title_changed(|window, title| {
