@@ -35,6 +35,7 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
     private let contentStack = UIStackView()
     private var titleMinimumWidthConstraint: NSLayoutConstraint?
     private var isToolbarCollapsed = false
+    private var observations: [NSKeyValueObservation] = []
     private lazy var closeButton = makeToolbarButton(symbolName: "xmark", action: #selector(closeTapped))
     private lazy var backButton = makeToolbarButton(symbolName: "chevron.left", action: #selector(goBack))
     private lazy var forwardButton = makeToolbarButton(symbolName: "chevron.right", action: #selector(goForward))
@@ -55,6 +56,7 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
 
+        setupObservations()
         applyNoFlickerStyle(to: popupWebView, in: self)
         popupWebView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(popupWebView)
@@ -148,9 +150,25 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
         }
     }
 
+    private func setupObservations() {
+        observations = [
+            popupWebView.observe(\.canGoBack, options: [.new]) { [weak self] _, _ in
+                self?.updateNavigationButtons()
+            },
+            popupWebView.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in
+                self?.updateNavigationButtons()
+            },
+            popupWebView.observe(\.title, options: [.new]) { [weak self] _, _ in
+                self?.updateDisplayedTitle()
+            },
+            popupWebView.observe(\.url, options: [.new]) { [weak self] _, _ in
+                self?.updateDisplayedTitle()
+            }
+        ]
+    }
+
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        updateDisplayedTitle()
-        updateNavigationButtons()
+        // KVO handles UI updates
     }
 
     // Use WebKit's internal "allow without App Link" policy to keep Universal Links in-app.
@@ -162,18 +180,15 @@ private final class PopupWebViewController: UIViewController, WKNavigationDelega
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        updateDisplayedTitle()
-        updateNavigationButtons()
+        // KVO handles UI updates
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        updateDisplayedTitle()
-        updateNavigationButtons()
+        // KVO handles UI updates
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        updateDisplayedTitle()
-        updateNavigationButtons()
+        // KVO handles UI updates
     }
 
     private func updateNavigationButtons() {
