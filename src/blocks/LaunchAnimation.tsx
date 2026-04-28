@@ -17,7 +17,7 @@ function LaunchAnimation() {
     }, [])
     return (
         <div
-            className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-[100vw] overflow-hidden select-none"}
+            className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-screen overflow-hidden select-none"}
         >
             <div className={`absolute text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
                 <AnimatedGlowText

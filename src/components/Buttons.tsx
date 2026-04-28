@@ -28,12 +28,12 @@ function NaiveButton({
             type="button"
             className={join_classes(
                 "relative align-middle select-none overflow-hidden rounded-[18px] border backdrop-blur-xl",
-                "bg-[var(--button-background-color)] text-[var(--button-text-color)] border-[var(--button-border-color)]",
+                "bg-(--button-background-color) text-(--button-text-color) border-(--button-border-color)",
                 "shadow-[0_6px_18px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.28)]",
                 "transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
                 "hover:cursor-pointer hover:shadow-[0_8px_22px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.28)]",
                 "active:scale-[0.97] active:text-black/44",
-                "dark:bg-[var(--button-background-color-dark)] dark:text-[var(--button-text-color-dark)] dark:border-[var(--button-border-color-dark)]",
+                "dark:bg-(--button-background-color-dark) dark:text-(--button-text-color-dark) dark:border-(--button-border-color-dark)",
                 "dark:shadow-[0_8px_20px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0_10px_24px_rgba(120,120,120,0.10),inset_0_1px_0_rgba(255,255,255,0.3)] dark:active:text-white/44",
                 className
             )}
@@ -87,9 +87,9 @@ function ButtonGroup({
         <div
             className={join_classes(
                 "inline-block select-none rounded-[22px] border p-1 backdrop-blur-2xl",
-                "bg-[var(--button-group-background-color)] border-[var(--button-group-border-color)]",
+                "bg-(--button-group-background-color) border-(--button-group-border-color)",
                 "shadow-[0_8px_22px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.24)]",
-                "dark:bg-[var(--button-group-background-color-dark)] dark:border-[var(--button-group-border-color-dark)]",
+                "dark:bg-(--button-group-background-color-dark) dark:border-(--button-group-border-color-dark)",
                 "dark:shadow-[0_10px_24px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.03)]",
                 className
             )}
@@ -116,9 +116,9 @@ function ButtonGroup({
                         type="button"
                         className={join_classes(
                             "relative align-middle px-4 overflow-hidden rounded-[18px] transition duration-300 ease-in-out hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
-                            "text-[var(--button-group-current-text-color)] dark:text-[var(--button-group-current-text-color-dark)]",
+                            "text-(--button-group-current-text-color) dark:text-(--button-group-current-text-color-dark)",
                             is_selected
-                                ? "border bg-[var(--button-group-selected-background-color)] border-[var(--button-group-selected-border-color)] shadow-[0_4px_12px_rgba(0,0,0,0.035),inset_0_1px_0_rgba(255,255,255,0.30)] dark:bg-[var(--button-group-selected-background-color-dark)] dark:border-[var(--button-group-selected-border-color-dark)] dark:shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.03)]"
+                                ? "border bg-(--button-group-selected-background-color) border-(--button-group-selected-border-color) shadow-[0_4px_12px_rgba(0,0,0,0.035),inset_0_1px_0_rgba(255,255,255,0.30)] dark:bg-(--button-group-selected-background-color-dark) dark:border-(--button-group-selected-border-color-dark) dark:shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.03)]"
                                 : "border border-transparent hover:shadow-[0_3px_10px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.30)] dark:hover:shadow-[0_4px_12px_rgba(120,120,120,0.30),inset_0_1px_0_rgba(255,255,255,0.10)] active:scale-[0.975] active:text-black/44 dark:active:text-white/44"
                         )}
                         key={index}

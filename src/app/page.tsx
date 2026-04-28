@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { LaunchAnimation } from "@/components/LaunchAnimation"
+import { LaunchAnimation } from "@/blocks/LaunchAnimation"
 import { Device } from "@/components/Device"
 import { Version } from "@/components/Version"
 

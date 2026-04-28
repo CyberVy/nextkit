@@ -42,12 +42,12 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
                     } as CSSProperties}
                     className={[
                         "pointer-events-none absolute inset-0 rounded-full border border-black/5",
-                        "bg-[var(--checkbox-background-color)]",
+                        "bg-(--checkbox-background-color)",
                         "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),inset_0_1px_2px_rgba(0,0,0,0.08)]",
                         "transition-all duration-200 ease-out",
                         "peer-focus-visible:shadow-[0_0_0_3px_rgba(10,132,255,0.22),inset_0_1px_0_rgba(255,255,255,0.98),0_0.5px_1px_rgba(0,0,0,0.16),0_3px_8px_rgba(0,0,0,0.08)]",
-                        "peer-checked:border-[var(--checkbox-active-color)]",
-                        "peer-checked:bg-[var(--checkbox-active-color)]",
+                        "peer-checked:border-(--checkbox-active-color)",
+                        "peer-checked:bg-(--checkbox-active-color)",
                         "peer-checked:shadow-[inset_0_0_0_1px_var(--checkbox-active-shadow-color)]",
                         "peer-disabled:bg-[#f1f1f3] peer-disabled:shadow-none",
                     ].filter(Boolean).join(" ")}
@@ -55,7 +55,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
                 <span
                     aria-hidden="true"
                     className={[
-                        "pointer-events-none absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-full bg-white",
+                        "pointer-events-none absolute left-0.5 top-0.5 h-[27px] w-[27px] rounded-full bg-white",
                         "shadow-[0_1px_3px_rgba(0,0,0,0.24),0_0.5px_1px_rgba(0,0,0,0.12)]",
                         "transition-transform duration-300 ease-in-out",
                         "peer-checked:translate-x-5"

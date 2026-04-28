@@ -39,7 +39,7 @@ const StringArray = forwardRef<HTMLUListElement | HTMLOListElement, StringArrayP
     const list_children = (
         <>
             {array.length === 0 &&
-                <li className="list-none rounded-[22px] bg-black/[0.025] px-3.5 py-3 text-[14px] text-black/48 dark:bg-white/[0.035] dark:text-white/48">
+                <li className="list-none rounded-[22px] bg-black/2.5 px-3.5 py-3 text-[14px] text-black/48 dark:bg-white/[0.035] dark:text-white/48">
                     {empty_text}
                 </li>}
 
@@ -48,7 +48,7 @@ const StringArray = forwardRef<HTMLUListElement | HTMLOListElement, StringArrayP
                     <li
                         key={`${text}-${index}`}
                         className={[
-                            "list-none rounded-[22px] border border-transparent bg-black/[0.025] px-3.5 py-3 text-[15px] font-medium leading-[1.25] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition duration-300 ease-in-out",
+                            "list-none rounded-[22px] border border-transparent bg-black/2.5 px-3.5 py-3 text-[15px] font-medium leading-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition duration-300 ease-in-out",
                             "dark:bg-white/[0.035] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
                             className,
                         ].filter(Boolean).join(" ")}
@@ -126,7 +126,7 @@ function ListToButtons({ list, callback }: ListToButtonsProps) {
                     <button
                         key={index}
                         className={item === selected_item ? `${highlight} ${item_base_style}` : item_base_style}
-                        onClick={event => {
+                        onClick={() => {
                             vibrate()
                             set_selected_item(item === selected_item ? null : item)
                             callback?.(item === selected_item ? null : item)
