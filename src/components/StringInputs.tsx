@@ -7,13 +7,12 @@ import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/Buttons"
 
-function StringInput({ default_value,callback,description, need_button, button_title, button_height, button_width, enable_auto_execution = true }: StringInputProps){
+function StringInput({ default_value,callback,description, need_button, button_title, button_height, button_width, enable_auto_execution = true, className = "" }: StringInputProps){
     const [is_collapsed,set_is_collapsed] = useState(false)
     return (
-        <div className="">
+        <div className={`${className}`}>
             {Boolean(need_button) && (
                 <NaiveButton
-                    className={"mb-2"}
                     width={button_width}
                     height={button_height}
                     icon={
@@ -41,22 +40,23 @@ function StringInput({ default_value,callback,description, need_button, button_t
                             callback(event.currentTarget.value || "")
                         }
                     }}
-                    className="focus:outline-none focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 transition-shadow duration-200 ease-in-out border border-black/20 dark:border-white/20 rounded-lg px-3 py-2 w-full"
+                    className="focus:outline-none focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 transition-shadow duration-300 ease-in-out border border-black/20 dark:border-white/20 rounded-lg px-3 py-2 w-full"
                 />
             </div>
         </div>
     )
 }
 
-function SearchWordInput({ callback }: SearchWordInputProps){
+function SearchWordInput({ callback,className = "", description = "" }: SearchWordInputProps){
+    description = description || "Search for something? "
     const input_ref = useRef<HTMLInputElement>(null)
     return (
-        <div className={`px-4 py-3 flex gap-2`}>
+        <div className={`flex gap-2 ${className}`}>
             <input
                 ref={input_ref}
                 type="text"
-                placeholder="Search for something? "
-                className="focus:outline-none focus:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out border border-black/20 dark:border-white/20 rounded-lg px-3 py-2 flex-1"
+                placeholder={description}
+                className="focus:outline-none focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 transition-shadow duration-300 ease-in-out border border-black/20 dark:border-white/20 rounded-lg px-3 py-2 flex-1"
                 onKeyDown={event => {
                     if (event.key === "Enter"){
                         event.currentTarget.blur()

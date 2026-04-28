@@ -265,7 +265,7 @@ function LabeledImage({
                         </div>}
 
                         {top_information && <div
-                            className={`absolute ${label_left ? "top-6" : "top-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${top_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden max-h-[48px] max-w-1/2`}
+                            className={`absolute ${label_left ? "top-6" : "top-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${top_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden max-h-12 max-w-1/2`}
                             onTouchEnd={event => {
                                 event.stopPropagation()
                             }}
@@ -274,7 +274,7 @@ function LabeledImage({
                         </div>}
 
                         {bottom_information && <div
-                            className={`absolute ${onClickDelete ? "bottom-6" : "bottom-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${bottom_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden  max-h-[16px] max-w-4/5`}
+                            className={`absolute ${onClickDelete ? "bottom-6" : "bottom-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${bottom_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden  max-h-4 max-w-4/5`}
                             onTouchEnd={event => {
                                 event.stopPropagation()
                             }}

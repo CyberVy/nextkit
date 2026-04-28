@@ -10,6 +10,7 @@ export type StringInputProps = {
     button_height?: string
     button_width?: string
     enable_auto_execution?: boolean
+    className?: string
 }
 
 export type ListToButtonsProps = {
@@ -52,6 +53,8 @@ export type ScrollButtonProps = {
 
 export type SearchWordInputProps = {
     callback: (word: string) => void
+    className?: string
+    description?: string
 }
 
 export type ButtonGroupProps = {

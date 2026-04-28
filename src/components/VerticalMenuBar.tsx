@@ -11,33 +11,55 @@ import {
 } from "react"
 
 type VerticalMenuBarItem = {
+    // Unique key for selection and React list rendering.
     key: string
+    // Primary text content shown in the menu row.
     label: ReactNode
+    // Optional secondary text shown below the label.
     description?: ReactNode
+    // Optional leading visual, typically an icon.
     icon?: ReactNode
+    // Optional badge shown on the right side, such as a count or status.
     badge?: ReactNode
+    // Optional trailing content, such as a chevron or shortcut hint.
     trailing?: ReactNode
+    // Prevents clicking and dims the visual state.
     disabled?: boolean
+    // Visual tone for the item. Destructive renders in red when not selected.
     tone?: "default" | "destructive"
+    // Per-item click handler invoked after the component-level onSelect.
     onClick?: () => void
 }
 
 type VerticalMenuBarSection = {
+    // Optional stable key for React list rendering.
     key?: string
+    // Optional section heading shown above the item list.
     title?: ReactNode
+    // Optional supporting text shown below the section title.
     caption?: ReactNode
+    // Items rendered inside this section.
     items: VerticalMenuBarItem[]
 }
 
 type VerticalMenuBarProps = Omit<ComponentPropsWithoutRef<"nav">, "children" | "onSelect"> & {
+    // Sectioned menu data rendered by the component.
     sections: VerticalMenuBarSection[]
+    // Currently selected item key for controlled selection.
     selected_key?: string
+    // Initial selected item key for uncontrolled selection.
     default_selected_key?: string
+    // Called when an item is selected. Receives the item key and item data.
     onSelect?: (key: string, item: VerticalMenuBarItem) => void
+    // Optional content rendered above the menu sections.
     header?: ReactNode
+    // Optional content rendered below the menu sections.
     footer?: ReactNode
+    // Reduces spacing and icon size for a denser layout.
     compact?: boolean
+    // Accent color used by the selected state.
     accent_color?: string
+    // Enables haptic feedback through vibrate() on selection.
     enable_vibration?: boolean
 }
 
@@ -101,7 +123,7 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
                     return (
                         <section
                             key={section.key || `${section_index}`}
-                            className="rounded-[24px] bg-black/[0.025] p-1.5 dark:bg-white/[0.035]"
+                            className="rounded-3xl bg-black/2.5 p-1.5 dark:bg-white/[0.035]"
                         >
                             {(section.title || section.caption) &&
                                 <div className="px-3 pb-2 pt-2">
@@ -134,7 +156,7 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
                                                 compact ? "gap-3 px-3 py-2.5" : "gap-3.5 px-3.5 py-3",
                                                 item.disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer",
                                                 is_selected
-                                                    ? "border border-[var(--vertical-menu-accent-border-color)] bg-[linear-gradient(180deg,var(--vertical-menu-accent-soft-color),color-mix(in_srgb,var(--vertical-menu-accent-color)_11%,transparent))] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_10px_22px_color-mix(in_srgb,var(--vertical-menu-accent-color)_15%,transparent)]"
+                                                    ? "border border-(--vertical-menu-accent-border-color) bg-[linear-gradient(180deg,var(--vertical-menu-accent-soft-color),color-mix(in_srgb,var(--vertical-menu-accent-color)_11%,transparent))] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_10px_22px_color-mix(in_srgb,var(--vertical-menu-accent-color)_15%,transparent)]"
                                                     : "border border-transparent hover:bg-white/72 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_8px_18px_rgba(15,23,42,0.08)] active:scale-[0.992] dark:hover:bg-white/[0.07] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_10px_20px_rgba(0,0,0,0.18)]",
                                             ].filter(Boolean).join(" ")}
                                         >
@@ -144,8 +166,8 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
                                                     "flex shrink-0 items-center justify-center rounded-[18px] border text-[currentColor] shadow-[inset_0_1px_0_rgba(255,255,255,0.20)] transition duration-300 ease-in-out",
                                                     compact ? "h-9 w-9" : "h-10 w-10",
                                                     is_selected
-                                                        ? "border-[var(--vertical-menu-accent-border-color)] bg-white/82 text-[var(--vertical-menu-accent-color)]"
-                                                        : "border-black/6 bg-white/72 text-black/68 dark:border-white/8 dark:bg-white/[0.05] dark:text-white/72",
+                                                        ? "border-(--vertical-menu-accent-border-color) bg-white/82 text-(--vertical-menu-accent-color)"
+                                                        : "border-black/6 bg-white/72 text-black/68 dark:border-white/8 dark:bg-white/5 dark:text-white/72",
                                                     is_destructive && !is_selected ? "text-[#ff3b30]" : "",
                                                 ].filter(Boolean).join(" ")}
                                             >
@@ -156,14 +178,14 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
                                                 <span
                                                     className={[
                                                         "block truncate text-[15px] font-semibold leading-[1.15]",
-                                                        is_selected ? "text-[var(--vertical-menu-accent-color)]" : "",
+                                                        is_selected ? "text-(--vertical-menu-accent-color)" : "",
                                                         is_destructive && !is_selected ? "text-[#ff3b30]" : "",
                                                     ].filter(Boolean).join(" ")}
                                                 >
                                                     {item.label}
                                                 </span>
                                                 {item.description &&
-                                                    <span className="mt-1 block truncate text-[12px] leading-[1.25] text-black/48 dark:text-white/48">
+                                                    <span className="mt-1 block truncate text-[12px] leading-tight text-black/48 dark:text-white/48">
                                                         {item.description}
                                                     </span>}
                                             </span>
@@ -175,14 +197,14 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
                                                             className={[
                                                                 "rounded-full px-2 py-1 text-[11px] font-semibold leading-none",
                                                                 is_selected
-                                                                    ? "bg-[var(--vertical-menu-accent-color)] text-white"
+                                                                    ? "bg-(--vertical-menu-accent-color) text-white"
                                                                     : "bg-black/6 text-black/55 dark:bg-white/8 dark:text-white/62",
                                                             ].filter(Boolean).join(" ")}
                                                         >
                                                             {item.badge}
                                                         </span>}
                                                     {item.trailing &&
-                                                        <span className="text-black/34 transition duration-300 ease-in-out group-hover:translate-x-[1px] dark:text-white/34">
+                                                        <span className="text-black/34 transition duration-300 ease-in-out group-hover:translate-x-px dark:text-white/34">
                                                             {item.trailing}
                                                         </span>}
                                                 </span>}
