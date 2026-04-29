@@ -102,3 +102,8 @@ This guide documents the current project structure and code style. It is for dev
 - Avoid unnecessary fallback mechanisms; this is a maintainable application, not a script.
 - Prefer minimal implementation over defensive coding by default.
 - For non-critical risks, add a concise comment about the caveat instead of implementing extra defensive branches unless explicitly requested.
+- If any Typescript files have been edited, run 
+  ```bash
+  npx tsc --noEmit
+  ```
+- If any Typescript/Javascript files have been edited, use eslint to check if they are acceptable.
