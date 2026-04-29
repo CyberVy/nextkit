@@ -1,4 +1,5 @@
 import version, { static_resource_cache_name } from "@/infra/version"
+import { CacheStorageItemController } from "@/infra/storage.client"
 
 export async function check_latest(){
     let is_latest = true
@@ -12,20 +13,22 @@ export async function check_latest(){
     for (const key of cache_keys){
         if (!key.startsWith(static_resource_cache_name)) continue
 
-        const cache = await caches.open(key)
-        const _keys = await cache.keys()
-        for (const _key of _keys){
-            if (new URL(_key.url).pathname === "/"){
-                const cached_index_html_response = await cache.match(_key)
+        const cache_controller = new CacheStorageItemController(key)
+        const _keys = await cache_controller.keys
+        if (_keys) {
+            for (const _key of _keys){
+                if (new URL(_key.url).pathname === "/"){
+                    const cached_index_html_response = await cache_controller.get(_key)
 
-                if (!cached_index_html_response) break
+                    if (!cached_index_html_response) break
 
-                if (latest_index_html_text !== await cached_index_html_response.text()){
-                    await caches.delete(key)
-                    is_latest = false
-                    console.log(`The static resource cache(${key}) is deleted.`)
+                    if (latest_index_html_text !== await cached_index_html_response.text()){
+                        await cache_controller.destroy()
+                        is_latest = false
+                        console.log(`The static resource cache(${key}) is deleted.`)
+                    }
+                    break
                 }
-                break
             }
         }
     }
@@ -61,14 +64,14 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
 
     const f = async () => {
         const latest_cache_key = `${static_resource_cache_name}-v${version}`
-        const static_resource_cache = await caches.open(latest_cache_key)
-        const cached = await static_resource_cache.match(event.request)
+        const static_resource_cache = new CacheStorageItemController(latest_cache_key)
+        const cached = await static_resource_cache.get(event.request)
         if (cached) {
             return cached
         }
         const response = await fetch(event.request)
         if (response.status === 200) {
-            await static_resource_cache.put(event.request, response.clone())
+            await static_resource_cache.set(event.request, response.clone())
         }
         return response
     }
