@@ -1,6 +1,7 @@
 import type { RefObject } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { is_ios_device } from "@/infra/device.client"
+import { LocalStorageItemController } from "@/infra/storage.client"
 
 /** root_margin: expands or shrinks the viewport area used by IntersectionObserver.
  *
@@ -117,23 +118,24 @@ export function useOptimizedRotation(){
 
     return hidden
 }
-export function useStateWithLocalStorage<T>(init_value: T,key: string): [T,((value: (T) | ((prev: T) => T)) => void)] {
+export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((value: (T) | ((prev: T) => T)) => void)] {
     const [state, set_state] = useState<T>(init_value)
+    const storage_controller = useRef(new LocalStorageItemController<T>(key)).current
     const render_counter_ref = useRef(0)
     render_counter_ref.current += 1
 
     useEffect(() => {
         if (render_counter_ref.current !== 1) return
 
-        const init_value_from_local_storage = localStorage.getItem(key)
-        if (typeof init_value_from_local_storage !== "string") return
-
-        if (typeof init_value !== "string"){
-            const init_value: T = JSON.parse(init_value_from_local_storage)
-            set_state(init_value)
+        let init_value_from_local_storage: T | null
+        if (typeof init_value !== "string") {
+            init_value_from_local_storage = storage_controller.get_object()
+        } else {
+            init_value_from_local_storage = storage_controller.get_item() as T | null
         }
-        else {
-            set_state(init_value_from_local_storage as T)
+
+        if (init_value_from_local_storage !== null) {
+            set_state(init_value_from_local_storage)
         }
     }, [])
 
@@ -141,32 +143,32 @@ export function useStateWithLocalStorage<T>(init_value: T,key: string): [T,((val
         if (render_counter_ref.current === 1) return
 
         if (state == undefined) {
-            localStorage.removeItem(key)
-        }
-        else {
-            if (typeof state !== "string"){
-                localStorage.setItem(key, JSON.stringify(state))
-            }
+            storage_controller.remove_item()
+        } else {
+            if (typeof state !== "string") {
+                storage_controller.set_object(state)
+            } 
             else {
-                localStorage.setItem(key,state)
+                storage_controller.set_item(state)
             }
         }
-    }, [key,state])
+    }, [key, state])
     return [state, set_state]
 }
-export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T,key: string): [RefObject<T>,(value: (T) | ((prev: T ) => T )) => void,T]{
+export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: string): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T] {
     const [state, set_state] = useState<T>(init_value)
     const state_ref = useRef<T>(init_value)
+    const storage_controller = useRef(new LocalStorageItemController<T>(key)).current
     const render_counter_ref = useRef(0)
     render_counter_ref.current += 1
 
-    const dispatch_func = (value: (T) | ((prev: T ) => T )) => {
-        if (typeof value !== "function"){
+    const dispatch_func = (value: (T) | ((prev: T) => T)) => {
+        if (typeof value !== "function") {
             set_state(value)
             state_ref.current = value
-        }
+        } 
         else {
-            const f = value as (prev: T ) => T
+            const f = value as (prev: T) => T
             const r = f(state_ref.current)
             set_state(r)
             state_ref.current = r
@@ -176,15 +178,16 @@ export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T,key: str
     useEffect(() => {
         if (render_counter_ref.current !== 1) return
 
-        const init_value_from_local_storage = localStorage.getItem(key)
-        if (typeof init_value_from_local_storage !== "string") return
-
-        if (typeof init_value !== "string"){
-            const init_value: T = JSON.parse(init_value_from_local_storage)
-            dispatch_func(init_value)
-        }
+        let init_value_from_local_storage: T | null
+        if (typeof init_value !== "string") {
+            init_value_from_local_storage = storage_controller.get_object()
+        } 
         else {
-            dispatch_func(init_value_from_local_storage as T)
+            init_value_from_local_storage = storage_controller.get_item() as T | null
+        }
+
+        if (init_value_from_local_storage !== null) {
+            dispatch_func(init_value_from_local_storage)
         }
     }, [])
 
@@ -192,17 +195,17 @@ export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T,key: str
         if (render_counter_ref.current === 1) return
 
         if (state == undefined) {
-            localStorage.removeItem(key)
-        }
+            storage_controller.remove_item()
+        } 
         else {
-            if (typeof state !== "string"){
-                localStorage.setItem(key, JSON.stringify(state))
-            }
+            if (typeof state !== "string") {
+                storage_controller.set_object(state)
+            } 
             else {
-                localStorage.setItem(key,state)
+                storage_controller.set_item(state)
             }
         }
-    }, [key,state])
+    }, [key, state])
 
-    return [state_ref,dispatch_func,state]
+    return [state_ref, dispatch_func, state]
 }
