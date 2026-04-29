@@ -71,9 +71,9 @@ export class CacheStorageItemController {
         this.cache_storage_name = name
         this.cache_storage = null
 
-        console.log(`CacheStorageStorage: ${name} initializing...`)
+        console.log(`CacheStorageItemController: ${name} initializing...`)
         this.ready_promise = this.get_cache_storage().then(() => {
-            console.log(`CacheStorageStorage: ${name} initialized.`)
+            console.log(`CacheStorageItemController: ${name} initialized.`)
         })
     }
 
