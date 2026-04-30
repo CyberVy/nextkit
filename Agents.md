@@ -1,7 +1,3 @@
-# Code Structure & Style Guide
-
-This guide documents the current project structure and code style. It is for developers and AI agents. Follow it strictly to keep new code consistent with this repo.
-
 ## Project Structure
 
 - `src/app/`: Next.js App Router entry points.
@@ -36,13 +32,13 @@ This guide documents the current project structure and code style. It is for dev
 
 ## Naming Conventions
 
-- Types, interfaces, classes, enums, and type aliases: `PascalCase` (e.g. `PlayerState`, `VideoData`, `WindowHubClient`).
-- React components: `PascalCase` filenames and exports (e.g. `Player.tsx`, `GlobalSettingButton`).
-- React component props types: component name plus `Props` in `PascalCase` (e.g. `PlayerProps`, `CheckboxProps`).
+- Types, interfaces, classes, enums, and type aliases: `PascalCase` (e.g. `PlayerState`).
+- React components: `PascalCase` filenames and exports (e.g. `GlobalSettingButton`).
+- React component props types: component name plus `Props` in `PascalCase` (e.g. `PlayerProps`).
 - Blocks: `PascalCase` filenames and exports under `src/blocks/`.
-- React hooks: `camelCase` names starting with `use` (e.g. `useWindowSize`, `useLatestValue`).
-- Functions and methods: `snake_case` (e.g. `get_playlist_id_from_url`, `sync_history_resources`).
-- Variables, parameters, refs, and state values: `snake_case` (e.g. `current_video_id`, `history_playlist_resources_ref`).
+- React hooks: `camelCase` names starting with `use` (e.g. `useWindowSize`).
+- Functions and methods: `snake_case` (e.g. `get_playlist_id_from_url`).
+- Variables, parameters, refs, and state values: `snake_case` (e.g. `current_video_id`).
 - Constants: `SCREAMING_SNAKE_CASE` for module-level immutable values (e.g. `DESKTOP_USER_AGENT`); use `snake_case` for local values.
 - Type imports: use `import type` when importing only types.
 - Path aliases: prefer `@/` for imports under `src/`.
@@ -52,58 +48,20 @@ This guide documents the current project structure and code style. It is for dev
 - `src/components/` must not depend on `src/blocks/`.
 - `src/blocks/` may depend on `src/components/`, `src/core/`, and `src/infra/`.
 - `src/app/` is responsible for route entry points and composing blocks.
-- Keep business UI out of `src/components/`; place it in `src/blocks/`.
+- Keep business UI out of `src/components/`, place it in `src/blocks/`.
 
-## Formatting and Style
-
-- Indentation: 4 spaces.
-- Quotes: double quotes for strings.
-- Semicolons: generally omitted in `src/` files; follow local file style if different.
-- Trailing commas: mixed; keep existing style in the file you edit.
-- Spacing: keep current patterns, including compact object/array spacing (e.g. `{width,height}`).
-- Comments: use sparingly, only for non-obvious logic or warnings.
-
-## React and TypeScript
-
-- Default to function components and hooks.
-- Client components must start with `"use client"` at the top of the file.
-- Keep state and refs in snake_case.
-- Prefer `useCallback` for callbacks passed to children.
-- Keep TypeScript `strict` compatibility; do not disable type checks.
-- Avoid reformatting; preserve local patterns when touching a file.
-
-## Styling
-
-- Tailwind CSS is used via `@import "tailwindcss";` in `src/app/globals.css`.
-- Components mix Tailwind utility classes with inline styles when needed.
-- Global theme variables live in `:root` and `@theme inline`.
-- Keep className strings intact; avoid re-ordering classes unless necessary.
-
-## Service Worker
-
-- Source lives under `src/sw/`.
-- Built/served SW entry is `public/sw.js`.
-- Avoid direct edits to generated assets unless explicitly required.
-
-## AI-Specific Rules (Must Follow)
+## Base Rules
 
 - Match existing naming, formatting, and import style in every file.
-- Do not introduce new conventions (e.g. camelCase variables in a snake_case file).
-- Preserve file-local style even if it differs from other files.
 - Keep edits minimal and targeted; avoid sweeping reformatting.
-- Use `@/` imports for `src/` modules unless the file already uses relative paths.
-- Do not add new dependencies unless necessary; always try to reuse existing interfaces, especially under `src/infra/`.
+- Do not add new dependencies unless necessary; always try to reuse existing interfaces.
 - If no suitable interface exists, inform the developer and request adding one.
 - If the interface is simple, you may design it yourself.
 - If the interface is complex and would require external dependencies, evaluate the dependency for stability, maintainability, and code quality first.
 - If no suitable dependency exists and the interface is important, design it cautiously and explicitly inform the developer; only proceed to output code after developer approval.
 - Prioritize human readability: keep logic simple, direct, and minimal.
 - Do not add verbose or convoluted logic just to make code "work".
-- Avoid unnecessary fallback mechanisms; this is a maintainable application, not a script.
-- Prefer minimal implementation over defensive coding by default.
-- For non-critical risks, add a concise comment about the caveat instead of implementing extra defensive branches unless explicitly requested.
-- If any Typescript files have been edited, run 
-  ```bash
-  npx tsc --noEmit
-  ```
-- If any Typescript/Javascript files have been edited, use eslint to check if they are acceptable.
+- Avoid unnecessary fallback mechanisms.
+- Prefer minimal implementation over defensive coding.
+- If any files have been edited, use related tools to check if the edits are valid and acceptable
+(e.g. `tsc`, `tsx`, `eslint`, `cargo`, `pyright`, `pylint`, `python`, `node`)
