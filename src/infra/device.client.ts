@@ -3,8 +3,7 @@ export function is_apple_device(){
         return false
     }
     const user_agent = navigator.userAgent.toLowerCase()
-    return (user_agent.includes("iphone") || user_agent.includes("ipad") || user_agent.includes("macintosh") || user_agent.includes("applewebkit"))
-        && !(user_agent.includes("windows") || user_agent.includes("linux") || user_agent.includes("cros"))
+    return (user_agent.includes("iphone") || user_agent.includes("ipad") || user_agent.includes("macintosh"))
 }
 
 export function is_touch_device(){
@@ -41,10 +40,7 @@ export function is_ipad(){
     if (typeof window === "undefined") {
         return false
     }
-    const user_agent = navigator.userAgent.toLowerCase()
-    const mobile_ua = user_agent.includes("ipad")
-    const desk_ua = user_agent.includes("macintosh") && (("ontouchend" in document) || navigator.maxTouchPoints > 0)
-    return mobile_ua || desk_ua
+    return navigator.userAgent.toLowerCase().includes("ipad") || (navigator.userAgent.toLowerCase().includes("macintosh") && is_touch_device())
 }
 
 export function is_in_pwa(){
