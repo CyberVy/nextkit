@@ -59,7 +59,11 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
 
 
     if (is_in_native() && !cors_proxy){
-        return await invoke("fetch", { req: { url: url, headers: headers_record, method: request_method } }) as {body:string, headers:HeadersInit, status:number}
+        const native_response = await invoke("fetch", { req: { url: url, headers: headers_record, method: request_method } }) as {body:string, headers:HeadersInit, status:number}
+        return new Response(native_response.body, {
+            status: native_response.status,
+            headers: native_response.headers
+        })
     }
     else {
 
