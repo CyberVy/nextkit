@@ -12,7 +12,7 @@ type CheckboxProps = Omit<ComponentPropsWithoutRef<"input">, "type"> & {
 }
 
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-    { background_color = "#e9e9ea", picker_color = "#34c759", children, disabled, ...props }, ref) {
+    { background_color = "#e9e9ea", picker_color = "#34c759", children, disabled, ...props }, ref){
     return (
         <label
             className={[

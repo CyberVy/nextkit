@@ -16,7 +16,7 @@ type UseInViewportOptions = {
     initial_in_view?: boolean
 }
 
-function get_root_margin(root_margin: number | string) {
+function get_root_margin(root_margin: number | string){
     if (typeof root_margin === "number") return `${root_margin}px`
 
     return root_margin
@@ -29,7 +29,7 @@ export function useInViewport<T extends HTMLElement>({
     protected_padding = 0,
     threshold = 0,
     initial_in_view = true,
-}: UseInViewportOptions = {}) {
+}: UseInViewportOptions = {}){
     const [element, set_element] = useState<T | null>(null)
     const [in_view, set_in_view] = useState(initial_in_view)
     const ref = useCallback((next_element: T | null) => {
@@ -66,7 +66,7 @@ export function useInViewport<T extends HTMLElement>({
 }
 
 // create an auto sync state and ref object
-export function useAutoSyncRefAndState<T>(value: T): [RefObject<T>,(value: T | ((prev: T) => T)) => void,T] {
+export function useAutoSyncRefAndState<T>(value: T): [RefObject<T>, (value: T | ((prev: T) => T)) => void, T]{
     const [state, set_state] = useState(value)
     const state_ref = useRef(value)
     const dispatch_func = (value: T | ((prev: T) => T)) => {
@@ -81,7 +81,7 @@ export function useAutoSyncRefAndState<T>(value: T): [RefObject<T>,(value: T | (
             state_ref.current = r
         }
     }
-    return [state_ref,dispatch_func,state]
+    return [state_ref, dispatch_func, state]
 }
 
 // beta feature
@@ -109,16 +109,16 @@ export function useOptimizedRotation(){
                 // a rotation action is detected, update the is_portrait state
                 is_portrait = !is_portrait
                 set_hidden(true)
-                setTimeout(() => set_hidden(false),200)
+                setTimeout(() => set_hidden(false), 200)
             }
-            window.addEventListener("resize",resize_callback)
-            return () => window.removeEventListener("resize",resize_callback)
+            window.addEventListener("resize", resize_callback)
+            return () => window.removeEventListener("resize", resize_callback)
         }
     }, [])
 
     return hidden
 }
-export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((value: (T) | ((prev: T) => T)) => void)] {
+export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((value: (T) | ((prev: T) => T)) => void)]{
     const [state, set_state] = useState<T>(init_value)
     const storage_controller = useRef(new LocalStorageItemController<T>(key)).current
     const render_counter_ref = useRef(0)
@@ -128,13 +128,14 @@ export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((v
         if (render_counter_ref.current !== 1) return
 
         let init_value_from_local_storage: T | null
-        if (typeof init_value !== "string") {
+        if (typeof init_value !== "string"){
             init_value_from_local_storage = storage_controller.get_object()
-        } else {
+        }
+        else {
             init_value_from_local_storage = storage_controller.get_item() as T | null
         }
 
-        if (init_value_from_local_storage !== null) {
+        if (init_value_from_local_storage !== null){
             set_state(init_value_from_local_storage)
         }
     }, [])
@@ -142,10 +143,11 @@ export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((v
     useEffect(() => {
         if (render_counter_ref.current === 1) return
 
-        if (state == undefined) {
+        if (state == undefined){
             storage_controller.remove_item()
-        } else {
-            if (typeof state !== "string") {
+        }
+        else {
+            if (typeof state !== "string"){
                 storage_controller.set_object(state)
             } 
             else {
@@ -155,7 +157,7 @@ export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((v
     }, [key, state])
     return [state, set_state]
 }
-export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: string): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T] {
+export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: string): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
     const [state, set_state] = useState<T>(init_value)
     const state_ref = useRef<T>(init_value)
     const storage_controller = useRef(new LocalStorageItemController<T>(key)).current
@@ -163,7 +165,7 @@ export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: st
     render_counter_ref.current += 1
 
     const dispatch_func = (value: (T) | ((prev: T) => T)) => {
-        if (typeof value !== "function") {
+        if (typeof value !== "function"){
             set_state(value)
             state_ref.current = value
         } 
@@ -179,14 +181,14 @@ export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: st
         if (render_counter_ref.current !== 1) return
 
         let init_value_from_local_storage: T | null
-        if (typeof init_value !== "string") {
+        if (typeof init_value !== "string"){
             init_value_from_local_storage = storage_controller.get_object()
         } 
         else {
             init_value_from_local_storage = storage_controller.get_item() as T | null
         }
 
-        if (init_value_from_local_storage !== null) {
+        if (init_value_from_local_storage !== null){
             dispatch_func(init_value_from_local_storage)
         }
     }, [])
@@ -194,11 +196,11 @@ export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: st
     useEffect(() => {
         if (render_counter_ref.current === 1) return
 
-        if (state == undefined) {
+        if (state == undefined){
             storage_controller.remove_item()
         } 
         else {
-            if (typeof state !== "string") {
+            if (typeof state !== "string"){
                 storage_controller.set_object(state)
             } 
             else {

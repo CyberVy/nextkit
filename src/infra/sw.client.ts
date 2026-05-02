@@ -1,16 +1,16 @@
 import { is_service_worker_available } from "@/infra/device.client"
 
-export function send_response_to_service_worker(url: string, content: string, headers: Record<string, string>,description: string){
+export function send_response_to_service_worker(url: string, content: string, headers: Record<string, string>, description: string){
     if (!is_service_worker_available()){
         return
     }
     const channel = new MessageChannel()
     navigator.serviceWorker.controller?.postMessage({
         url: decodeURI(url),
-        content:content,
+        content: content,
         headers: headers,
         description: description
-    },[channel.port2])
+    }, [channel.port2])
 
 
     return new Promise<boolean>((resolve) => {

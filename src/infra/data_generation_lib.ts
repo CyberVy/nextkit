@@ -10,7 +10,7 @@ type PendingHtmlOptions = {
     icon?: PendingHtmlIcon
 }
 
-export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000) {
+export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000){
 
     const numChannels = 1
     const bitsPerSample = 16
@@ -45,7 +45,7 @@ export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000) {
     return "data:audio/wav;base64," + buffer.toString("base64")
 }
 
-export function generate_cover_image(title: string, options:CoverImageOptions) {
+export function generate_cover_image(title: string, options:CoverImageOptions){
     const {
         width = 1024,
         height = 720,
@@ -77,16 +77,17 @@ export function generate_cover_image(title: string, options:CoverImageOptions) {
 
     return new Promise<string>(resolve => {
         canvas.toBlob(blob => {
-            if (blob) {
+            if (blob){
                 resolve(URL.createObjectURL(blob))
-            } else {
+            }
+            else {
                 resolve("")
             }
         }, "image/png")
     })
 }
 
-function escape_html(text: string) {
+function escape_html(text: string){
     return text
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -95,19 +96,19 @@ function escape_html(text: string) {
         .replaceAll("'", "&#39;")
 }
 
-function escape_html_with_line_break(text: string) {
+function escape_html_with_line_break(text: string){
     return escape_html(text).replaceAll("\n", "<br>")
 }
 
-function generate_pending_html_icon(icon: PendingHtmlIcon) {
-    if (icon === "search") {
+function generate_pending_html_icon(icon: PendingHtmlIcon){
+    if (icon === "search"){
         return `
             <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2" fill="none" />
                 <path d="M15 15L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>`
     }
-    if (icon === "clipboard") {
+    if (icon === "clipboard"){
         return `
             <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <rect x="7" y="5" width="10" height="15" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none" />
@@ -115,7 +116,7 @@ function generate_pending_html_icon(icon: PendingHtmlIcon) {
                 <rect x="9" y="2.5" width="6" height="4" rx="1.5" ry="1.5" stroke="currentColor" stroke-width="2" fill="none" />
             </svg>`
     }
-    if (icon === "chat") {
+    if (icon === "chat"){
         return `
             <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M6 18L4 20V6C4 4.9 4.9 4 6 4H18C19.1 4 20 4.9 20 6V16C20 17.1 19.1 18 18 18H6Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" />
@@ -123,7 +124,7 @@ function generate_pending_html_icon(icon: PendingHtmlIcon) {
                 <path d="M8 13H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>`
     }
-    if (icon === "external_link") {
+    if (icon === "external_link"){
         return `
             <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M14 5H19V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
@@ -131,7 +132,7 @@ function generate_pending_html_icon(icon: PendingHtmlIcon) {
                 <path d="M19 13V18C19 19.1 18.1 20 17 20H6C4.9 20 4 19.1 4 18V7C4 5.9 4.9 5 6 5H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
             </svg>`
     }
-    if (icon === "none") {
+    if (icon === "none"){
         return ""
     }
 
@@ -142,7 +143,7 @@ function generate_pending_html_icon(icon: PendingHtmlIcon) {
         </svg>`
 }
 
-export function generate_pending_html({ title, message, note = "", icon = "loading" }: PendingHtmlOptions) {
+export function generate_pending_html({ title, message, note = "", icon = "loading" }: PendingHtmlOptions){
 
     const background_color = is_in_dark() ? "#000000" : "#FFFFFF"
     const text_color = is_in_dark() ? "#EEEEEE" : "#000000"

@@ -9,7 +9,7 @@ const WEB_URL = "/"
 
 // This is an entry for native app, which can clear the default flicker.
 export default function Page(){
-    const [in_native,set_in_native] = useState(true)
+    const [in_native, set_in_native] = useState(true)
 
     useLayoutEffect(() => {
         if (is_in_native()){
@@ -18,7 +18,7 @@ export default function Page(){
 
             location.replace(url)
         }
-    },[])
+    }, [])
     useEffect(() => {
         set_in_native(is_in_native())
         if (!is_in_native()) return

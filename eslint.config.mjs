@@ -113,6 +113,22 @@ export default defineConfig([{
             singleline: "forbid"
         }],
         "local/jsx-text-indent": ["warn", 4],
-        semi: ["warn", "never"]
+        semi: ["warn", "never"],
+        "object-curly-spacing": ["warn", "always"],
+        "key-spacing": ["warn", {
+            afterColon: true
+        }],
+        "comma-spacing": ["warn", {
+            before: false,
+            after: true
+        }],
+        "space-before-blocks": ["warn", "never"],
+        "brace-style": ["warn", "stroustrup", {
+            allowSingleLine: true
+        }],
+        "arrow-spacing": ["warn", {
+            before: true,
+            after: true
+        }]
     }
 }]);

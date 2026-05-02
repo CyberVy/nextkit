@@ -1,16 +1,16 @@
 import { invoke } from "@tauri-apps/api/core"
 import { listen } from "@tauri-apps/api/event"
 import type {
-    WindowHubIncomingEnvelope,WindowHubMessageHandler,
-    WindowHubMessenger,WindowHubSendOptions,
+    WindowHubIncomingEnvelope, WindowHubMessageHandler,
+    WindowHubMessenger, WindowHubSendOptions,
 } from "@/infra/window_hub.types"
 import { is_in_native } from "./device.client"
 
 const WINDOW_HUB_EVENT = "window-hub:message"
 
-function normalize_id(id: string, field_name: "id" | "target_id") {
+function normalize_id(id: string, field_name: "id" | "target_id"){
     const normalized_id = id.trim()
-    if (!normalized_id) {
+    if (!normalized_id){
         throw new Error(`${field_name} can not be empty`)
     }
     return normalized_id
@@ -32,8 +32,8 @@ function normalize_id(id: string, field_name: "id" | "target_id") {
  * await messenger.close()
  * ```
  */
-export async function register<TData = unknown>(id: string): Promise<WindowHubMessenger<TData>> {
-    if (!is_in_native()) {
+export async function register<TData = unknown>(id: string): Promise<WindowHubMessenger<TData>>{
+    if (!is_in_native()){
         throw new Error("window hub is only available in native context")
     }
 
@@ -46,12 +46,12 @@ export async function register<TData = unknown>(id: string): Promise<WindowHubMe
     let remove_lifecycle_listeners: (() => void) | null = null
 
     const ensure_listening = () => {
-        if (ensure_listening_promise) {
+        if (ensure_listening_promise){
             return ensure_listening_promise
         }
 
         ensure_listening_promise = listen<WindowHubIncomingEnvelope<TData>>(WINDOW_HUB_EVENT, event => {
-            if (event.payload?.receiver_id !== normalized_id) {
+            if (event.payload?.receiver_id !== normalized_id){
                 return
             }
 
@@ -64,7 +64,7 @@ export async function register<TData = unknown>(id: string): Promise<WindowHubMe
     }
 
     const setup_lifecycle_unload = () => {
-        if (remove_lifecycle_listeners) {
+        if (remove_lifecycle_listeners){
             return
         }
 
@@ -89,7 +89,7 @@ export async function register<TData = unknown>(id: string): Promise<WindowHubMe
         remove_lifecycle_listeners?.()
         remove_lifecycle_listeners = null
 
-        if (ensure_listening_promise) {
+        if (ensure_listening_promise){
             const unlisten = await ensure_listening_promise
             unlisten()
             ensure_listening_promise = null
@@ -103,7 +103,7 @@ export async function register<TData = unknown>(id: string): Promise<WindowHubMe
 
     return {
         send: async (target_id: string, data: TData, _options?: WindowHubSendOptions) => {
-            if (closed) {
+            if (closed){
                 throw new Error(`messenger(${normalized_id}) is closed`)
             }
             void _options
@@ -115,7 +115,7 @@ export async function register<TData = unknown>(id: string): Promise<WindowHubMe
             })
         },
         onMessage: (handler: WindowHubMessageHandler<TData>) => {
-            if (closed) {
+            if (closed){
                 throw new Error(`messenger(${normalized_id}) is closed`)
             }
             handlers.add(handler)

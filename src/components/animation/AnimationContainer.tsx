@@ -16,7 +16,7 @@ function AnimationContainer({
     enter_from, enter_to, exit_from, exit_to,
     on_enter_start, on_enter_end, on_exit_start, on_exit_end,
     unmount_on_exit = false, animate_on_mount = true
-}: AnimationContainerProps) {
+}: AnimationContainerProps){
 
     const element_ref = useRef<HTMLDivElement>(null)
     const animation_ref = useRef<Animation | null>(null)
@@ -34,7 +34,7 @@ function AnimationContainer({
 
     useEffect(() => {
         if (show){
-            if (render_mode === "pending") {
+            if (render_mode === "pending"){
                 if (animate_on_mount){
                     set_render_mode("entering")
                 }
@@ -46,7 +46,7 @@ function AnimationContainer({
             else if (render_mode === "entering"){ return }
             else if (render_mode === "visible"){ return }
             else if (render_mode === "exiting_to_hidden"){ set_render_mode("entering") }
-            else if (render_mode === "hidden") { set_render_mode("entering") }
+            else if (render_mode === "hidden"){ set_render_mode("entering") }
             else if (render_mode === "exiting_to_unmount"){ set_render_mode("entering") }
             else if (render_mode === "unmount"){ set_render_mode("entering")}
         }
@@ -55,7 +55,7 @@ function AnimationContainer({
             else if (render_mode === "entering"){ set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden") }
             else if (render_mode === "visible"){ set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden") }
             else if (render_mode === "exiting_to_hidden"){ return }
-            else if (render_mode === "hidden") { return }
+            else if (render_mode === "hidden"){ return }
             else if (render_mode === "exiting_to_unmount"){ return}
             else if (render_mode === "unmount"){ return }
         }
@@ -91,7 +91,7 @@ function AnimationContainer({
 
             animation_ref.current = null
 
-            if (show) {
+            if (show){
                 on_enter_end?.()
                 set_render_mode("visible")
             }
@@ -107,21 +107,21 @@ function AnimationContainer({
         }).catch(() => {})
 
         return () => {
-            if (animation_ref.current === animation) {
+            if (animation_ref.current === animation){
                 animation_ref.current = null
             }
             animation.cancel()
         }
     }, [show])
 
-    if (!["hidden", "unmount"].includes(render_mode) || show) {
+    if (!["hidden", "unmount"].includes(render_mode) || show){
         return (
             <div ref={element_ref} className={className} style={style}>
                 {children}
             </div>
         )
     }
-    else if (render_mode === "hidden") {
+    else if (render_mode === "hidden"){
         return (
             <div ref={element_ref} className={className} style={style} hidden={true}>
                 {children}

@@ -81,7 +81,7 @@ function ButtonGroup({
     className
 }: ButtonGroupProps){
     const should_show_selected_state = enable_selected_border == undefined ? true : enable_selected_border
-    const [selected_index,set_selected_index] = useState(default_selected_index ?? -1)
+    const [selected_index, set_selected_index] = useState(default_selected_index ?? -1)
 
     return (
         <div
@@ -108,7 +108,7 @@ function ButtonGroup({
                 "--button-group-selected-text-color-dark": selected_text_color_dark,
             } as CSSProperties}
         >
-            {button_icons.map((icon,index) => {
+            {button_icons.map((icon, index) => {
                 const is_selected = should_show_selected_state && selected_index === index
 
                 return (
@@ -124,7 +124,7 @@ function ButtonGroup({
                         key={index}
                         onClick={() => {
                             vibrate()
-                            if (index !== selected_index) {
+                            if (index !== selected_index){
                                 set_selected_index(index)
                                 callbacks?.[index]?.()
                             }
