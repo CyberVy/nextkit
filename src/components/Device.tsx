@@ -14,18 +14,18 @@ function Device(){
 
     const [ua, set_ua] = useState("")
     const [is_touch_device, set_is_touch_device] = useState(false)
-    const [client_width,set_client_width] = useState(0)
-    const [client_height,set_client_height] = useState(0)
-    const [is_in_pwa,set_is_in_pwa] = useState(false)
-    const [is_in_webview,set_is_in_webview] = useState(false)
-    const [is_service_worker_available,set_is_service_worker_available] = useState(true)
-    const [is_in_native,set_is_in_native] = useState(false)
+    const [client_width, set_client_width] = useState(0)
+    const [client_height, set_client_height] = useState(0)
+    const [is_in_pwa, set_is_in_pwa] = useState(false)
+    const [is_in_webview, set_is_in_webview] = useState(false)
+    const [is_service_worker_available, set_is_service_worker_available] = useState(true)
+    const [is_in_native, set_is_in_native] = useState(false)
     useEffect(() => {
         set_ua(navigator.userAgent)
         set_is_touch_device(_is_touch_device())
         set_client_width(document.documentElement.clientWidth)
         set_client_height(document.documentElement.clientHeight)
-        window.addEventListener("resize",() => {
+        window.addEventListener("resize", () => {
             set_client_width(document.documentElement.clientWidth)
             set_client_height(document.documentElement.clientHeight)
         })

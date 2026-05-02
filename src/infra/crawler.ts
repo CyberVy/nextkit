@@ -2,7 +2,7 @@ import { NestedRecordValue } from "@/infra/types"
 import { is_in_native } from "@/infra/device.client"
 import { invoke } from "@tauri-apps/api/core"
 
-export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:string): NestedRecordValue<T>[] {
+export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:string): NestedRecordValue<T>[]{
     const r: NestedRecordValue<T>[]  = []
     function visit(node: NestedRecordValue<T>){
 
@@ -27,7 +27,7 @@ export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:st
     return r
 }
 
-export async function smart_fetch(input : string | URL | Request,init?: RequestInit, cors_proxy = ""){
+export async function smart_fetch(input : string | URL | Request, init?: RequestInit, cors_proxy = ""){
 
     let url: string = ""
     let headers: Headers = new Headers()
@@ -52,14 +52,14 @@ export async function smart_fetch(input : string | URL | Request,init?: RequestI
         headers.set("user-agent", navigator.userAgent)
     }
 
-    const headers_record: Record<string,string | number> = {}
-    headers.forEach((v,k) => {
+    const headers_record: Record<string, string | number> = {}
+    headers.forEach((v, k) => {
         headers_record[k] = v
     })
 
 
     if (is_in_native() && !cors_proxy){
-        return await invoke("fetch",{req: {url: url,headers:headers_record,method:request_method}}) as {body:string, headers:HeadersInit, status:number}
+        return await invoke("fetch", { req: { url: url, headers: headers_record, method: request_method } }) as {body:string, headers:HeadersInit, status:number}
     }
     else {
 
@@ -68,7 +68,7 @@ export async function smart_fetch(input : string | URL | Request,init?: RequestI
                 init.credentials = "include"
             }
             else {
-                init = new Request(url,{credentials: "include"})
+                init = new Request(url, { credentials: "include" })
             }
             return await fetch(`${cors_proxy}${url}`, init)
         }

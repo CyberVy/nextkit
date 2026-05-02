@@ -5,18 +5,18 @@ import { is_in_browser } from "@/infra/device.client"
 import { ScrollToBottomButton, ScrollToTopButton } from "@/components/FixedScrollButtons"
 
 const FullscreenModalContainer = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & {enable_scroll_button?: boolean}>(
-    function FullscreenModalContainer({ className = "", children, enable_scroll_button = false, ...props }, ref) {
+    function FullscreenModalContainer({ className = "", children, enable_scroll_button = false, ...props }, ref){
 
-        const [in_browser,set_in_browser] = useState(true)
+        const [in_browser, set_in_browser] = useState(true)
         const container_ref = useRef<HTMLDivElement | null>(null)
 
         const set_container_ref = useCallback((node: HTMLDivElement | null) => {
             container_ref.current = node
-            if (typeof ref === "function") {
+            if (typeof ref === "function"){
                 ref(node)
                 return
             }
-            if (ref) {
+            if (ref){
                 ref.current = node
             }
         }, [ref])
@@ -61,7 +61,7 @@ export { FullscreenModalContainer }
 
 
 const FloatingModalContainer = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
-    function FloatingModalContainer({ className = "", children,...props }, ref) {
+    function FloatingModalContainer({ className = "", children, ...props }, ref){
         return (
             <div
                 ref={ref}

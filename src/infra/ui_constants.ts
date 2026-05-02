@@ -23,7 +23,7 @@ export const string_icons = {
     right_double_arrow: "≫",
     left_dashed_arrow: "⇠",
     right_dashed_arrow: "⇢",
-    expand:"⛶",
+    expand: "⛶",
     target: "⌖"
 }
 

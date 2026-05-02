@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react"
 
-const AnimatedGlowText = ({ text = "Hello World", duration = 1.8, stagger = 0.06, tailwind_cls_for_string_item = ""}) => {
-    const [text_list,set_text_list] = useState<string[]>([])
+const AnimatedGlowText = ({ text = "Hello World", duration = 1.8, stagger = 0.06, tailwind_cls_for_string_item = "" }) => {
+    const [text_list, set_text_list] = useState<string[]>([])
     // some complicated CSS styles (e.g. animation styles) can not appear in the initial html for iOS PWA.
     // because a webkit bug can cause a brief flicker sometimes, especially for some low-end device
     // the resolution is rendering this component within useEffect
     useEffect(() => {
         set_text_list(text.split(""))
-    },[text])
+    }, [text])
 
     return (
         <div className="inline">

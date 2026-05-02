@@ -12,14 +12,14 @@ import { FullscreenModalContainer } from "@/components/ModalContainer"
 import { VerticalMenuBar } from "@/components/VerticalMenuBar"
 import { AnimationContainer } from "@/components/animation/AnimationContainer"
 
-function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number,number]): [number,number] {
+function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number, number]): [number, number]{
     const safe_padding = 12
     const max_x = Math.max(safe_padding, window.innerWidth - context_menu_element.offsetWidth - safe_padding)
     const max_y = Math.max(safe_padding, window.innerHeight - context_menu_element.offsetHeight - safe_padding)
     const next_x = Math.min(Math.max(context_menu_point[0], safe_padding), max_x)
     const next_y = Math.min(Math.max(context_menu_point[1], safe_padding), max_y)
 
-    return [next_x,next_y]
+    return [next_x, next_y]
 }
 
 
@@ -46,32 +46,32 @@ function LabeledImage({
     image_className,
     className,
     ...props
-}: LabeledImageProps) {
-    const [is_ios,set_is_ios] = useState(false)
-    const [is_loaded,set_is_loaded] = useState(false)
-    const [show_description,set_show_description] = useState(false)
-    const [fallback_blob_url,set_fallback_blob_url] = useState("")
-    const [show_context_menu,set_show_context_menu] = useState(false)
-    const [context_menu_point,set_context_menu_point] = useState<[number,number]>([0,0])
-    const [context_menu_render_point,set_context_menu_render_point] = useState<[number,number]>([0,0])
-    const {ref: intersection_div_ref, in_view} = useInViewport<HTMLDivElement>({
+}: LabeledImageProps){
+    const [is_ios, set_is_ios] = useState(false)
+    const [is_loaded, set_is_loaded] = useState(false)
+    const [show_description, set_show_description] = useState(false)
+    const [fallback_blob_url, set_fallback_blob_url] = useState("")
+    const [show_context_menu, set_show_context_menu] = useState(false)
+    const [context_menu_point, set_context_menu_point] = useState<[number, number]>([0, 0])
+    const [context_menu_render_point, set_context_menu_render_point] = useState<[number, number]>([0, 0])
+    const { ref: intersection_div_ref, in_view } = useInViewport<HTMLDivElement>({
         enabled: clear_margin != undefined,
         root: intersection_root_element,
         root_margin: clear_margin ?? 0,
         protected_padding: protected_padding ?? 0,
         initial_in_view: clear_margin == undefined,
     })
-    const [img_size, set_img_size] = useState([0,0])
+    const [img_size, set_img_size] = useState([0, 0])
     const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
     const resolved_src = fallback_blob_url || requested_src || undefined
     const has_context_menu = Boolean(context_menu?.sections.length)
 
     const context_menu_enter_from = useMemo(() => {
-        return {transform:"scale(0.0)"}
+        return { transform: "scale(0.0)" }
     }, [])
 
     const context_menu_enter_to = useMemo(() => {
-        return {transform:"scale(1.0)"}
+        return { transform: "scale(1.0)" }
     }, [])
 
     const close_context_menu = useCallback(() => {
@@ -81,8 +81,8 @@ function LabeledImage({
     const open_context_menu = useCallback((client_x: number, client_y: number) => {
         if (!has_context_menu) return
 
-        set_context_menu_point([client_x,client_y])
-        set_context_menu_render_point([client_x,client_y])
+        set_context_menu_point([client_x, client_y])
+        set_context_menu_render_point([client_x, client_y])
         set_show_context_menu(true)
     }, [has_context_menu])
 
@@ -149,7 +149,7 @@ function LabeledImage({
             return
         }
 
-        generate_cover_image(alt || "",{}).then(url => {
+        generate_cover_image(alt || "", {}).then(url => {
             if (ignore){
                 URL.revokeObjectURL(url)
                 return
@@ -202,7 +202,7 @@ function LabeledImage({
                     event.preventDefault()
                 }}
             >
-                {!in_view && <img alt="" style={{visibility:"hidden",width: img_size[0],height:img_size[1]}}/>}
+                {!in_view && <img alt="" style={{ visibility: "hidden", width: img_size[0], height: img_size[1] }}/>}
                 {in_view &&
                     <>
                         <img
@@ -212,13 +212,13 @@ function LabeledImage({
                             className={`${image_className || ""} w-full h-full object-cover [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
                             onLoad={event => {
                                 set_is_loaded(true)
-                                set_img_size([event.currentTarget.width,event.currentTarget.height])
+                                set_img_size([event.currentTarget.width, event.currentTarget.height])
                                 image_props?.onLoad?.(event)
                             }}
                             onError={async event => {
                                 image_props?.onError?.(event)
                                 if (src && alt && in_view && !fallback_blob_url){
-                                    await generate_cover_image(alt,{}).then(set_fallback_blob_url)
+                                    await generate_cover_image(alt, {}).then(set_fallback_blob_url)
                                 }
                                 set_is_loaded(true)
                             }}

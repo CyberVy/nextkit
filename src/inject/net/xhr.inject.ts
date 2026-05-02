@@ -3,7 +3,7 @@ import type {
     XhrInterceptResponse
 } from "@/inject/net/types"
 
-function define_intercepted_xhr_property(xhr: XMLHttpRequest, key: PropertyKey, value: unknown) {
+function define_intercepted_xhr_property(xhr: XMLHttpRequest, key: PropertyKey, value: unknown){
     Object.defineProperty(xhr, key, {
         configurable: true,
         enumerable: true,
@@ -12,16 +12,16 @@ function define_intercepted_xhr_property(xhr: XMLHttpRequest, key: PropertyKey, 
     })
 }
 
-function normalize_header_name(header_name: string) {
+function normalize_header_name(header_name: string){
     return header_name.toLowerCase()
 }
 
-function extract_xhr_headers(xhr: XMLHttpRequest) {
+function extract_xhr_headers(xhr: XMLHttpRequest){
     const raw_headers = xhr.getAllResponseHeaders()
     if (!raw_headers) return undefined
 
     const headers: Record<string, string> = {}
-    for (const line of raw_headers.split(/\r?\n/)) {
+    for (const line of raw_headers.split(/\r?\n/)){
         if (!line.trim()) continue
 
         const separator_index = line.indexOf(":")
@@ -35,7 +35,7 @@ function extract_xhr_headers(xhr: XMLHttpRequest) {
     return Object.keys(headers).length > 0 ? headers : undefined
 }
 
-function extract_xhr_intercept_response(xhr: XMLHttpRequest): XhrInterceptResponse {
+function extract_xhr_intercept_response(xhr: XMLHttpRequest): XhrInterceptResponse{
     return {
         status: xhr.status,
         response: xhr.response,
@@ -44,7 +44,7 @@ function extract_xhr_intercept_response(xhr: XMLHttpRequest): XhrInterceptRespon
     }
 }
 
-function dispatch_intercepted_xhr_events(xhr: XMLHttpRequest) {
+function dispatch_intercepted_xhr_events(xhr: XMLHttpRequest){
     const fire_ready_state_change = (ready_state: number) => {
         define_intercepted_xhr_property(xhr, "readyState", ready_state)
         xhr.dispatchEvent(new Event("readystatechange"))
@@ -57,7 +57,7 @@ function dispatch_intercepted_xhr_events(xhr: XMLHttpRequest) {
     xhr.dispatchEvent(new ProgressEvent("loadend"))
 }
 
-function apply_intercepted_response(xhr: XMLHttpRequest, request: XhrInterceptRequest, intercepted_response: XhrInterceptResponse) {
+function apply_intercepted_response(xhr: XMLHttpRequest, request: XhrInterceptRequest, intercepted_response: XhrInterceptResponse){
     const status = intercepted_response.status ?? 200
     const response_text =
         intercepted_response.response_text
@@ -71,7 +71,7 @@ function apply_intercepted_response(xhr: XMLHttpRequest, request: XhrInterceptRe
     define_intercepted_xhr_property(xhr, "responseURL", request.url)
     define_intercepted_xhr_property(xhr, "response", intercepted_response.response)
 
-    if (xhr.responseType === "" || xhr.responseType === "text") {
+    if (xhr.responseType === "" || xhr.responseType === "text"){
         define_intercepted_xhr_property(xhr, "responseText", response_text ?? "")
     }
 
@@ -86,7 +86,7 @@ function apply_intercepted_response(xhr: XMLHttpRequest, request: XhrInterceptRe
 export function install_xhr_interceptor(
     bypass_callback?: (request: XhrInterceptRequest, response: XhrInterceptResponse) => void,
     intercept_callback?: (request: XhrInterceptRequest) => XhrInterceptResponse | Promise<XhrInterceptResponse | void> | void
-): () => void {
+): () => void{
     const original_open = XMLHttpRequest.prototype.open
     const original_send = XMLHttpRequest.prototype.send
 
@@ -98,7 +98,7 @@ export function install_xhr_interceptor(
     }
     const intercepted_xhr_metadata_map = new WeakMap<XMLHttpRequest, InterceptedXhrMetadata>()
 
-    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null) {
+    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null){
         intercepted_xhr_metadata_map.set(this, {
             method: method.toUpperCase(),
             url: String(url),
@@ -108,11 +108,11 @@ export function install_xhr_interceptor(
         return original_open.call(this, method, url, async ?? true, username, password)
     }
 
-    XMLHttpRequest.prototype.send = async function(body?: XhrSendBody) {
+    XMLHttpRequest.prototype.send = async function(body?: XhrSendBody){
         const metadata = intercepted_xhr_metadata_map.get(this)
         if (metadata) metadata.body = body
 
-        if (metadata) {
+        if (metadata){
             const request: XhrInterceptRequest = {
                 method: metadata.method,
                 url: metadata.url,
@@ -124,14 +124,14 @@ export function install_xhr_interceptor(
             }, { once: true })
 
             const intercepted_response = await intercept_callback?.(request)
-            if (intercepted_response) {
+            if (intercepted_response){
                 apply_intercepted_response(this, request, intercepted_response)
 
                 const complete_intercepted_request = () => {
                     dispatch_intercepted_xhr_events(this)
                 }
 
-                if (metadata.async) {
+                if (metadata.async){
                     queueMicrotask(complete_intercepted_request)
                 }
                 else {

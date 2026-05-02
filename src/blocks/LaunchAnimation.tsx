@@ -4,8 +4,8 @@ import { AnimatedGlowText } from "@/components/String"
 import { useEffect, useState } from "react"
 import { LabeledImage } from "@/components/LabeledImage"
 
-function LaunchAnimation() {
-    const [welcome_sentence,set_welcome_sentence] = useState("Struggling to wake... Just five more minutes.")
+function LaunchAnimation(){
+    const [welcome_sentence, set_welcome_sentence] = useState("Struggling to wake... Just five more minutes.")
     const [is_amount, set_is_amount] = useState(false)
     useEffect(() => {
         set_is_amount(true)
@@ -13,7 +13,7 @@ function LaunchAnimation() {
             "Are we there yet? Oh, right. Waking up.",
             "Ugh, waking up is hard."
         ]
-        setTimeout(() => set_welcome_sentence(welcome_sentences[Math.floor(Math.random() * welcome_sentences.length)]),500)
+        setTimeout(() => set_welcome_sentence(welcome_sentences[Math.floor(Math.random() * welcome_sentences.length)]), 500)
     }, [])
     return (
         <div

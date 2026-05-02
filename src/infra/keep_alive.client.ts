@@ -3,7 +3,7 @@ import { generate_silent_wav_base64 } from "@/infra/data_generation_lib"
 
 let unique_audio_element: HTMLAudioElement | null = null
 function get_unique_audio_element(){
-    if (!unique_audio_element) {
+    if (!unique_audio_element){
         unique_audio_element = document.createElement("audio")
         unique_audio_element.src = generate_silent_wav_base64(30)
         unique_audio_element.loop = true
@@ -45,7 +45,7 @@ export function auto_keep_alive_by_video_states(){
         'seeking', 'ended', 'emptied', 'error',
     ]
 
-    for (const type of unplaying_states) {
+    for (const type of unplaying_states){
         document.addEventListener(type, event => {
             if (event.target instanceof HTMLVideoElement){
                 keep_alive_for_once()

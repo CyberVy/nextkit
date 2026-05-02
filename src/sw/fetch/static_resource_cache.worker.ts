@@ -15,7 +15,7 @@ export async function check_latest(){
 
         const cache_controller = new CacheStorageItemController(key)
         const _keys = await cache_controller.keys
-        if (_keys) {
+        if (_keys){
             for (const _key of _keys){
                 if (new URL(_key.url).pathname === "/"){
                     const cached_index_html_response = await cache_controller.get(_key)
@@ -54,7 +54,7 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
     // do not cache the service worker script
     if (url.href === location.href) return false
 
-    for (const path of included_path_prefix_list) {
+    for (const path of included_path_prefix_list){
         if (url.pathname.startsWith(path)){
             is_included = true
             break
@@ -66,11 +66,11 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
         const latest_cache_key = `${static_resource_cache_name}-v${version}`
         const static_resource_cache = new CacheStorageItemController(latest_cache_key)
         const cached = await static_resource_cache.get(event.request)
-        if (cached) {
+        if (cached){
             return cached
         }
         const response = await fetch(event.request)
-        if (response.status === 200) {
+        if (response.status === 200){
             await static_resource_cache.set(event.request, response.clone())
         }
         return response
@@ -78,7 +78,7 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
     event.respondWith(f())
     if (url.pathname === "/"){
         // avoid resources racing
-        setTimeout(() => check_latest(),500)
+        setTimeout(() => check_latest(), 500)
     }
     return true
 }

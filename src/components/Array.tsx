@@ -35,7 +35,7 @@ const StringArray = forwardRef<HTMLUListElement | HTMLOListElement, StringArrayP
         ...item_props
     },
     ref
-) {
+){
     const list_children = (
         <>
             {array.length === 0 &&
@@ -99,10 +99,10 @@ export type { StringArrayProps }
 export { StringArray }
 
 
-function ListToButtons({ list, callback }: ListToButtonsProps) {
+function ListToButtons({ list, callback }: ListToButtonsProps){
 
-    const [selected_item,set_selected_item] = useState<string | number | null>(null)
-    const [is_collapsed,set_is_collapsed] = useState(true)
+    const [selected_item, set_selected_item] = useState<string | number | null>(null)
+    const [is_collapsed, set_is_collapsed] = useState(true)
     const item_base_style = "px-2 py-1  rounded-xl border border-black/20 dark:border-white/20 hover:bg-black/30 dark:hover:bg-white/30 transition duration-300 ease-in-out"
 
     return (

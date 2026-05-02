@@ -79,18 +79,18 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
         ...props
     },
     ref
-) {
-    const [inner_selected_key,set_inner_selected_key] = useState(default_selected_key)
+){
+    const [inner_selected_key, set_inner_selected_key] = useState(default_selected_key)
     const current_selected_key = selected_key ?? inner_selected_key
 
     const handle_select = useCallback((item: VerticalMenuBarItem) => {
-        if (item.disabled) {
+        if (item.disabled){
             return
         }
-        if (enable_vibration) {
+        if (enable_vibration){
             vibrate()
         }
-        if (selected_key === undefined) {
+        if (selected_key === undefined){
             set_inner_selected_key(item.key)
         }
         onSelect?.(item.key, item)

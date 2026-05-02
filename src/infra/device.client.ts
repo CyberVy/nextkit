@@ -1,5 +1,5 @@
 export function is_apple_device(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     const user_agent = navigator.userAgent.toLowerCase()
@@ -7,7 +7,7 @@ export function is_apple_device(){
 }
 
 export function is_touch_device(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return (("ontouchend" in document) || navigator.maxTouchPoints > 0)
@@ -37,14 +37,14 @@ export function is_mac(){
 }
 
 export function is_ipad(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return navigator.userAgent.toLowerCase().includes("ipad") || (navigator.userAgent.toLowerCase().includes("macintosh") && is_touch_device())
 }
 
 export function is_in_pwa(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     // Chrome can install a non-PWA as a PWA with display-mode: minimal-ui,
@@ -57,42 +57,42 @@ export function is_in_pwa(){
 }
 
 export function is_in_webview(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return Boolean(window.webkit && window.webkit.messageHandlers)
 }
 
 export function is_in_native(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return Boolean(window.__TAURI_INTERNALS__ || window.__TAURI__)
 }
 
 export function is_in_browser(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return !is_in_native() && !is_in_pwa()
 }
 
 export function is_service_worker_available(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return Boolean(navigator.serviceWorker?.controller)
 }
 
 export function is_in_background(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     return document.visibilityState === "hidden"
 }
 
 export function is_viewport_portrait(){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return false
     }
     const height = document.documentElement.clientHeight
@@ -140,7 +140,7 @@ type OpenUrlOptions = {
 }
 
 export function open_url(url: string, target: "_self" | "_blank" | string, options?: OpenUrlOptions){
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined"){
         return
     }
     if (target === "_self"){
@@ -154,7 +154,7 @@ export function open_url(url: string, target: "_self" | "_blank" | string, optio
     const new_window = window.open(url, target, "popup")
     if (!new_window) return
 
-    if (!dom_string) {
+    if (!dom_string){
         if (is_in_dark()){
             dom_string = `<body style="background-color: black;"></body>`
         }
@@ -172,7 +172,7 @@ export function open_url(url: string, target: "_self" | "_blank" | string, optio
 
         if (!is_ios_device()){
             const callback = () => {
-                if (new_window.closed) {
+                if (new_window.closed){
                     window.removeEventListener("focus", callback)
                     on_close()
                 }
@@ -181,7 +181,7 @@ export function open_url(url: string, target: "_self" | "_blank" | string, optio
         }
         // the focus event will be triggered instantly after opening a new window on iOS
         else {
-            setTimeout(() => window.addEventListener("focus",on_close,{once: true}),17)
+            setTimeout(() => window.addEventListener("focus", on_close, { once: true }), 17)
         }
     }
     else {
@@ -192,7 +192,7 @@ export function open_url(url: string, target: "_self" | "_blank" | string, optio
                 clearInterval(i)
                 on_close()
             }
-        },167)
+        }, 167)
     }
 
     return new_window

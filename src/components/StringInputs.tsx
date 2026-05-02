@@ -1,14 +1,14 @@
 "use client"
 
-import { useState,useRef } from "react"
+import { useState, useRef } from "react"
 import {  string_icons } from "@/infra/ui_constants"
 import type { SearchWordInputProps, StringInputProps } from "@/components/types"
 import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/Buttons"
 
-function StringInput({ default_value,callback,description, need_button, button_title, button_height, button_width, enable_auto_execution = true, className = "" }: StringInputProps){
-    const [is_collapsed,set_is_collapsed] = useState(false)
+function StringInput({ default_value, callback, description, need_button, button_title, button_height, button_width, enable_auto_execution = true, className = "" }: StringInputProps){
+    const [is_collapsed, set_is_collapsed] = useState(false)
     return (
         <div className={`${className}`}>
             {Boolean(need_button) && (
@@ -47,7 +47,7 @@ function StringInput({ default_value,callback,description, need_button, button_t
     )
 }
 
-function SearchWordInput({ callback,className = "", description = "" }: SearchWordInputProps){
+function SearchWordInput({ callback, className = "", description = "" }: SearchWordInputProps){
     description = description || "Search for something? "
     const input_ref = useRef<HTMLInputElement>(null)
     return (

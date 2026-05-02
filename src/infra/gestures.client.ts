@@ -21,8 +21,8 @@ type PressGestureParams<TEvent extends { clientX: number, clientY: number }> = {
     move_threshold?: number
 }
 
-const is_gesture_enabled = <TEvent,>(enabled: GestureEnabled<TEvent> | undefined, event: TEvent) => {
-    if (typeof enabled === "function") {
+const is_gesture_enabled = <TEvent, >(enabled: GestureEnabled<TEvent> | undefined, event: TEvent) => {
+    if (typeof enabled === "function"){
         return enabled(event)
     }
 
@@ -36,7 +36,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     enabled,
     long_press,
     move_threshold = 10,
-}: PressGestureParams<TEvent>) {
+}: PressGestureParams<TEvent>){
     let timer = 0
     let start_event: TEvent | null = null
     let start_client_x = 0
@@ -68,7 +68,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const on_pointer_down = (event: TEvent) => {
-        if (!is_gesture_enabled(enabled, event)) {
+        if (!is_gesture_enabled(enabled, event)){
             reset_press()
             return
         }
@@ -105,12 +105,12 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
 
         const did_long_press = long_pressing
 
-        if (did_long_press) {
+        if (did_long_press){
             long_press?.on_end?.(event)
         }
 
         reset_press()
-        if (did_long_press) {
+        if (did_long_press){
             on_success?.(event)
             return
         }
@@ -123,7 +123,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const on_pointer_cancel = (event: TEvent) => {
-        if (long_pressing) {
+        if (long_pressing){
             long_press?.on_end?.(event)
             reset_press()
             return
@@ -133,7 +133,7 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const on_pointer_leave = (event: TEvent) => {
-        if (long_pressing) {
+        if (long_pressing){
             long_press?.on_end?.(event)
             reset_press()
             return
