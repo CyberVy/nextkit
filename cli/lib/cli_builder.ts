@@ -25,7 +25,7 @@ type OptionDeclarationConfig = {
     description?: string
 }
 
-function to_snake_case(input: string): string {
+function to_snake_case(input: string): string{
     return input
         .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
         .replace(/-/g, "_")
@@ -35,7 +35,7 @@ function to_snake_case(input: string): string {
 function parse_option_declaration(
     option_declaration: string,
     option_declaration_config: OptionDeclarationConfig = {}
-): OptionConfig {
+): OptionConfig{
     const parts = option_declaration
         .split(",")
         .map((part) => part.trim())
@@ -49,11 +49,11 @@ function parse_option_declaration(
     const description = option_declaration_config.description?.trim() || undefined
     const base_name = long_flag ?? short_flag
 
-    if (!base_name) {
+    if (!base_name){
         throw new Error(`Invalid option declaration: "${option_declaration}"`)
     }
 
-    if (repeatable && !requires_value) {
+    if (repeatable && !requires_value){
         throw new Error(`Repeatable option must require a value: "${option_declaration}"`)
     }
 
@@ -68,45 +68,45 @@ function parse_option_declaration(
     }
 }
 
-export class Command {
+export class Command{
     private readonly option_configs: OptionConfig[] = []
     private handler?: CommandHandler
 
     constructor(
         public readonly name: string,
         public readonly description = ""
-    ) {}
+    ){}
 
     /** Register one option for this command; description is used by built-in help output. */
-    public option(option_declaration: string, option_declaration_config: OptionDeclarationConfig = {}): this {
+    public option(option_declaration: string, option_declaration_config: OptionDeclarationConfig = {}): this{
         this.option_configs.push(parse_option_declaration(option_declaration, option_declaration_config))
         return this
     }
 
     /** Register the command handler called after args/options parsing. */
-    public action(handler: CommandHandler): this {
+    public action(handler: CommandHandler): this{
         this.handler = handler
         return this
     }
 
-    public get options(): OptionConfig[] {
+    public get options(): OptionConfig[]{
         return this.option_configs
     }
 
-    public async execute(ctx: CommandContext): Promise<void> {
-        if (!this.handler) {
+    public async execute(ctx: CommandContext): Promise<void>{
+        if (!this.handler){
             throw new Error(`No action registered for command "${this.name}"`)
         }
         await this.handler(ctx)
     }
 }
 
-export class CLI {
+export class CLI{
     private readonly commands = new Map<string, Command>()
 
     /** Register a command by unique name; its description is shown in built-in help. */
-    public command(name: string, description = ""): Command {
-        if (this.commands.has(name)) {
+    public command(name: string, description = ""): Command{
+        if (this.commands.has(name)){
             throw new Error(`Command "${name}" is already registered`)
         }
         const cmd = new Command(name, description)
@@ -115,24 +115,24 @@ export class CLI {
     }
 
     /** Run argv like process.argv.slice(2); auto handles -h/--help unless that command defines help manually. */
-    public async run(argv: string[]): Promise<void> {
+    public async run(argv: string[]): Promise<void>{
         const [command_name, ...tokens] = argv
-        if (!command_name) {
+        if (!command_name){
             throw new Error("No command provided")
         }
 
-        if (command_name === "-h" || command_name === "--help") {
+        if (command_name === "-h" || command_name === "--help"){
             console.log(this.build_cli_help())
             return
         }
 
         const command = this.commands.get(command_name)
-        if (!command) {
+        if (!command){
             throw new Error(`Unknown command: "${command_name}"`)
         }
 
         const has_manual_help = this.has_manual_help_option(command.options)
-        if (!has_manual_help && this.has_help_token(tokens)) {
+        if (!has_manual_help && this.has_help_token(tokens)){
             console.log(this.build_command_help(command))
             return
         }
@@ -147,19 +147,19 @@ export class CLI {
         })
     }
 
-    private has_manual_help_option(option_configs: OptionConfig[]): boolean {
+    private has_manual_help_option(option_configs: OptionConfig[]): boolean{
         return option_configs.some((option_config) => option_config.short_flag === "h" || option_config.long_flag === "help")
     }
 
-    private has_help_token(tokens: string[]): boolean {
-        for (const token of tokens) {
+    private has_help_token(tokens: string[]): boolean{
+        for (const token of tokens){
             if (token === "--") return false
             if (token === "-h" || token === "--help") return true
         }
         return false
     }
 
-    private format_option_label(option_config: OptionConfig): string {
+    private format_option_label(option_config: OptionConfig): string{
         const names: string[] = []
         if (option_config.short_flag) names.push(`-${option_config.short_flag}`)
         if (option_config.long_flag) names.push(`--${option_config.long_flag}`)
@@ -169,17 +169,17 @@ export class CLI {
         return `${names.join(", ")}${value_part}`
     }
 
-    private format_option_description(option_config: OptionConfig): string | undefined {
+    private format_option_description(option_config: OptionConfig): string | undefined{
         const base_description = option_config.description ?? option_config.value_placeholder
-        if (option_config.repeatable) {
+        if (option_config.repeatable){
             return base_description ? `${base_description} (repeatable)` : "repeatable"
         }
         return base_description
     }
 
-    public build_command_help(command: Command): string {
+    public build_command_help(command: Command): string{
         const option_entries = [...command.options]
-        if (!this.has_manual_help_option(command.options)) {
+        if (!this.has_manual_help_option(command.options)){
             option_entries.push({
                 short_flag: "h",
                 long_flag: "help",
@@ -199,20 +199,20 @@ export class CLI {
             rows.length === 0
                 ? ["  (none)"]
                 : rows.map((row) =>
-                      row.description
-                          ? `  ${row.label.padEnd(label_width)}  ${row.description}`
-                          : `  ${row.label}`
-                  )
+                    row.description
+                        ? `  ${row.label.padEnd(label_width)}  ${row.description}`
+                        : `  ${row.label}`
+                )
 
         const lines = [`Usage: ${command.name} [options] [args]`]
-        if (command.description) {
+        if (command.description){
             lines.push("", command.description)
         }
         lines.push("", "Options:", ...option_lines)
         return lines.join("\n")
     }
 
-    private build_cli_help(): string {
+    private build_cli_help(): string{
         const commands = Array.from(this.commands.values())
         const name_width = commands.reduce((max, command) => Math.max(max, command.name.length), 0)
         const command_lines = commands.map((command) =>
@@ -231,33 +231,33 @@ export class CLI {
         ].join("\n")
     }
 
-    private parse_args(tokens: string[], option_configs: OptionConfig[]) {
+    private parse_args(tokens: string[], option_configs: OptionConfig[]){
         const args: string[] = []
         const options: Record<string, OptionValue> = {}
         const unknown: string[] = []
         const assign_option = (option_config: OptionConfig, value: string | boolean) => {
-            if (!option_config.repeatable) {
+            if (!option_config.repeatable){
                 options[option_config.option_name] = value
                 return
             }
 
-            if (typeof value !== "string") {
+            if (typeof value !== "string"){
                 throw new Error(`Repeatable option "${option_config.option_name}" must have string values`)
             }
 
             const existing = options[option_config.option_name]
 
-            if (existing === undefined) {
+            if (existing === undefined){
                 options[option_config.option_name] = [value]
                 return
             }
 
-            if (Array.isArray(existing)) {
+            if (Array.isArray(existing)){
                 existing.push(value)
                 return
             }
 
-            if (typeof existing === "string") {
+            if (typeof existing === "string"){
                 options[option_config.option_name] = [existing, value]
                 return
             }
@@ -276,15 +276,15 @@ export class CLI {
                 .map((config) => [config.long_flag as string, config])
         )
 
-        for (let i = 0; i < tokens.length; i++) {
+        for (let i = 0; i < tokens.length; i++){
             const token = tokens[i]
 
-            if (token === "--") {
+            if (token === "--"){
                 args.push(...tokens.slice(i + 1))
                 break
             }
 
-            if (token.startsWith("--")) {
+            if (token.startsWith("--")){
                 const option_body = token.slice(2)
                 const eq_index = option_body.indexOf("=")
                 const colon_index = option_body.indexOf(":")
@@ -296,39 +296,41 @@ export class CLI {
                 const inline_value = separator_index >= 0 ? option_body.slice(separator_index + 1) : undefined
                 const option_config = long_map.get(name)
 
-                if (!option_config) {
+                if (!option_config){
                     unknown.push(token)
                     continue
                 }
 
-                if (option_config.requires_value) {
+                if (option_config.requires_value){
                     const value = inline_value ?? tokens[++i]
-                    if (value === undefined) {
+                    if (value === undefined){
                         throw new Error(`Missing value for --${name}`)
                     }
                     assign_option(option_config, value)
-                } else {
+                }
+                else {
                     assign_option(option_config, true)
                 }
                 continue
             }
 
-            if (/^-[a-zA-Z0-9]$/.test(token)) {
+            if (/^-[a-zA-Z0-9]$/.test(token)){
                 const name = token[1] as string
                 const option_config = short_map.get(name)
 
-                if (!option_config) {
+                if (!option_config){
                     unknown.push(token)
                     continue
                 }
 
-                if (option_config.requires_value) {
+                if (option_config.requires_value){
                     const value = tokens[++i]
-                    if (value === undefined) {
+                    if (value === undefined){
                         throw new Error(`Missing value for -${name}`)
                     }
                     assign_option(option_config, value)
-                } else {
+                }
+                else {
                     assign_option(option_config, true)
                 }
                 continue

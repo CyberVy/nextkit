@@ -95,7 +95,7 @@ const jsxTextIndentRule = {
 };
 
 export default defineConfig([{
-    files: ["src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    files: ["{src,cli}/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     extends: compat.extends("next/core-web-vitals", "next/typescript"),
     plugins: {
         local: {
