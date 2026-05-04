@@ -364,10 +364,12 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
 
         popupControllers.setObject(popupController, forKey: popupWebView)
         controller.present(popupController, animated: true)
+        installFullPageScreenshot(webView: popupWebView)
         return popupWebView
     }
 
     func webViewDidClose(_ webView: WKWebView) {
+        uninstallFullPageScreenshot(webView: webView)
         guard let controller = popupControllers.object(forKey: webView) else { return }
         controller.dismiss(animated: true)
         popupControllers.removeObject(forKey: webView)
