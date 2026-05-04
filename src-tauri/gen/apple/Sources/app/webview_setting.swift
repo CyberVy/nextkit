@@ -21,4 +21,6 @@ public func on_webview_created(_ webviewPtr: UnsafeRawPointer?, _ controllerPtr:
     installExternalOpenDelegate(webView: webview, controller: controller)
 
     applyNoFlickerStyle(to: webview, in: controller)
+
+    installFullPageScreenshot(webView: webview, controller: controller)
 }
