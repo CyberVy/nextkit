@@ -1,18 +1,17 @@
 "use client"
 
 import {
-    forwardRef,
-    type CSSProperties, type ComponentPropsWithoutRef,
+    type CSSProperties, type ComponentPropsWithRef,
 } from "react"
 import { vibrate } from "@/infra/device.client"
 
-type CheckboxProps = Omit<ComponentPropsWithoutRef<"input">, "type"> & {
+type CheckboxProps = Omit<ComponentPropsWithRef<"input">, "type"> & {
     background_color?: string
     picker_color?: string
 }
 
-const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-    { background_color = "#e9e9ea", picker_color = "#34c759", children, disabled, ...props }, ref){
+const Checkbox = function Checkbox(
+    { background_color = "#e9e9ea", picker_color = "#34c759", children, disabled, ref, ...props }: CheckboxProps){
     return (
         <label
             className={[
@@ -21,7 +20,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
             ].filter(Boolean).join(" ")}
         >
             {children}
-            <span className="relative h-[31px] w-[51px] shrink-0">
+            <span className="relative h-7.75 w-12.75 shrink-0">
                 <input
                     {...props}
                     onClick={event => {
@@ -55,7 +54,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
                 <span
                     aria-hidden="true"
                     className={[
-                        "pointer-events-none absolute left-0.5 top-0.5 h-[27px] w-[27px] rounded-full bg-white",
+                        "pointer-events-none absolute left-0.5 top-0.5 h-6.75 w-6.75 rounded-full bg-white",
                         "shadow-[0_1px_3px_rgba(0,0,0,0.24),0_0.5px_1px_rgba(0,0,0,0.12)]",
                         "transition-transform duration-300 ease-in-out",
                         "peer-checked:translate-x-5"
@@ -64,6 +63,6 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
             </span>
         </label>
     )
-})
+}
 
 export { Checkbox }

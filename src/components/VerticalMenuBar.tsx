@@ -2,9 +2,8 @@
 
 import { vibrate } from "@/infra/device.client"
 import {
-    forwardRef,
     type CSSProperties,
-    type ComponentPropsWithoutRef,
+    type ComponentPropsWithRef,
     type ReactNode,
     useCallback,
     useState,
@@ -42,7 +41,7 @@ type VerticalMenuBarSection = {
     items: VerticalMenuBarItem[]
 }
 
-type VerticalMenuBarProps = Omit<ComponentPropsWithoutRef<"nav">, "children" | "onSelect"> & {
+type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"nav">, "children" | "onSelect"> & {
     // Sectioned menu data rendered by the component.
     sections: VerticalMenuBarSection[]
     // Currently selected item key for controlled selection.
@@ -63,7 +62,7 @@ type VerticalMenuBarProps = Omit<ComponentPropsWithoutRef<"nav">, "children" | "
     enable_vibration?: boolean
 }
 
-const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function VerticalMenuBar(
+const VerticalMenuBar = function VerticalMenuBar(
     {
         sections,
         selected_key,
@@ -76,10 +75,9 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
         enable_vibration = true,
         className = "",
         style,
+        ref,
         ...props
-    },
-    ref
-){
+    }: VerticalMenuBarProps){
     const [inner_selected_key, set_inner_selected_key] = useState(default_selected_key)
     const current_selected_key = selected_key ?? inner_selected_key
 
@@ -223,7 +221,7 @@ const VerticalMenuBar = forwardRef<HTMLElement, VerticalMenuBarProps>(function V
                 </div>}
         </nav>
     )
-})
+}
 
 VerticalMenuBar.displayName = "VerticalMenuBar"
 

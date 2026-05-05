@@ -1,16 +1,32 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useRef, useState } from "react"
 import {  string_icons } from "@/infra/ui_constants"
 import type { SearchWordInputProps, StringInputProps } from "@/components/types"
 import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/Buttons"
 
-function StringInput({ default_value, callback, description, need_button, button_title, button_height, button_width, enable_auto_execution = true, className = "" }: StringInputProps){
+const StringInput = function StringInput({
+    default_value,
+    callback,
+    description,
+    need_button,
+    button_title,
+    button_height,
+    button_width,
+    enable_auto_execution = true,
+    className = "",
+    ref,
+    ...props
+}: StringInputProps){
     const [is_collapsed, set_is_collapsed] = useState(false)
     return (
-        <div className={`${className}`}>
+        <div
+            {...props}
+            ref={ref}
+            className={className}
+        >
             {Boolean(need_button) && (
                 <NaiveButton
                     width={button_width}
@@ -47,11 +63,15 @@ function StringInput({ default_value, callback, description, need_button, button
     )
 }
 
-function SearchWordInput({ callback, className = "", description = "" }: SearchWordInputProps){
+const SearchWordInput = function SearchWordInput({ callback, className = "", description = "", ref, ...props }: SearchWordInputProps){
     description = description || "Search for something? "
     const input_ref = useRef<HTMLInputElement>(null)
     return (
-        <div className={`flex gap-2 ${className}`}>
+        <div
+            {...props}
+            ref={ref}
+            className={`flex gap-2 ${className}`}
+        >
             <input
                 ref={input_ref}
                 type="text"
@@ -81,5 +101,8 @@ function SearchWordInput({ callback, className = "", description = "" }: SearchW
         </div>
     )
 }
+
+StringInput.displayName = "StringInput"
+SearchWordInput.displayName = "SearchWordInput"
 
 export { StringInput, SearchWordInput }

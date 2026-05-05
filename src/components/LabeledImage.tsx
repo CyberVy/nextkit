@@ -23,7 +23,7 @@ function get_context_menu_render_point(context_menu_element: HTMLElement, contex
 }
 
 
-function LabeledImage({
+const LabeledImage = function LabeledImage({
     src,
     label_left,
     label_left_background_color,
@@ -45,6 +45,7 @@ function LabeledImage({
     image_props,
     image_className,
     className,
+    ref,
     ...props
 }: LabeledImageProps){
     const [is_ios, set_is_ios] = useState(false)
@@ -186,6 +187,7 @@ function LabeledImage({
 
     return (
         <div
+            ref={ref}
             className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} ${className || ""}`}
             {...props}
         >
@@ -387,5 +389,7 @@ function LabeledImage({
         </div>
     )
 }
+
+LabeledImage.displayName = "LabeledImage"
 
 export { LabeledImage }
