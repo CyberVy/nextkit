@@ -1,16 +1,5 @@
 import { defineConfig } from "eslint/config";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
+import next_core_web_vitals from "eslint-config-next/core-web-vitals";
 
 const jsxTextIndentRule = {
     meta: {
@@ -94,41 +83,47 @@ const jsxTextIndentRule = {
     }
 };
 
-export default defineConfig([{
-    files: ["{src,cli}/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    extends: compat.extends("next/core-web-vitals", "next/typescript"),
-    plugins: {
-        local: {
-            rules: {
-                "jsx-text-indent": jsxTextIndentRule
+export default defineConfig([
+    ...next_core_web_vitals,
+    {
+        files: ["{src,cli}/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+        plugins: {
+            local: {
+                rules: {
+                    "jsx-text-indent": jsxTextIndentRule
+                }
             }
+        },
+        rules: {
+            indent: ["warn", 4],
+            "@next/next/no-img-element": "off",
+            "react-hooks/exhaustive-deps": "off",
+            "react-hooks/set-state-in-effect": "off",
+            "react-hooks/immutability": "off",
+            "react-hooks/refs": "off",
+            "react/jsx-closing-bracket-location": ["warn", "line-aligned"],
+            "react/jsx-curly-newline": ["warn", {
+                multiline: "consistent",
+                singleline: "forbid"
+            }],
+            "local/jsx-text-indent": ["warn", 4],
+            semi: ["warn", "never"],
+            "object-curly-spacing": ["warn", "always"],
+            "key-spacing": ["warn", {
+                afterColon: true
+            }],
+            "comma-spacing": ["warn", {
+                before: false,
+                after: true
+            }],
+            "space-before-blocks": ["warn", "never"],
+            "brace-style": ["warn", "stroustrup", {
+                allowSingleLine: true
+            }],
+            "arrow-spacing": ["warn", {
+                before: true,
+                after: true
+            }]
         }
-    },
-    rules: {
-        indent: ["warn", 4],
-        "react-hooks/exhaustive-deps": "off",
-        "react/jsx-closing-bracket-location": ["warn", "line-aligned"],
-        "react/jsx-curly-newline": ["warn", {
-            multiline: "consistent",
-            singleline: "forbid"
-        }],
-        "local/jsx-text-indent": ["warn", 4],
-        semi: ["warn", "never"],
-        "object-curly-spacing": ["warn", "always"],
-        "key-spacing": ["warn", {
-            afterColon: true
-        }],
-        "comma-spacing": ["warn", {
-            before: false,
-            after: true
-        }],
-        "space-before-blocks": ["warn", "never"],
-        "brace-style": ["warn", "stroustrup", {
-            allowSingleLine: true
-        }],
-        "arrow-spacing": ["warn", {
-            before: true,
-            after: true
-        }]
     }
-}]);
+]);
