@@ -44,3 +44,5 @@ next-env.d.ts
 /.idea
 /public/sw.js
 /draft
+/buildServer.json
+/.compile
