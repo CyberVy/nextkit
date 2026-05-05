@@ -2,14 +2,13 @@
 
 import type { ButtonGroupProps, NaiveButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
-import type { CSSProperties } from "react"
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 
 const join_classes = (...classes: (string | false | null | undefined)[]) => {
     return classes.filter(Boolean).join(" ")
 }
 
-function NaiveButton({
+const NaiveButton = function NaiveButton({
     width = "56px",
     height = "32px",
     icon,
@@ -20,12 +19,19 @@ function NaiveButton({
     border_color_dark = "rgba(255,255,255,0.10)",
     text_color = "rgba(48,48,48,0.80)",
     text_color_dark = "rgba(255,255,255,0.80)",
-    className
+    className,
+    style,
+    type = "button",
+    onClick,
+    ref,
+    ...props
 }: NaiveButtonProps){
 
     return (
         <button
-            type="button"
+            {...props}
+            ref={ref}
+            type={type}
             className={join_classes(
                 "relative align-middle select-none overflow-hidden rounded-[18px] border backdrop-blur-xl",
                 "bg-(--button-background-color) text-(--button-text-color) border-(--button-border-color)",
@@ -46,10 +52,14 @@ function NaiveButton({
                 "--button-border-color-dark": border_color_dark,
                 "--button-text-color": text_color,
                 "--button-text-color-dark": text_color_dark,
+                ...style,
             } as CSSProperties}
             onClick={event => {
+                onClick?.(event)
+                if (event.defaultPrevented) return
+
                 vibrate()
-                callback(event)
+                callback?.(event)
             }}
         >
             <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
@@ -59,7 +69,7 @@ function NaiveButton({
     )
 }
 
-function ButtonGroup({
+const ButtonGroup = function ButtonGroup({
     button_icons,
     callbacks,
     item_width,
@@ -78,13 +88,18 @@ function ButtonGroup({
     selected_border_color_dark = "rgba(255,255,255,0.10)",
     selected_text_color = "rgba(48,48,38,0.95)",
     selected_text_color_dark = "rgba(244,244,244,0.95)",
-    className
+    className,
+    style,
+    ref,
+    ...props
 }: ButtonGroupProps){
     const should_show_selected_state = enable_selected_border == undefined ? true : enable_selected_border
     const [selected_index, set_selected_index] = useState(default_selected_index ?? -1)
 
     return (
         <div
+            {...props}
+            ref={ref}
             className={join_classes(
                 "inline-block select-none rounded-[22px] border p-1 backdrop-blur-2xl",
                 "bg-(--button-group-background-color) border-(--button-group-border-color)",
@@ -106,6 +121,7 @@ function ButtonGroup({
                 "--button-group-selected-border-color-dark": selected_border_color_dark,
                 "--button-group-selected-text-color": selected_text_color,
                 "--button-group-selected-text-color-dark": selected_text_color_dark,
+                ...style,
             } as CSSProperties}
         >
             {button_icons.map((icon, index) => {
@@ -149,5 +165,8 @@ function ButtonGroup({
         </div>
     )
 }
+
+NaiveButton.displayName = "NaiveButton"
+ButtonGroup.displayName = "ButtonGroup"
 
 export { NaiveButton, ButtonGroup }

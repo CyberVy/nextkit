@@ -1,12 +1,10 @@
-import type { CSSProperties, ReactNode } from "react"
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react"
 
 type AnimationStyle = Pick<CSSProperties, "opacity" | "transform" | "filter">
 
-type AnimationContainerProps = {
+type AnimationContainerProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     show?: boolean
     children: ReactNode
-    className?: string
-    style?: CSSProperties
     duration?: number
     delay?: number
     easing?: string

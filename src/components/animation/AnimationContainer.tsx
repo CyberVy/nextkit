@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { AnimationContainerProps } from "@/components/animation/types"
 
 /**
@@ -10,16 +10,30 @@ import type { AnimationContainerProps } from "@/components/animation/types"
  * the animation's reference coordinates can become incorrect.
  * The failure mode may also differ across browser engines because their implementations are not identical.
  */
-function AnimationContainer({
+const AnimationContainer = function AnimationContainer({
     show = true, children, className, style,
     duration = 300, delay = 0, easing = "ease-in-out",
     enter_from, enter_to, exit_from, exit_to,
     on_enter_start, on_enter_end, on_exit_start, on_exit_end,
-    unmount_on_exit = false, animate_on_mount = true
+    unmount_on_exit = false, animate_on_mount = true,
+    ref,
+    ...props
 }: AnimationContainerProps){
 
     const element_ref = useRef<HTMLDivElement>(null)
     const animation_ref = useRef<Animation | null>(null)
+    const set_element_ref = useCallback((element: HTMLDivElement | null) => {
+        element_ref.current = element
+
+        if (typeof ref === "function"){
+            ref(element)
+            return
+        }
+
+        if (ref){
+            ref.current = element
+        }
+    }, [ref])
     const [render_mode, set_render_mode] = useState<"pending" | "entering" | "visible" | "exiting_to_hidden" | "hidden" | "exiting_to_unmount" | "unmount">(() => {
         if (show){
             return "pending"
@@ -116,19 +130,32 @@ function AnimationContainer({
 
     if (!["hidden", "unmount"].includes(render_mode) || show){
         return (
-            <div ref={element_ref} className={className} style={style}>
+            <div
+                {...props}
+                ref={set_element_ref}
+                className={className}
+                style={style}
+            >
                 {children}
             </div>
         )
     }
     else if (render_mode === "hidden"){
         return (
-            <div ref={element_ref} className={className} style={style} hidden={true}>
+            <div
+                {...props}
+                ref={set_element_ref}
+                className={className}
+                style={style}
+                hidden={true}
+            >
                 {children}
             </div>
         )
     }
     return null
 }
+
+AnimationContainer.displayName = "AnimationContainer"
 
 export { AnimationContainer }

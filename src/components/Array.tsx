@@ -1,12 +1,11 @@
 "use client"
 
 import React, {
-    forwardRef,
     type ComponentPropsWithoutRef,
     type ReactNode,
     type Ref, useState,
 } from "react"
-import { ListToButtonsProps } from "@/components/types"
+import type { ListToButtonsProps } from "@/components/types"
 import { NaiveButton } from "@/components/Buttons"
 import { vibrate } from "@/infra/device.client"
 import { highlight, string_icons } from "@/infra/ui_constants"
@@ -22,9 +21,10 @@ type StringArrayProps = Omit<ComponentPropsWithoutRef<"li">, "children"> & {
     ordered?: boolean
     // Optional empty placeholder shown when the array is empty.
     empty_text?: ReactNode
+    ref?: Ref<HTMLUListElement | HTMLOListElement>
 }
 
-const StringArray = forwardRef<HTMLUListElement | HTMLOListElement, StringArrayProps>(function StringList(
+const StringArray = function StringArray(
     {
         array,
         list_className = "",
@@ -32,10 +32,9 @@ const StringArray = forwardRef<HTMLUListElement | HTMLOListElement, StringArrayP
         ordered = false,
         empty_text = "No items",
         className = "",
+        ref,
         ...item_props
-    },
-    ref
-){
+    }: StringArrayProps){
     const list_children = (
         <>
             {array.length === 0 &&
@@ -91,7 +90,7 @@ const StringArray = forwardRef<HTMLUListElement | HTMLOListElement, StringArrayP
                 </ul>}
         </div>
     )
-})
+}
 
 StringArray.displayName = "StringArray"
 
@@ -99,14 +98,18 @@ export type { StringArrayProps }
 export { StringArray }
 
 
-function ListToButtons({ list, callback }: ListToButtonsProps){
+const ListToButtons = function ListToButtons({ list, callback, className = "", ref, ...props }: ListToButtonsProps){
 
     const [selected_item, set_selected_item] = useState<string | number | null>(null)
     const [is_collapsed, set_is_collapsed] = useState(true)
     const item_base_style = "px-2 py-1  rounded-xl border border-black/20 dark:border-white/20 hover:bg-black/30 dark:hover:bg-white/30 transition duration-300 ease-in-out"
 
     return (
-        <div className="select-none">
+        <div
+            {...props}
+            ref={ref}
+            className={["select-none", className].filter(Boolean).join(" ")}
+        >
             <NaiveButton
                 icon={
                     <span className={`${selected_item ? highlight : ""} text-2xl`}>
@@ -121,9 +124,10 @@ function ListToButtons({ list, callback }: ListToButtonsProps){
                 height={"36px"}
             />
 
-            {<div className={`flex flex-wrap text-xs gap-1 py-2 pl-2 pr-2 max-h-[100px] overflow-auto ${is_collapsed ? 'hidden' : 'block'}`}>
+            {<div className={`flex flex-wrap text-xs gap-1 py-2 pl-2 pr-2 max-h-25 overflow-auto ${is_collapsed ? 'hidden' : 'block'}`}>
                 {list.map((item, index) => (
                     <button
+                        type="button"
                         key={index}
                         className={item === selected_item ? `${highlight} ${item_base_style}` : item_base_style}
                         onClick={() => {
@@ -139,5 +143,7 @@ function ListToButtons({ list, callback }: ListToButtonsProps){
         </div>
     )
 }
+
+ListToButtons.displayName = "ListToButtons"
 
 export { ListToButtons }

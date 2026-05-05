@@ -1,7 +1,7 @@
 import React from "react"
 import type { VerticalMenuBarProps } from "@/components/VerticalMenuBar"
 
-export type StringInputProps = {
+export type StringInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     default_value?: string
     callback: (url: string) => void
     description: string
@@ -10,15 +10,14 @@ export type StringInputProps = {
     button_height?: string
     button_width?: string
     enable_auto_execution?: boolean
-    className?: string
 }
 
-export type ListToButtonsProps = {
+export type ListToButtonsProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     list: string[]
     callback?: (item: string | null) => void
 }
 
-export type LabeledImageProps = Omit<React.ComponentPropsWithoutRef<"div">, "children"> & {
+export type LabeledImageProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     src?: string
     top_information?: React.ReactNode
     top_information_background_color?: string
@@ -45,19 +44,18 @@ export type LabeledImageProps = Omit<React.ComponentPropsWithoutRef<"div">, "chi
     className?: string
 }
 
-export type ScrollButtonProps = {
+export type ScrollButtonProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     element_ref?: React.RefObject<HTMLDivElement | null>
     callback?: () => void
     position_class_name?: string
 }
 
-export type SearchWordInputProps = {
+export type SearchWordInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     callback: (word: string) => void
-    className?: string
     description?: string
 }
 
-export type ButtonGroupProps = {
+export type ButtonGroupProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     button_icons: React.ReactNode[]
     callbacks?: (() => void)[]
     item_width: string
@@ -76,19 +74,17 @@ export type ButtonGroupProps = {
     selected_border_color_dark?: string
     selected_text_color?: string
     selected_text_color_dark?: string
-    className?: string
 }
 
-export type NaiveButtonProps = {
+export type NaiveButtonProps = Omit<React.ComponentPropsWithRef<"button">, "children"> & {
     width?: string
     height?: string
     icon: React.ReactNode
-    callback: (event: React.MouseEvent<HTMLButtonElement>) => void
+    callback?: (event: React.MouseEvent<HTMLButtonElement>) => void
     background_color?: string
     background_color_dark?: string
     border_color?: string
     border_color_dark?: string
     text_color?: string
     text_color_dark?: string
-    className?: string
 }

@@ -47,9 +47,13 @@ function scroll_element({ element_ref, callback }: ScrollButtonProps, position: 
     callback?.()
 }
 
-const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, callback, position_class_name }: ScrollButtonProps){
+const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, callback, position_class_name, className, ref, ...props }: ScrollButtonProps){
     return (
-        <div className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4")}>
+        <div
+            {...props}
+            ref={ref}
+            className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4", className)}
+        >
             <ButtonGroup
                 button_icons={[string_icons.up_triangle]}
                 callbacks={[() => scroll_element({ element_ref, callback }, "top")]}
@@ -59,9 +63,13 @@ const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, c
     )
 })
 
-const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_ref, callback, position_class_name }: ScrollButtonProps){
+const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_ref, callback, position_class_name, className, ref, ...props }: ScrollButtonProps){
     return (
-        <div className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-17")}>
+        <div
+            {...props}
+            ref={ref}
+            className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-17", className)}
+        >
             <ButtonGroup
                 button_icons={[string_icons.down_triangle]}
                 callbacks={[() => scroll_element({ element_ref, callback }, "bottom")]}
@@ -71,9 +79,13 @@ const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_
     )
 })
 
-const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, callback, position_class_name }: ScrollButtonProps){
+const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, callback, position_class_name, className, ref, ...props }: ScrollButtonProps){
     return (
-        <div className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4")}>
+        <div
+            {...props}
+            ref={ref}
+            className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4", className)}
+        >
             <ButtonGroup
                 button_icons={[string_icons.up_triangle, string_icons.down_triangle]}
                 callbacks={[
@@ -85,5 +97,9 @@ const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, 
         </div>
     )
 })
+
+ScrollToTopButton.displayName = "ScrollToTopButton"
+ScrollToBottomButton.displayName = "ScrollToBottomButton"
+ScrollButtonGroup.displayName = "ScrollButtonGroup"
 
 export { ScrollToTopButton, ScrollToBottomButton, ScrollButtonGroup }
