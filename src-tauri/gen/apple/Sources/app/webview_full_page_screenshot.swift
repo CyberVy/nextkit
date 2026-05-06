@@ -1,61 +1,189 @@
 import UIKit
 import WebKit
 
+@available(iOS 14.0, *)
 private class ScreenshotManager: NSObject, UIScreenshotServiceDelegate {
-    static var shared: ScreenshotManager?
 
-    private var webViews: [WeakWebViewBox] = []
+    static let shared = ScreenshotManager()
 
-    private class WeakWebViewBox {
-        weak var webView: WKWebView?
-        init(_ webView: WKWebView) { self.webView = webView }
+    private struct WeakWebView {
+
+        weak var value: WKWebView?
     }
 
-    func install(_ webView: WKWebView) {
-        webViews.removeAll { $0.webView == nil }
-        guard !webViews.contains(where: { $0.webView === webView }) else { return }
-        webViews.append(WeakWebViewBox(webView))
+    private var webViews: [WeakWebView] = []
+
+    override init() {
+        super.init()
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(rebindDelegate),
+            name: UIScene.didActivateNotification,
+            object: nil
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    func install(
+        _ webView: WKWebView,
+        controller: UIViewController? = nil
+    ) {
+
+        cleanup()
+
+        if !webViews.contains(where: { $0.value === webView }) {
+            webViews.append(.init(value: webView))
+        }
+
+        bindDelegate(
+            scene:
+                controller?.view.window?.windowScene
+                ?? webView.window?.windowScene
+        )
     }
 
     func uninstall(_ webView: WKWebView) {
-        webViews.removeAll { $0.webView === webView || $0.webView == nil }
+
+        webViews.removeAll {
+            $0.value == nil || $0.value === webView
+        }
     }
 
-    private func resolveActiveWebView() -> WKWebView? {
-        webViews.removeAll { $0.webView == nil }
-        return webViews.last?.webView
+    @objc
+    private func rebindDelegate() {
+
+        bindDelegate(
+            scene: activeWebView()?.window?.windowScene
+        )
     }
 
-    func screenshotService(_ screenshotService: UIScreenshotService, generatePDFRepresentationWithCompletion completionHandler: @escaping (Data?, Int, CGRect) -> Void) {
-        guard #available(iOS 14.0, *),
-              let webView = resolveActiveWebView() else {
-            completionHandler(nil, 0, .zero)
+    private func bindDelegate(
+        scene: UIWindowScene?
+    ) {
+
+        scene?
+            .screenshotService?
+            .delegate = self
+    }
+
+    private func activeWebView() -> WKWebView? {
+
+        cleanup()
+
+        return webViews.last {
+            guard let webView = $0.value else {
+                return false
+            }
+
+            return
+                !webView.isHidden &&
+                webView.window != nil
+        }?.value
+    }
+
+    private func cleanup() {
+
+        webViews.removeAll {
+            $0.value == nil
+        }
+    }
+
+    func screenshotService(
+        _ screenshotService: UIScreenshotService,
+        generatePDFRepresentationWithCompletion completionHandler: @escaping (
+            Data?,
+            Int,
+            CGRect
+        ) -> Void
+    ) {
+
+        guard let webView = activeWebView() else {
+
+            completionHandler(
+                nil,
+                0,
+                .zero
+            )
+
             return
         }
-        webView.createPDF(configuration: WKPDFConfiguration()) { result in
+
+        let rect = CGRect(
+            origin: .zero,
+            size: webView.scrollView.contentSize
+        )
+
+        guard
+            rect.width > 0,
+            rect.height > 0
+        else {
+
+            completionHandler(
+                nil,
+                0,
+                .zero
+            )
+
+            return
+        }
+
+        let configuration = WKPDFConfiguration()
+        configuration.rect = rect
+
+        webView.createPDF(
+            configuration: configuration
+        ) { result in
+
             switch result {
-            case .success(let data): completionHandler(data, 0, .zero)
-            case .failure:           completionHandler(nil, 0, .zero)
+
+            case .success(let data):
+
+                completionHandler(
+                    data,
+                    0,
+                    rect
+                )
+
+            case .failure:
+
+                completionHandler(
+                    nil,
+                    0,
+                    .zero
+                )
             }
         }
     }
 }
 
-func installFullPageScreenshot(webView: WKWebView, controller: UIViewController) {
-    if ScreenshotManager.shared == nil {
-        if #available(iOS 14.0, *) {
-            let manager = ScreenshotManager()
-            ScreenshotManager.shared = manager
-            controller.view.window?.windowScene?.screenshotService?.delegate = manager
-        }
-    }
-    ScreenshotManager.shared?.install(webView)
+@available(iOS 14.0, *)
+func installFullPageScreenshot(
+    webView: WKWebView,
+    controller: UIViewController
+) {
+
+    ScreenshotManager.shared.install(
+        webView,
+        controller: controller
+    )
 }
 
-func installFullPageScreenshot(webView: WKWebView) {
-    ScreenshotManager.shared?.install(webView)
+@available(iOS 14.0, *)
+func installFullPageScreenshot(
+    webView: WKWebView
+) {
+
+    ScreenshotManager.shared.install(webView)
 }
 
-func uninstallFullPageScreenshot(webView: WKWebView) {
-    ScreenshotManager.shared?.uninstall(webView)
+@available(iOS 14.0, *)
+func uninstallFullPageScreenshot(
+    webView: WKWebView
+) {
+
+    ScreenshotManager.shared.uninstall(webView)
 }
