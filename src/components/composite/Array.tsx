@@ -6,7 +6,7 @@ import React, {
     type Ref, useState,
 } from "react"
 import type { ListToButtonsProps } from "@/components/types"
-import { NaiveButton } from "@/components/Buttons"
+import { NaiveButton } from "@/components/base/Buttons"
 import { vibrate } from "@/infra/device.client"
 import { highlight, string_icons } from "@/infra/ui_constants"
 

@@ -1,8 +1,8 @@
 "use client"
 
-import { AnimatedGlowText } from "@/components/String"
+import { AnimatedGlowText } from "@/components"
 import { useEffect, useState } from "react"
-import { LabeledImage } from "@/components/LabeledImage"
+import { LabeledImage } from "@/components"
 
 function LaunchAnimation(){
     const [welcome_sentence, set_welcome_sentence] = useState("Struggling to wake... Just five more minutes.")

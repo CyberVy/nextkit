@@ -5,7 +5,7 @@ import {  string_icons } from "@/infra/ui_constants"
 import type { SearchWordInputProps, StringInputProps } from "@/components/types"
 import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
-import { NaiveButton } from "@/components/Buttons"
+import { NaiveButton } from "@/components/base/Buttons"
 
 const StringInput = function StringInput({
     default_value,

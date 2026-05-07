@@ -8,8 +8,8 @@ import type { LabeledImageProps } from "@/components/types"
 import { is_ios_device, vibrate } from "@/infra/device.client"
 import { create_press_gesture } from "@/infra/gestures.client"
 import { useInViewport } from "@/components/hooks"
-import { FullscreenModalContainer } from "@/components/ModalContainer"
-import { VerticalMenuBar } from "@/components/VerticalMenuBar"
+import { FullscreenModalContainer } from "@/components/composite/ModalContainer"
+import { VerticalMenuBar } from "@/components/base/MenuBar"
 import { AnimationContainer } from "@/components/animation/AnimationContainer"
 
 function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number, number]): [number, number]{
@@ -307,7 +307,7 @@ const LabeledImage = function LabeledImage({
                             <div
                                 className={`mx-2 bg-black/50 absolute bottom-10 right-2 px-2 py-1 text-white text-sm rounded-lg ${show_description ? "block" : "hidden"}`}
                             >
-                                <div className="text-center whitespace-pre-line max-h-[300px] max-w-[50vw] overflow-auto">
+                                <div className="text-center whitespace-pre-line max-h-75 max-w-[50vw] overflow-auto">
                                     {description}
                                 </div>
                             </div>

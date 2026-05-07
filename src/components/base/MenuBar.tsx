@@ -41,7 +41,7 @@ type VerticalMenuBarSection = {
     items: VerticalMenuBarItem[]
 }
 
-type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"nav">, "children" | "onSelect"> & {
+type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"div">, "children" | "onSelect"> & {
     // Sectioned menu data rendered by the component.
     sections: VerticalMenuBarSection[]
     // Currently selected item key for controlled selection.
@@ -62,7 +62,7 @@ type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"nav">, "children" | "onS
     enable_vibration?: boolean
 }
 
-const VerticalMenuBar = function VerticalMenuBar(
+function VerticalMenuBar(
     {
         sections,
         selected_key,
@@ -96,7 +96,7 @@ const VerticalMenuBar = function VerticalMenuBar(
     }, [enable_vibration, onSelect, selected_key])
 
     return (
-        <nav
+        <div
             ref={ref}
             style={{
                 "--vertical-menu-accent-color": accent_color,
@@ -219,7 +219,7 @@ const VerticalMenuBar = function VerticalMenuBar(
                 <div className="px-3.5 pb-1 pt-3">
                     {footer}
                 </div>}
-        </nav>
+        </div>
     )
 }
 
