@@ -1,5 +1,5 @@
 import React from "react"
-import type { VerticalMenuBarProps } from "@/components/VerticalMenuBar"
+import type { VerticalMenuBarProps } from "@/components/base/MenuBar"
 
 export type StringInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     default_value?: string
@@ -76,7 +76,7 @@ export type ButtonGroupProps = Omit<React.ComponentPropsWithRef<"div">, "childre
     selected_text_color_dark?: string
 }
 
-export type NaiveButtonProps = Omit<React.ComponentPropsWithRef<"button">, "children"> & {
+export type NaiveButtonProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     width?: string
     height?: string
     icon: React.ReactNode

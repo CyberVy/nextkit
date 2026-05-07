@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { is_in_browser } from "@/infra/device.client"
-import { ScrollToBottomButton, ScrollToTopButton } from "@/components/FixedScrollButtons"
+import { ScrollToBottomButton, ScrollToTopButton } from "@/components/composite/FixedScrollButtons"
 
 type FullscreenModalContainerProps = React.ComponentPropsWithRef<"div"> & {
     enable_scroll_button?: boolean

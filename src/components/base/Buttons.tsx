@@ -3,12 +3,9 @@
 import type { ButtonGroupProps, NaiveButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 import { useState, type CSSProperties } from "react"
+import { join_classes } from "../utils"
 
-const join_classes = (...classes: (string | false | null | undefined)[]) => {
-    return classes.filter(Boolean).join(" ")
-}
-
-const NaiveButton = function NaiveButton({
+function NaiveButton({
     width = "56px",
     height = "32px",
     icon,
@@ -21,19 +18,15 @@ const NaiveButton = function NaiveButton({
     text_color_dark = "rgba(255,255,255,0.80)",
     className,
     style,
-    type = "button",
-    onClick,
     ref,
     ...props
 }: NaiveButtonProps){
 
     return (
-        <button
-            {...props}
-            ref={ref}
-            type={type}
+        <div 
             className={join_classes(
-                "relative align-middle select-none overflow-hidden rounded-[18px] border backdrop-blur-xl",
+                "inline-block select-none backdrop-blur-xl",
+                "border rounded-[18px]",
                 "bg-(--button-background-color) text-(--button-text-color) border-(--button-border-color)",
                 "shadow-[0_6px_18px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.28)]",
                 "transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
@@ -43,6 +36,7 @@ const NaiveButton = function NaiveButton({
                 "dark:shadow-[0_8px_20px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0_10px_24px_rgba(120,120,120,0.10),inset_0_1px_0_rgba(255,255,255,0.3)] dark:active:text-white/44",
                 className
             )}
+            ref={ref}
             style={{
                 width: width,
                 height: height,
@@ -54,22 +48,27 @@ const NaiveButton = function NaiveButton({
                 "--button-text-color-dark": text_color_dark,
                 ...style,
             } as CSSProperties}
-            onClick={event => {
-                onClick?.(event)
-                if (event.defaultPrevented) return
-
-                vibrate()
-                callback?.(event)
-            }}
+            {...props}
         >
-            <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
-                {icon}
-            </span>
-        </button>
+            <button
+                type={"button"}
+                className={join_classes(
+                    "relative align-middle overflow-hidden w-full h-full"
+                )}
+                onClick={event => {
+                    vibrate()
+                    callback?.(event)
+                }}
+            >
+                <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
+                    {icon}
+                </span>
+            </button>
+        </div>
     )
 }
 
-const ButtonGroup = function ButtonGroup({
+function ButtonGroup({
     button_icons,
     callbacks,
     item_width,
@@ -165,8 +164,5 @@ const ButtonGroup = function ButtonGroup({
         </div>
     )
 }
-
-NaiveButton.displayName = "NaiveButton"
-ButtonGroup.displayName = "ButtonGroup"
 
 export { NaiveButton, ButtonGroup }

@@ -1,14 +1,11 @@
 "use client"
 
-import { ButtonGroup } from "@/components/Buttons"
+import { ButtonGroup } from "@/components/base/Buttons"
 import { string_icons } from "@/infra/ui_constants"
 import React from "react"
 import type { ScrollButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
-
-const join_classes = (...classes: (string | false | null | undefined)[]) => {
-    return classes.filter(Boolean).join(" ")
-}
+import { join_classes } from "../utils"
 
 const scroll_button_group_props = {
     item_width: "40px",
