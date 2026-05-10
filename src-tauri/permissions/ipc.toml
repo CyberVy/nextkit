@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "ipc"
+description = "Allows the trusted CMS web app to use native IPC commands."
+commands.allow = [
+  "fetch",
+  "window_hub_register",
+  "window_hub_unregister",
+  "window_hub_send",
+]
