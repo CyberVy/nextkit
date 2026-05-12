@@ -18,8 +18,8 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-      --background: #000000;
-      --foreground: #EEEEEE;
+        --background: #000000;
+        --foreground: #EEEEEE;
     }
 }
 
@@ -29,8 +29,6 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-button:focus-visible,div:focus-visible,p:focus-visible {
+*:focus-visible {
     outline: none;
-    box-shadow: 0 0 10px 1px #aaaaaa;
-    transition: box-shadow 0.2s ease-in-out;
 }

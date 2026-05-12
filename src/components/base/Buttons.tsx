@@ -29,7 +29,7 @@ function NaiveButton({
                 "border rounded-[18px]",
                 "bg-(--button-background-color) text-(--button-text-color) border-(--button-border-color)",
                 "shadow-[0_6px_18px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.28)]",
-                "transition duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
+                "transition duration-300 ease-in-out",
                 "hover:cursor-pointer hover:shadow-[0_8px_22px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.28)]",
                 "active:scale-[0.97] active:text-black/44",
                 "dark:bg-(--button-background-color-dark) dark:text-(--button-text-color-dark) dark:border-(--button-border-color-dark)",
@@ -53,7 +53,8 @@ function NaiveButton({
             <button
                 type={"button"}
                 className={join_classes(
-                    "relative align-middle overflow-hidden w-full h-full"
+                    "relative align-middle overflow-hidden w-full h-full rounded-[18px]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22"
                 )}
                 onClick={event => {
                     vibrate()
