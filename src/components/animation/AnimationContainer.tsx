@@ -10,7 +10,7 @@ import type { AnimationContainerProps } from "@/components/animation/types"
  * the animation's reference coordinates can become incorrect.
  * The failure mode may also differ across browser engines because their implementations are not identical.
  */
-const AnimationContainer = function AnimationContainer({
+function AnimationContainer({
     show = true, children, className, style,
     duration = 300, delay = 0, easing = "ease-in-out",
     enter_from, enter_to, exit_from, exit_to,
@@ -155,7 +155,5 @@ const AnimationContainer = function AnimationContainer({
     }
     return null
 }
-
-AnimationContainer.displayName = "AnimationContainer"
 
 export { AnimationContainer }

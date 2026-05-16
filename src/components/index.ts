@@ -29,7 +29,7 @@ export { StringInput, SearchWordInput } from "./composite/StringInputs"
 // Version.tsx
 export { Version } from "./base/Version"
 
-// VerticalMenuBar.tsx
+// MenuBar.tsx
 export { VerticalMenuBar } from "./base/MenuBar"
 export type { VerticalMenuBarItem, VerticalMenuBarProps, VerticalMenuBarSection } from "./base/MenuBar"
 
@@ -50,14 +50,3 @@ export {
 
 // icons.tsx
 export { search_icon } from "./icons"
-
-// types.ts
-export type {
-    StringInputProps,
-    ListToButtonsProps,
-    LabeledImageProps,
-    ScrollButtonProps,
-    SearchWordInputProps,
-    ButtonGroupProps,
-    NaiveButtonProps
-} from "./types"

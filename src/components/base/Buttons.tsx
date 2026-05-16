@@ -1,9 +1,44 @@
 "use client"
 
-import type { ButtonGroupProps, NaiveButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 import { useState, type CSSProperties } from "react"
 import { join_classes } from "../utils"
+
+import type { ComponentPropsWithRef, ReactNode, MouseEvent } from "react"
+
+export type ButtonGroupProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+    button_icons: ReactNode[]
+    callbacks?: (() => void)[]
+    item_width: string
+    height: string
+    default_selected_index?: number
+    enable_selected_border?: boolean
+    background_color?: string
+    background_color_dark?: string
+    border_color?: string
+    border_color_dark?: string
+    text_color?: string
+    text_color_dark?: string
+    selected_background_color?: string
+    selected_background_color_dark?: string
+    selected_border_color?: string
+    selected_border_color_dark?: string
+    selected_text_color?: string
+    selected_text_color_dark?: string
+}
+
+export type NaiveButtonProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+    width?: string
+    height?: string
+    icon: ReactNode
+    callback?: (event: MouseEvent<HTMLButtonElement>) => void
+    background_color?: string
+    background_color_dark?: string
+    border_color?: string
+    border_color_dark?: string
+    text_color?: string
+    text_color_dark?: string
+}
 
 function NaiveButton({
     width = "56px",

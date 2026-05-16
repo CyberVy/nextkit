@@ -1,9 +1,8 @@
 "use client"
 
-import {
-    type CSSProperties, type ComponentPropsWithRef,
-} from "react"
 import { vibrate } from "@/infra/device.client"
+
+import type { CSSProperties, ComponentPropsWithRef } from "react"
 
 type CheckboxProps = Omit<ComponentPropsWithRef<"input">, "type"> & {
     background_color?: string

@@ -2,8 +2,10 @@
 
 import version, { delete_static_resource_caches_of_all_versions } from "@/infra/version"
 import { string_icons } from "@/infra/ui_constants"
-import { useState, type ComponentPropsWithRef } from "react"
+import { useState } from "react"
 import { vibrate } from "@/infra/device.client"
+
+import type { ComponentPropsWithRef } from "react"
 
 type VersionProps = Omit<ComponentPropsWithRef<"div">, "children">
 

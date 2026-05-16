@@ -1,14 +1,16 @@
 "use client"
 
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { is_in_browser } from "@/infra/device.client"
 import { ScrollToBottomButton, ScrollToTopButton } from "@/components/composite/FixedScrollButtons"
 
-type FullscreenModalContainerProps = React.ComponentPropsWithRef<"div"> & {
+import type { ComponentPropsWithRef } from "react"
+
+type FullscreenModalContainerProps = ComponentPropsWithRef<"div"> & {
     enable_scroll_button?: boolean
 }
 
-const FullscreenModalContainer = function FullscreenModalContainer({ className = "", children, enable_scroll_button = false, ref, ...props }: FullscreenModalContainerProps){
+function FullscreenModalContainer({ className = "", children, enable_scroll_button = false, ref, ...props }: FullscreenModalContainerProps){
 
     const [in_browser, set_in_browser] = useState(true)
     const container_ref = useRef<HTMLDivElement | null>(null)
@@ -57,14 +59,12 @@ const FullscreenModalContainer = function FullscreenModalContainer({ className =
     )
 }
 
-FullscreenModalContainer.displayName = "FullscreenModalContainer"
-
 export { FullscreenModalContainer }
 
 
-type FloatingModalContainerProps = React.ComponentPropsWithRef<"div">
+type FloatingModalContainerProps = ComponentPropsWithRef<"div">
 
-const FloatingModalContainer = function FloatingModalContainer({ className = "", children, ref, ...props }: FloatingModalContainerProps){
+function FloatingModalContainer({ className = "", children, ref, ...props }: FloatingModalContainerProps){
     return (
         <div
             ref={ref}
@@ -87,7 +87,5 @@ const FloatingModalContainer = function FloatingModalContainer({ className = "",
         </div>
     )
 }
-
-FloatingModalContainer.displayName = "FullscreenModalContainer"
 
 export { FloatingModalContainer }

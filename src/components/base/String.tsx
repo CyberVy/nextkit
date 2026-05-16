@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useState, type ComponentPropsWithRef } from "react"
+import { useEffect, useState } from "react"
+
+import type { ComponentPropsWithRef } from "react"
 
 type AnimatedGlowTextProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     text?: string

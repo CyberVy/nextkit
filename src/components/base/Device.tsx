@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ComponentPropsWithRef } from "react"
+import { useEffect, useState } from "react"
 import {
     is_in_pwa as _is_in_pwa,
     is_touch_device as _is_touch_device,
@@ -9,6 +9,8 @@ import {
     is_in_native as _is_in_native
 } from "@/infra/device.client"
 import { string_icons } from "@/infra/ui_constants"
+
+import type { ComponentPropsWithRef } from "react"
 
 type DeviceProps = Omit<ComponentPropsWithRef<"div">, "children">
 
