@@ -1,13 +1,9 @@
 "use client"
 
 import { vibrate } from "@/infra/device.client"
-import {
-    type CSSProperties,
-    type ComponentPropsWithRef,
-    type ReactNode,
-    useCallback,
-    useState,
-} from "react"
+import { useCallback, useState } from "react"
+
+import type { CSSProperties, ComponentPropsWithRef, ReactNode } from "react"
 
 type VerticalMenuBarItem = {
     // Unique key for selection and React list rendering.

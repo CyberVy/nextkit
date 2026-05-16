@@ -1,16 +1,18 @@
 "use client"
 
-import React, {
-    type ComponentPropsWithoutRef,
-    type ReactNode,
-    type Ref, useState,
-} from "react"
-import type { ListToButtonsProps } from "@/components/types"
+import { useState } from "react"
 import { NaiveButton } from "@/components/base/Buttons"
 import { vibrate } from "@/infra/device.client"
 import { highlight, string_icons } from "@/infra/ui_constants"
 
-type StringArrayProps = Omit<ComponentPropsWithoutRef<"li">, "children"> & {
+import type { ComponentPropsWithRef, ReactNode, Ref } from "react"
+
+export type ListToButtonsProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+    list: string[]
+    callback?: (item: string | null) => void
+}
+
+type StringArrayProps = Omit<ComponentPropsWithRef<"li">, "children"> & {
     // String array rendered as list rows.
     array: string[]
     // Optional className applied to the outer list container.
@@ -21,10 +23,9 @@ type StringArrayProps = Omit<ComponentPropsWithoutRef<"li">, "children"> & {
     ordered?: boolean
     // Optional empty placeholder shown when the array is empty.
     empty_text?: ReactNode
-    ref?: Ref<HTMLUListElement | HTMLOListElement>
 }
 
-const StringArray = function StringArray(
+function StringArray(
     {
         array,
         list_className = "",
@@ -92,13 +93,10 @@ const StringArray = function StringArray(
     )
 }
 
-StringArray.displayName = "StringArray"
-
 export type { StringArrayProps }
 export { StringArray }
 
-
-const ListToButtons = function ListToButtons({ list, callback, className = "", ref, ...props }: ListToButtonsProps){
+function ListToButtons({ list, callback, className = "", ref, ...props }: ListToButtonsProps){
 
     const [selected_item, set_selected_item] = useState<string | number | null>(null)
     const [is_collapsed, set_is_collapsed] = useState(true)
@@ -144,6 +142,5 @@ const ListToButtons = function ListToButtons({ list, callback, className = "", r
     )
 }
 
-ListToButtons.displayName = "ListToButtons"
 
 export { ListToButtons }

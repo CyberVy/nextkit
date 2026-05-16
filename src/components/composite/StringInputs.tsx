@@ -2,12 +2,27 @@
 
 import { useRef, useState } from "react"
 import {  string_icons } from "@/infra/ui_constants"
-import type { SearchWordInputProps, StringInputProps } from "@/components/types"
 import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/base/Buttons"
 
-const StringInput = function StringInput({
+export type SearchWordInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
+    callback: (word: string) => void
+    description?: string
+}
+
+export type StringInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
+    default_value?: string
+    callback: (url: string) => void
+    description: string
+    need_button?: boolean
+    button_title?: string
+    button_height?: string
+    button_width?: string
+    enable_auto_execution?: boolean
+}
+
+function StringInput({
     default_value,
     callback,
     description,
@@ -63,7 +78,7 @@ const StringInput = function StringInput({
     )
 }
 
-const SearchWordInput = function SearchWordInput({ callback, className = "", description = "", ref, ...props }: SearchWordInputProps){
+function SearchWordInput({ callback, className = "", description = "", ref, ...props }: SearchWordInputProps){
     description = description || "Search for something? "
     const input_ref = useRef<HTMLInputElement>(null)
     return (
@@ -101,8 +116,5 @@ const SearchWordInput = function SearchWordInput({ callback, className = "", des
         </div>
     )
 }
-
-StringInput.displayName = "StringInput"
-SearchWordInput.displayName = "SearchWordInput"
 
 export { StringInput, SearchWordInput }

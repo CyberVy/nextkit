@@ -1,16 +1,47 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import type { PointerEvent as ReactPointerEvent } from "react"
 import { string_icons } from "@/infra/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
-import type { LabeledImageProps } from "@/components/types"
+
 import { is_ios_device, vibrate } from "@/infra/device.client"
 import { create_press_gesture } from "@/infra/gestures.client"
 import { useInViewport } from "@/components/hooks"
 import { FullscreenModalContainer } from "@/components/composite/ModalContainer"
 import { VerticalMenuBar } from "@/components/base/MenuBar"
 import { AnimationContainer } from "@/components/animation/AnimationContainer"
+
+import type { PointerEvent } from "react"
+import type { ComponentPropsWithRef, ComponentPropsWithoutRef, ReactNode } from "react"
+import type { VerticalMenuBarProps } from "@/components/base/MenuBar"
+
+export type LabeledImageProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+    src?: string
+    top_information?: ReactNode
+    top_information_background_color?: string
+    bottom_information?: ReactNode
+    bottom_information_background_color?: string
+    image_proxy_api?: string
+    image_props?: Omit<ComponentPropsWithoutRef<"img">, "children" | "src" | "alt" | "className" | "onClick" | "onContextMenu" | "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel" | "onPointerLeave" | "onTouchEnd">
+    image_className?: string
+    label_left?: ReactNode
+    label_left_background_color?: string
+    label_right?: ReactNode
+    label_right_background_color?: string
+    alt?: string
+    description?: ReactNode
+    onClickImage?: () => void
+    onClickDelete?: () => void
+    clear_margin?: number
+    protected_padding?: number
+    intersection_root_element?: HTMLElement | null
+    context_menu?: Pick<VerticalMenuBarProps, "sections" | "header" | "footer" | "compact" | "accent_color" | "enable_vibration" | "onSelect"> & {
+        long_press_ms?: number
+        close_after_select?: boolean
+    }
+    className?: string
+}
+
 
 function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number, number]): [number, number]{
     const safe_padding = 12
@@ -104,7 +135,7 @@ const LabeledImage = function LabeledImage({
     }, [context_menu_point])
 
     const press_gesture = useMemo(() => {
-        return create_press_gesture<ReactPointerEvent<HTMLImageElement>>({
+        return create_press_gesture<PointerEvent<HTMLImageElement>>({
             enabled: event => event.button === 0,
             on_success: () => {
                 vibrate()

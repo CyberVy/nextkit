@@ -3,9 +3,16 @@
 import { ButtonGroup } from "@/components/base/Buttons"
 import { string_icons } from "@/infra/ui_constants"
 import React from "react"
-import type { ScrollButtonProps } from "@/components/types"
 import { vibrate } from "@/infra/device.client"
 import { join_classes } from "../utils"
+
+import type { ComponentPropsWithRef, RefObject } from "react"
+
+export type ScrollButtonProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+    element_ref?: RefObject<HTMLDivElement | null>
+    callback?: () => void
+    position_class_name?: string
+}
 
 const scroll_button_group_props = {
     item_width: "40px",
