@@ -36,8 +36,8 @@ export type { VerticalMenuBarItem, VerticalMenuBarProps, VerticalMenuBarSection 
 // animation/AnimationContainer.tsx
 export { AnimationContainer } from "./animation/AnimationContainer"
 
-// animation/types.ts
-export type { AnimationStyle, AnimationContainerProps } from "./animation/types"
+// Portal.tsx
+export { BodyPortal } from "./base/Portal"
 
 // hooks.tsx
 export {
