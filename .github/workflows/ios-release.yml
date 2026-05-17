@@ -48,7 +48,7 @@ jobs:
             echo "Signing secrets detected. Building signed IPA."
           elif [[ -z "$IOS_CERTIFICATE_P12_BASE64" && -z "$IOS_CERTIFICATE_PASSWORD" && -z "$IOS_PROVISIONING_PROFILE_BASE64" ]]; then
             echo "has_signing=false" >> "$GITHUB_OUTPUT"
-            echo "Signing secrets missing. Building unsigned simulator app."
+            echo "Signing secrets missing. Building unsigned device app."
           else
             echo "Partial signing secrets detected. Please set all of IOS_CERTIFICATE_P12_BASE64, IOS_CERTIFICATE_PASSWORD, IOS_PROVISIONING_PROFILE_BASE64 or leave all empty."
             exit 1
@@ -122,34 +122,26 @@ jobs:
           fi
           cp "$IPA_PATH" "$GITHUB_WORKSPACE/ios-release.ipa"
 
-      - name: Select unsigned simulator target
-        id: unsigned_target
+      - name: Build unsigned iOS device IPA
+        if: ${{ steps.signing_mode.outputs.has_signing != 'true' }}
+        run: npm run tauri ios build -- --ci --target aarch64 --no-sign
+
+      - name: Collect unsigned iOS device build
         if: ${{ steps.signing_mode.outputs.has_signing != 'true' }}
         run: |
-          if [[ "$(uname -m)" == "arm64" ]]; then
-            echo "ios_target=aarch64-sim" >> "$GITHUB_OUTPUT"
-          else
-            echo "ios_target=x86_64" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Align simulator arch with runner
-        if: ${{ steps.signing_mode.outputs.has_signing != 'true' && runner.arch == 'ARM64' }}
-        run: |
-          perl -0777 -i -pe 's/ARCHS = \(\s*arm64,\s*x86_64,\s*\);/ARCHS = arm64;/g; s/VALID_ARCHS = "arm64  x86_64";/VALID_ARCHS = arm64;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-
-      - name: Build unsigned iOS simulator app
-        if: ${{ steps.signing_mode.outputs.has_signing != 'true' }}
-        run: npm run tauri ios build -- --ci --target "${{ steps.unsigned_target.outputs.ios_target }}"
-
-      - name: Package unsigned simulator app
-        if: ${{ steps.signing_mode.outputs.has_signing != 'true' }}
-        run: |
-          APP_PATH="$(find src-tauri/gen/apple/build -type d -name '*.app' | head -n 1)"
-          if [[ -z "$APP_PATH" ]]; then
-            echo "No simulator .app generated."
+          IPA_PATH="$(find src-tauri/gen/apple src-tauri/target -type f -name '*.ipa' | head -n 1)"
+          if [[ -z "$IPA_PATH" ]]; then
+            echo "No unsigned device .ipa generated."
             exit 1
           fi
-          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$GITHUB_WORKSPACE/ios-simulator-unsigned.zip"
+          cp "$IPA_PATH" "$GITHUB_WORKSPACE/ios-device-unsigned.ipa"
+
+          APP_PATH="$(find src-tauri/gen/apple src-tauri/target -type d -name '*.app' | head -n 1)"
+          if [[ -z "$APP_PATH" ]]; then
+            echo "No unsigned device .app generated."
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$GITHUB_WORKSPACE/ios-device-unsigned-app.zip"
 
       - name: Upload signed IPA to release
         if: ${{ steps.signing_mode.outputs.has_signing == 'true' }}
@@ -157,11 +149,13 @@ jobs:
         with:
           files: ios-release.ipa
 
-      - name: Upload unsigned simulator app to release
+      - name: Upload unsigned device build to release
         if: ${{ steps.signing_mode.outputs.has_signing != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
-          files: ios-simulator-unsigned.zip
+          files: |
+            ios-device-unsigned.ipa
+            ios-device-unsigned-app.zip
 
       - name: Upload to TestFlight (optional)
         if: ${{ steps.signing_mode.outputs.has_signing == 'true' && steps.testflight_mode.outputs.has_testflight == 'true' }}
