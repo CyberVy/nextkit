@@ -104,17 +104,27 @@ export function is_in_dark(){
     return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-export function ios_haptic(){
-    if (!is_ios_device()) return
+let _ios_haptics_label_element: HTMLLabelElement | null = null
+function create_ios_haptics_label_element(){
+    if (_ios_haptics_label_element) return _ios_haptics_label_element
 
-    // This browser-side workaround is only reliable after a completed tap-like gesture.
-    // Early gesture phases such as touchstart/pointerdown usually cannot trigger it on iOS.
     const label_element = document.createElement("label")
     label_element.style.display = "none"
     const input_element = document.createElement("input")
     input_element.type = "checkbox"
     input_element.setAttribute("switch", "")
     label_element.appendChild(input_element)
+    _ios_haptics_label_element = label_element
+    return label_element
+}
+
+// This browser-side workaround is only reliable after a completed tap-like gesture.
+// Early gesture phases such as touchstart/pointerdown usually cannot trigger it on iOS.
+// warning: available for iOS 18 - iOS 26.0
+export function ios_haptic(){
+    if (!is_ios_device()) return
+
+    const label_element = create_ios_haptics_label_element()
     document.head.appendChild(label_element)
     try {
         label_element.click()
