@@ -30,7 +30,8 @@ export function keep_alive_for_once(metadata?: MediaMetadata){
     }
     const audio_element = get_unique_audio_element()
     audio_element.muted = false
-    return audio_element.play()
+    audio_element.play()
+    return audio_element
 }
 
 // beta
