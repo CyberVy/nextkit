@@ -29,6 +29,10 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+*::selection {
+    background-color: color-mix(in oklab, var(--foreground) 50%, transparent);
+}
+
 *:focus-visible {
     outline: none;
 }
