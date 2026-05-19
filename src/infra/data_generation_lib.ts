@@ -1,4 +1,3 @@
-import type { CoverImageOptions } from "@/infra/types"
 import { is_in_dark } from "@/infra/device.client"
 
 type PendingHtmlIcon = "search" | "loading" | "clipboard" | "chat" | "external_link" | "none"
@@ -8,6 +7,15 @@ type PendingHtmlOptions = {
     message: string
     note?: string
     icon?: PendingHtmlIcon
+}
+
+export type CoverImageOptions = {
+    width?: number
+    height?: number
+    background?: string
+    color?: string
+    fontSize?: number
+    fontFamily?: string
 }
 
 export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000){

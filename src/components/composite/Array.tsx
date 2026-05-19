@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { NaiveButton } from "@/components/base/Buttons"
 import { vibrate } from "@/infra/device.client"
-import { highlight, string_icons } from "@/infra/ui_constants"
+import { highlight, string_icons } from "@/components/ui_constants"
 
 import type { ComponentPropsWithRef, ReactNode, Ref } from "react"
 

@@ -1,7 +1,7 @@
 "use client"
 
 import version, { delete_static_resource_caches_of_all_versions } from "@/infra/version"
-import { string_icons } from "@/infra/ui_constants"
+import { string_icons } from "@/components/ui_constants"
 import { useState } from "react"
 import { vibrate } from "@/infra/device.client"
 

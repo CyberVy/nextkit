@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { string_icons } from "@/infra/ui_constants"
+import { string_icons } from "@/components/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
 
 import { is_ios_device, vibrate } from "@/infra/device.client"

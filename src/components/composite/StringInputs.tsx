@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
-import {  string_icons } from "@/infra/ui_constants"
+import {  string_icons } from "@/components/ui_constants"
 import { search_icon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/base/Buttons"

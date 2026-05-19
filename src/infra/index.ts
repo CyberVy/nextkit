@@ -25,12 +25,6 @@ export { keep_alive_for_once, auto_keep_alive_by_video_states } from "./keep_ali
 // storage.client.ts
 export { LocalStorageItemController, CacheStorageItemController } from "./storage.client"
 
-// types.ts
-export type { CoverImageOptions, NestedRecordValue, NestedRecord } from "./types"
-
-// ui_constants.ts
-export { string_icons, highlight } from "./ui_constants"
-
 // version.ts
 export { static_resource_cache_name, delete_static_resource_caches_of_all_versions, is_later_version } from "./version"
 export { default as version } from "./version"
