@@ -1,6 +1,10 @@
-import { NestedRecordValue } from "@/infra/types"
 import { is_in_native } from "@/infra/device.client"
 import { invoke } from "@tauri-apps/api/core"
+
+export type NestedRecordValue<T> = NestedRecord<T> | T | NestedRecordValue<T>[]
+export interface NestedRecord<T> {
+    [key: string]: NestedRecordValue<T>
+}
 
 export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:string): NestedRecordValue<T>[]{
     const r: NestedRecordValue<T>[]  = []

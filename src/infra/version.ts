@@ -1,5 +1,5 @@
 const is_dev = process.env.NODE_ENV === "development"
-const version = `0.1.0${is_dev ? "dev" : ""}`
+const version = `${process.env.NEXT_PUBLIC_VERSION}${is_dev ? "dev" : ""}`
 export const static_resource_cache_name = "static-resource-cache"
 
 export async function delete_static_resource_caches_of_all_versions(){

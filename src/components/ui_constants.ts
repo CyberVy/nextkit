@@ -28,4 +28,3 @@ export const string_icons = {
 }
 
 export const highlight = "text-orange-400 dark:text-orange-300"
-export const pulse = "active:outline-none active:shadow-[0_0_10px_1px_#aaaaaa] transition-shadow duration-200 ease-in-out"

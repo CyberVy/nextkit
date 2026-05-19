@@ -1,7 +1,7 @@
 "use client"
 
 import { ButtonGroup } from "@/components/base/Buttons"
-import { string_icons } from "@/infra/ui_constants"
+import { string_icons } from "@/components/ui_constants"
 import React from "react"
 import { vibrate } from "@/infra/device.client"
 import { join_classes } from "../utils"

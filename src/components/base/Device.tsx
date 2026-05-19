@@ -8,7 +8,7 @@ import {
     is_service_worker_available as _is_service_worker_available,
     is_in_native as _is_in_native
 } from "@/infra/device.client"
-import { string_icons } from "@/infra/ui_constants"
+import { string_icons } from "@/components/ui_constants"
 
 import type { ComponentPropsWithRef } from "react"
 
