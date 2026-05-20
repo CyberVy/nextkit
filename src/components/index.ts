@@ -17,6 +17,10 @@ export { ScrollToTopButton, ScrollToBottomButton, ScrollButtonGroup } from "./co
 // LabeledImage.tsx
 export { LabeledImage } from "./composite/LabeledImage"
 
+// ContextMenuContainer.tsx
+export { ContextMenu } from "./composite/ContextMenuContainer"
+export type { ContextMenuProps } from "./composite/ContextMenuContainer"
+
 // ModalContainer.tsx
 export { FullscreenModalContainer, FloatingModalContainer } from "./composite/ModalContainer"
 
