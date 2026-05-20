@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { vibrate } from "@/infra/device.client"
 import { create_press_gesture } from "@/infra/gestures.client"
 import { FullscreenModalContainer } from "@/components/composite/ModalContainer"
@@ -40,6 +40,7 @@ function ContextMenu({
     ...menuProps
 }: ContextMenuProps){
     const { sections, onSelect, enable_vibration = true, ...remainingMenuProps } = menuProps
+    const backdrop_press_active_ref = useRef(false)
     const [show_context_menu, set_show_context_menu] = useState(false)
     const [context_menu_point, set_context_menu_point] = useState<[number, number]>([0, 0])
     const [context_menu_render_point, set_context_menu_render_point] = useState<[number, number]>([0, 0])
@@ -61,6 +62,7 @@ function ContextMenu({
     const open_context_menu = useCallback((client_x: number, client_y: number) => {
         if (disabled || !has_context_menu) return
 
+        backdrop_press_active_ref.current = false
         set_context_menu_point([client_x, client_y])
         set_context_menu_render_point([client_x, client_y])
         set_show_context_menu(true)
@@ -207,12 +209,20 @@ function ContextMenu({
                             onContextMenu={event => {
                                 event.preventDefault()
                             }}
+                            onPointerDown={() => {
+                                backdrop_press_active_ref.current = true
+                            }}
+                            onTouchStart={() => {
+                                backdrop_press_active_ref.current = true
+                            }}
                             onClick={() => {
+                                if (!backdrop_press_active_ref.current) return
                                 close_context_menu()
                             }}
                             onTouchEnd={event => {
                                 // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
                                 event.preventDefault()
+                                if (!backdrop_press_active_ref.current) return
                                 event.currentTarget.click()
                             }}
                         >
