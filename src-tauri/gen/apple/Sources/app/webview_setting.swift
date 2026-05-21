@@ -8,6 +8,8 @@ public func on_webview_created(_ webviewPtr: UnsafeRawPointer?, _ controllerPtr:
     let webview = Unmanaged<WKWebView>.fromOpaque(webviewPtr).takeUnretainedValue()
     let controller = Unmanaged<UIViewController>.fromOpaque(controllerPtr).takeUnretainedValue()
 
+    webview.tintColor = UIColor.label.withAlphaComponent(0.8)
+
     // Enable edge-swipe back/forward like Safari.
     webview.allowsBackForwardNavigationGestures = true
 
