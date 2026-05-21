@@ -30,7 +30,10 @@ export default function Page(){
                 </div>
                 :
                 <div>
-                    <AnimatedGlowText text={"Launching... >_"}/>
+                    <AnimatedGlowText 
+                        text={"Launching... >_"}
+                        className="select-none"
+                    />
                 </div>}
         </div>
     )
