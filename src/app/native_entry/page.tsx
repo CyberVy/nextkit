@@ -4,10 +4,10 @@ import { useLayoutEffect, useState, useEffect } from "react"
 import { is_in_native } from "@/infra/device.client"
 import { AnimatedGlowText } from "@/components"
 
-// The WEB_URL with an "http" prefix is only for native app to simulate a website environment for some 3rd-party services which require it.
-const WEB_URL = "/"
+// The WEB_URL with an "https" prefix is for native app to simulate a website environment 
+// for some 3rd-party services and service worker which require it.
+const WEB_URL = process.env.NODE_ENV === "development" ? "/" : (process.env.NEXT_PUBLIC_NATIVE_ENTRY_URL || "/")
 
-// This is an entry for native app, which can clear the default flicker.
 export default function Page(){
     const [in_native, set_in_native] = useState(true)
 
@@ -21,8 +21,6 @@ export default function Page(){
     }, [])
     useEffect(() => {
         set_in_native(is_in_native())
-        if (!is_in_native()) return
-
     }, [])
     return (
         <div className="fixed left-1/2 top-1/2 -translate-1/2">
