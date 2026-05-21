@@ -74,7 +74,6 @@ function LabeledImage({
     const [img_size, set_img_size] = useState([0, 0])
     const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
     const resolved_src = fallback_blob_url || requested_src || undefined
-    const has_context_menu = Boolean(context_menu?.sections?.length)
 
     useEffect(() => {
         set_is_ios(is_ios_device())
@@ -117,14 +116,14 @@ function LabeledImage({
 
     return (
         <ContextMenu
-            disabled={!has_context_menu}
             onClickTrigger={onClickImage}
             sections={context_menu?.sections || []}
             {...context_menu}
+            className={className}
+            ref={ref}
         >
             <div
-                ref={ref}
-                className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} ${className || ""} w-full h-full`}
+                className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} w-full h-full`}
                 {...props}
             >
                 {clear_margin != undefined &&

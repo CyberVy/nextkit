@@ -86,7 +86,13 @@ function ContextMenu({
 
     const press_gesture = useMemo(() => {
         return create_press_gesture<PointerEvent<HTMLDivElement>>({
-            enabled: event => event.button === 0,
+            enabled: event => {
+                if (event.button !== 0) return false
+                if (onClickTrigger) return true
+                return (!disabled && has_context_menu)
+            },
+            stop_propagation: true,
+            prevent_default: true,
             on_success: () => {
                 if (enable_vibration){
                     vibrate()
@@ -137,43 +143,6 @@ function ContextMenu({
         open_context_menu(event.clientX, event.clientY)
     }
 
-    const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (disabled || !has_context_menu) return
-        event.stopPropagation()
-        press_gesture.on_pointer_down(event)
-    }
-
-    const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (disabled || !has_context_menu) return
-        event.stopPropagation()
-        press_gesture.on_pointer_move(event)
-    }
-
-    const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (disabled || !has_context_menu) return
-        event.stopPropagation()
-        press_gesture.on_pointer_up(event)
-    }
-
-    const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (disabled || !has_context_menu) return
-        event.stopPropagation()
-        press_gesture.on_pointer_cancel(event)
-    }
-
-    const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (disabled || !has_context_menu) return
-        event.stopPropagation()
-        press_gesture.on_pointer_leave(event)
-    }
-
-    const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-        if (disabled || !has_context_menu) return
-
-        // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
-        event.preventDefault()
-    }
-
     return (
         <>
             <div
@@ -183,12 +152,15 @@ function ContextMenu({
                 ].filter(Boolean).join(" ")}
                 style={style}
                 onContextMenu={handleContextMenu}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
-                onPointerLeave={handlePointerLeave}
-                onTouchEnd={handleTouchEnd}
+                onPointerDown={press_gesture.on_pointer_down}
+                onPointerMove={press_gesture.on_pointer_move}
+                onPointerUp={press_gesture.on_pointer_up}
+                onPointerCancel={press_gesture.on_pointer_cancel}
+                onPointerLeave={press_gesture.on_pointer_leave}
+                onTouchEnd={event => {
+                    // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
+                    event.preventDefault()
+                }}
             >
                 {children}
             </div>
