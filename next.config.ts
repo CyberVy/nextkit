@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
     output: "export",
     env: {
         NEXT_PUBLIC_BUILD_TIME: new Date().toUTCString(),
-        NEXT_PUBLIC_VERSION: "0.1.0"
+        NEXT_PUBLIC_VERSION: "0.1.0",
+        NEXT_PUBLIC_NATIVE_ENTRY_URL: "/"
     }
 }
 
