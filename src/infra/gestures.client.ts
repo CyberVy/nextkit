@@ -19,6 +19,8 @@ type PressGestureParams<TEvent extends { clientX: number, clientY: number }> = {
     enabled?: GestureEnabled<TEvent>
     long_press?: LongPressParams<TEvent>
     move_threshold?: number
+    stop_propagation?: boolean
+    prevent_default?: boolean
 }
 
 const is_gesture_enabled = <TEvent, >(enabled: GestureEnabled<TEvent> | undefined, event: TEvent) => {
@@ -29,13 +31,15 @@ const is_gesture_enabled = <TEvent, >(enabled: GestureEnabled<TEvent> | undefine
     return enabled ?? true
 }
 
-export function create_press_gesture<TEvent extends { clientX: number, clientY: number }>({
+export function create_press_gesture<TEvent extends { clientX: number, clientY: number, stopPropagation?: () => void, preventDefault?: () => void }>({
     click,
     on_cancel,
     on_success,
     enabled,
     long_press,
     move_threshold = 10,
+    stop_propagation = false,
+    prevent_default = false,
 }: PressGestureParams<TEvent>){
     let timer = 0
     let start_event: TEvent | null = null
@@ -67,6 +71,15 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
         on_cancel?.(reason, event)
     }
 
+    const handle_event_options = (event: TEvent) => {
+        if (stop_propagation && typeof event.stopPropagation === "function"){
+            event.stopPropagation()
+        }
+        if (prevent_default && typeof event.preventDefault === "function"){
+            event.preventDefault()
+        }
+    }
+
     const on_pointer_down = (event: TEvent) => {
         if (!is_gesture_enabled(enabled, event)){
             reset_press()
@@ -74,6 +87,8 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
         }
 
         reset_press()
+        handle_event_options(event)
+        
         start_event = event
         start_client_x = event.clientX
         start_client_y = event.clientY
@@ -90,7 +105,13 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const on_pointer_move = (event: TEvent) => {
-        if (!start_event || long_pressing) return
+        if (!start_event) return
+
+        if (is_gesture_enabled(enabled, event)){
+            handle_event_options(event)
+        }
+
+        if (long_pressing) return
 
         const moved_x = event.clientX - start_client_x
         const moved_y = event.clientY - start_client_y
@@ -102,6 +123,10 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
 
     const on_pointer_up = (event: TEvent) => {
         if (!start_event) return
+
+        if (is_gesture_enabled(enabled, event)){
+            handle_event_options(event)
+        }
 
         const did_long_press = long_pressing
 
@@ -123,6 +148,12 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const on_pointer_cancel = (event: TEvent) => {
+        if (!start_event) return
+
+        if (is_gesture_enabled(enabled, event)){
+            handle_event_options(event)
+        }
+
         if (long_pressing){
             long_press?.on_end?.(event)
             reset_press()
@@ -133,6 +164,12 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const on_pointer_leave = (event: TEvent) => {
+        if (!start_event) return
+
+        if (is_gesture_enabled(enabled, event)){
+            handle_event_options(event)
+        }
+
         if (long_pressing){
             long_press?.on_end?.(event)
             reset_press()
