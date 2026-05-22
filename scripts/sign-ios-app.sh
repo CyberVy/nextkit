@@ -143,7 +143,7 @@ sign_nested_code() {
   local item
 
   while IFS= read -r item; do
-    codesign --force --sign "$identity" --timestamp=none "$item"
+    codesign --force --sign "$identity" $TIMESTAMP_FLAG "$item"
   done < <(find "$app_path" -depth \( -type d \( -name '*.framework' -o -name '*.appex' \) -o -type f -name '*.dylib' \) -print)
 }
 
@@ -244,13 +244,21 @@ if [ -z "$IDENTITY" ]; then
     || die "no valid codesigning identity matches the selected provisioning profile"
 fi
 
+# Re-evaluate TIMESTAMP_FLAG after IDENTITY is resolved
+if [[ "$IDENTITY" == *"Distribution"* || "$IDENTITY" == *"distribution"* ]]; then
+  printf 'Distribution identity detected. Enabling secure timestamp for App Store validation...\n'
+  TIMESTAMP_FLAG="--timestamp"
+else
+  TIMESTAMP_FLAG="--timestamp=none"
+fi
+
 /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' "$SELECTED_PROFILE_PLIST" > "$ENTITLEMENTS"
 
 ditto "$APP_SOURCE" "$APP_PATH"
 cp "$PROFILE" "$APP_PATH/embedded.mobileprovision"
 
 sign_nested_code "$APP_PATH" "$IDENTITY"
-codesign --force --sign "$IDENTITY" --entitlements "$ENTITLEMENTS" --timestamp=none "$APP_PATH"
+codesign --force --sign "$IDENTITY" --entitlements "$ENTITLEMENTS" $TIMESTAMP_FLAG "$APP_PATH"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
 mkdir -p "$(dirname "$OUTPUT")"
