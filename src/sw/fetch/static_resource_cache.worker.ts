@@ -1,4 +1,4 @@
-import version, { static_resource_cache_name } from "@/infra/version"
+import version, { static_resource_cache_name, is_dev } from "@/infra/version"
 import { CacheStorageItemController } from "@/infra/storage.client"
 
 export async function check_latest(){
@@ -38,10 +38,7 @@ export async function check_latest(){
 
 export function handle_fetch_for_static_resource(event: FetchEvent){
 
-    try {
-        if (process.env.NODE_ENV === "development") return false
-    }
-    catch {}
+    if (is_dev) return false
 
     if (event.request.method !== "GET") return false
 

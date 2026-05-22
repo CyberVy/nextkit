@@ -1,5 +1,7 @@
-const is_dev = process.env.NODE_ENV === "development"
-const version = `${process.env.NEXT_PUBLIC_VERSION}${is_dev ? "dev" : ""}`
+export const is_dev = process.env.NODE_ENV === "development"
+import { version as package_version } from "../../package.json"
+const version = `${package_version}${is_dev ? "dev" : ""}`
+export default version
 export const static_resource_cache_name = "static-resource-cache"
 
 export async function delete_static_resource_caches_of_all_versions(){
@@ -38,5 +40,3 @@ export function is_later_version(v1:string, v2:string){
     }
     return patch_1 > patch_2
 }
-
-export default version
