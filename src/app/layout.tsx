@@ -42,12 +42,12 @@ export const viewport: Viewport = {
 
 // This css aims to avoid launch flicker in light mode on some platforms (e.g. iOS PWA).
 const no_flicker_background_css = `
-    html {
+    body {
         background: #FFFFFF;
     }
 
     @media (prefers-color-scheme: dark) {
-        html {
+        body {
             background: #000000;
         }
     }`
