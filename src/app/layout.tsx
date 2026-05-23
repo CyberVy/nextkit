@@ -40,7 +40,7 @@ export const viewport: Viewport = {
     userScalable: false
 }
 
-// This css aims to avoid launch filcker in light mode on some platforms (e.g. iOS PWA).
+// This css aims to avoid launch flicker in light mode on some platforms (e.g. iOS PWA).
 const no_flicker_background_css = `
     html {
         background: #FFFFFF;
