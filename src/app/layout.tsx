@@ -40,26 +40,9 @@ export const viewport: Viewport = {
     userScalable: false
 }
 
-// This css aims to avoid launch flicker in light mode on some platforms (e.g. iOS PWA).
-const no_flicker_background_css = `
-    body {
-        background: #FFFFFF;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        body {
-            background: #000000;
-        }
-    }`
-
 export default function RootLayout({ children }: Readonly<{children: ReactNode}>){
     return (
         <html lang="en">
-            <head>
-                <style>
-                    {no_flicker_background_css}
-                </style>
-            </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
