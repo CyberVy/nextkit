@@ -1,6 +1,6 @@
 "use client"
 
-import { vibrate } from "@/infra/device.client"
+import { is_ios_device, vibrate } from "@/infra/device.client"
 import { useState, type CSSProperties } from "react"
 import { IOSHapticsContainer } from "./IOSHapticContainer"
 import { join_classes } from "../utils"
@@ -94,7 +94,9 @@ function NaiveButton({
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22"
                     )}
                     onClick={() => {
-                        vibrate()
+                        if (!is_ios_device()){
+                            vibrate()
+                        }
                         callback?.()
                     }}
                 >
@@ -178,7 +180,9 @@ function ButtonGroup({
                                 )}
                                 
                                 onClick={() => {
-                                    vibrate()
+                                    if (!is_ios_device()){
+                                        vibrate()
+                                    }
                                     if (index !== selected_index){
                                         set_selected_index(index)
                                         callbacks?.[index]?.()
