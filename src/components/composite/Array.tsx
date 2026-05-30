@@ -115,7 +115,6 @@ function ListToButtons({ list, callback, className = "", ref, ...props }: ListTo
                     </span>
                 }
                 callback={() => {
-                    vibrate()
                     set_is_collapsed(!is_collapsed)
                 }}
                 width={"108px"}

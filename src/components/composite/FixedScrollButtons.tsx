@@ -3,7 +3,6 @@
 import { ButtonGroup } from "@/components/base/Buttons"
 import { string_icons } from "@/components/ui_constants"
 import React from "react"
-import { vibrate } from "@/infra/device.client"
 import { join_classes } from "../utils"
 
 import type { ComponentPropsWithRef, RefObject } from "react"
@@ -33,7 +32,6 @@ const scroll_button_group_props = {
 }
 
 function scroll_element({ element_ref, callback }: ScrollButtonProps, position: "top" | "bottom"){
-    vibrate()
     if (!element_ref?.current){
         const { documentElement } = document
         // use window.outerHeight
