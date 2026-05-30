@@ -2,9 +2,10 @@
 
 import { vibrate } from "@/infra/device.client"
 import { useState, type CSSProperties } from "react"
+import { IOSHapticsContainer } from "./IOSHapticContainer"
 import { join_classes } from "../utils"
 
-import type { ComponentPropsWithRef, ReactNode, MouseEvent } from "react"
+import type { ComponentPropsWithRef, ReactNode } from "react"
 
 export type ButtonGroupProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     button_icons: ReactNode[]
@@ -27,11 +28,11 @@ export type ButtonGroupProps = Omit<ComponentPropsWithRef<"div">, "children"> & 
     selected_text_color_dark?: string
 }
 
-export type NaiveButtonProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+export type NaiveButtonProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
     width?: string
     height?: string
     icon: ReactNode
-    callback?: (event: MouseEvent<HTMLButtonElement>) => void
+    callback?: () => void
     background_color?: string
     background_color_dark?: string
     border_color?: string
@@ -58,7 +59,8 @@ function NaiveButton({
 }: NaiveButtonProps){
 
     return (
-        <div 
+        <button 
+            type="button"
             className={join_classes(
                 "inline-block select-none backdrop-blur-xl",
                 "border rounded-[18px]",
@@ -85,22 +87,23 @@ function NaiveButton({
             } as CSSProperties}
             {...props}
         >
-            <button
-                type={"button"}
-                className={join_classes(
-                    "relative align-middle overflow-hidden w-full h-full rounded-[18px]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22"
-                )}
-                onClick={event => {
-                    vibrate()
-                    callback?.(event)
-                }}
-            >
-                <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
-                    {icon}
+            <IOSHapticsContainer>
+                <span
+                    className={join_classes(
+                        "relative align-middle inline-block overflow-hidden w-full h-full rounded-[18px]",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22"
+                    )}
+                    onClick={() => {
+                        vibrate()
+                        callback?.()
+                    }}
+                >
+                    <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
+                        {icon}
+                    </span>
                 </span>
-            </button>
-        </div>
+            </IOSHapticsContainer>
+        </button>
     )
 }
 
@@ -163,37 +166,40 @@ function ButtonGroup({
                 const is_selected = should_show_selected_state && selected_index === index
 
                 return (
-                    <button
-                        type="button"
-                        className={join_classes(
-                            "relative align-middle px-4 overflow-hidden rounded-[18px] transition duration-300 ease-in-out hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
-                            "text-(--button-group-current-text-color) dark:text-(--button-group-current-text-color-dark)",
-                            is_selected
-                                ? "border bg-(--button-group-selected-background-color) border-(--button-group-selected-border-color) shadow-[0_4px_12px_rgba(0,0,0,0.035),inset_0_1px_0_rgba(255,255,255,0.30)] dark:bg-(--button-group-selected-background-color-dark) dark:border-(--button-group-selected-border-color-dark) dark:shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.03)]"
-                                : "border border-transparent hover:shadow-[0_3px_10px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.30)] dark:hover:shadow-[0_4px_12px_rgba(120,120,120,0.30),inset_0_1px_0_rgba(255,255,255,0.10)] active:scale-[0.975] active:text-black/44 dark:active:text-white/44"
-                        )}
-                        key={index}
-                        onClick={() => {
-                            vibrate()
-                            if (index !== selected_index){
-                                set_selected_index(index)
-                                callbacks?.[index]?.()
-                            }
-                            else {
-                                set_selected_index(-1)
-                                callbacks?.[index]?.()
-                            }
-                        }}
-                        style={{
-                            width: item_width,
-                            height: height,
-                            "--button-group-current-text-color": is_selected ? selected_text_color : text_color,
-                            "--button-group-current-text-color-dark": is_selected ? selected_text_color_dark : text_color_dark,
-                        } as CSSProperties}
-                    >
-                        <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
-                            {icon}
-                        </span>
+                    <button key={index}>
+                        <IOSHapticsContainer>
+                            <span
+                                className={join_classes(
+                                    "relative align-middle inline-block px-4 overflow-hidden rounded-[18px] transition duration-300 ease-in-out hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a3a3a3]/22",
+                                    "text-(--button-group-current-text-color) dark:text-(--button-group-current-text-color-dark)",
+                                    is_selected
+                                        ? "border bg-(--button-group-selected-background-color) border-(--button-group-selected-border-color) shadow-[0_4px_12px_rgba(0,0,0,0.035),inset_0_1px_0_rgba(255,255,255,0.30)] dark:bg-(--button-group-selected-background-color-dark) dark:border-(--button-group-selected-border-color-dark) dark:shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.03)]"
+                                        : "border border-transparent hover:shadow-[0_3px_10px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.30)] dark:hover:shadow-[0_4px_12px_rgba(120,120,120,0.30),inset_0_1px_0_rgba(255,255,255,0.10)] active:scale-[0.975] active:text-black/44 dark:active:text-white/44"
+                                )}
+                                
+                                onClick={() => {
+                                    vibrate()
+                                    if (index !== selected_index){
+                                        set_selected_index(index)
+                                        callbacks?.[index]?.()
+                                    }
+                                    else {
+                                        set_selected_index(-1)
+                                        callbacks?.[index]?.()
+                                    }
+                                }}
+                                style={{
+                                    width: item_width,
+                                    height: height,
+                                    "--button-group-current-text-color": is_selected ? selected_text_color : text_color,
+                                    "--button-group-current-text-color-dark": is_selected ? selected_text_color_dark : text_color_dark,
+                                } as CSSProperties}
+                            >
+                                <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
+                                    {icon}
+                                </span>
+                            </span>
+                        </IOSHapticsContainer>
                     </button>
                 )
             })}
