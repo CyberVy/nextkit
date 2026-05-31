@@ -64,9 +64,13 @@ function assign(path: string, value: unknown){
 
 // Usages:
 // w = window.open("http://104.16.0.0")
-// Register_rpc in http://104.16.0.0
-// w.postMessage({func:"rpc_execute",args:["console.log",["1","2","3"]]},"*")
-// w.postMessage({func:"rpc_assign",args:["__test__",2]},"*")
+// Register web rpc in http://104.16.0.0
+// w.addEventListener("message", event => {
+//     if (event.data.func === "register_web_message_rpc" && event.data.result === "success" && event.data.origin === "http://104.16.0.0"){
+//         w.postMessage({func:"rpc_execute",args:["console.log",["1","2","3"]]},"*")
+//         w.postMessage({func:"rpc_assign",args:["__test__",2]},"*")
+//     }
+// })
 export function register_web_message_rpc(){
     const callback = (event: MessageEvent) => {
         let data: {func?: string, args?: unknown[]} = {}
@@ -94,4 +98,8 @@ export function register_web_message_rpc(){
         }
     }
     window.addEventListener("message", callback)
+}
+
+export function notify_rpc_success_to_window(_window: Window){
+    _window.postMessage({ func: "register_web_message_rpc", result: "success", origin: location.href }, "*")
 }
