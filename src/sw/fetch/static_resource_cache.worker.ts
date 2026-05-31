@@ -1,40 +1,63 @@
-import version, { static_resource_cache_name, is_dev } from "@/infra/version"
+import { static_resource_cache_name, is_dev, get_relative_links_from_html_string } from "@/infra/version"
 import { CacheStorageItemController } from "@/infra/storage.client"
 
-export async function check_latest(){
-    let is_latest = true
+const static_resource_cache = new CacheStorageItemController(static_resource_cache_name)
+
+export async function update(){
 
     const latest_index_html_response = await fetch("/")
-    if (latest_index_html_response.status !== 200) return true
+    if (latest_index_html_response.status !== 200) return
 
-    const latest_index_html_text = await latest_index_html_response.text()
+    const latest_index_html_text = await latest_index_html_response.clone().text()
 
-    const cache_keys = await caches.keys()
-    for (const key of cache_keys){
-        if (!key.startsWith(static_resource_cache_name)) continue
+    const keys = await static_resource_cache.keys
+    if (!keys) return
 
-        const cache_controller = new CacheStorageItemController(key)
-        const _keys = await cache_controller.keys
-        if (_keys){
-            for (const _key of _keys){
-                if (new URL(_key.url).pathname === "/"){
-                    const cached_index_html_response = await cache_controller.get(_key)
+    for (const key of keys){
+        const url = new URL(key.url)
+        if (url.pathname === "/"){
+            const cached_index_html_response = await static_resource_cache.get(key)
+            if (!cached_index_html_response) break
 
-                    if (!cached_index_html_response) break
+            const cached_index_html_text = await cached_index_html_response.text()
+            if (latest_index_html_text !== cached_index_html_text){
+                static_resource_cache.delete(key)
+                static_resource_cache.set(key, latest_index_html_response).then(() => console.log(`SW: Updated /.`))
 
-                    if (latest_index_html_text !== await cached_index_html_response.text()){
-                        await cache_controller.destroy()
-                        is_latest = false
-                        console.log(`The static resource cache(${key}) is deleted.`)
-                    }
-                    break
+                const latest_relative_links = get_relative_links_from_html_string(latest_index_html_text)
+                const cached_relative_links: string[] = []
+                for (const key of keys){
+                    cached_relative_links.push(new URL(key.url).pathname + new URL(key.url).search)
                 }
+
+                // delete legacy assets
+                // warning: all assets not in "/" will be deleted.
+                cached_relative_links.forEach(async(link, index) => {
+                    if (!latest_relative_links.includes(link)){
+                        // do not check "/" here because it has already been checked
+                        if (link === "/" || link.startsWith("/?")) return
+                        
+                        static_resource_cache.delete(keys[index]).then(r => {
+                            if (r) return
+                            return static_resource_cache.delete(keys[index].url)
+                            
+                        }).then(() => console.log(`SW: The legacy asset(${link}) is deleted.`))
+                    }
+                })
+
+                // silent update
+                latest_relative_links.forEach(async(link) => {
+                    if (!cached_relative_links.includes(link)){
+                        fetch(link).then(link_response => {
+                            static_resource_cache.set(new URL(link, location.origin), link_response)
+                        }).then(() => console.log(`SW: Updated ${link}.`))
+                    }
+                })
             }
+            break
         }
     }
-    return is_latest
 }
-
 
 export function handle_fetch_for_static_resource(event: FetchEvent){
 
@@ -59,10 +82,12 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
     }
     if (!is_included) return false
 
+    if (url.pathname === "/"){
+        update()
+    }
+
     const f = async () => {
-        const latest_cache_key = `${static_resource_cache_name}-v${version}`
-        const static_resource_cache = new CacheStorageItemController(latest_cache_key)
-        const cached = await static_resource_cache.get(event.request)
+        const cached = await static_resource_cache.get(event.request) || await static_resource_cache.get(event.request.url)
         if (cached){
             return cached
         }
@@ -73,9 +98,5 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
         return response
     }
     event.respondWith(f())
-    if (url.pathname === "/"){
-        // avoid resources racing
-        setTimeout(() => check_latest(), 500)
-    }
     return true
 }

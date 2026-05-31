@@ -40,3 +40,15 @@ export function is_later_version(v1:string, v2:string){
     }
     return patch_1 > patch_2
 }
+
+export function get_relative_links_from_html_string(html: string){
+
+    let matches = [...html.matchAll(/"(\/(?!>).+?)"/g)].map(m => m[1])
+    matches =  matches.map(v => {
+        if (v.endsWith("\\")){
+            v = v.slice(0, -1)
+        }
+        return v
+    })
+    return [...new Set(matches)]
+}
