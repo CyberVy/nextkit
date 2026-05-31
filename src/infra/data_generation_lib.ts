@@ -161,7 +161,7 @@ export function generate_pending_html({ title, message, note = "", icon = "loadi
 
     return `
         <!DOCTYPE html>
-        <html style="background-color: ${background_color}; height: 100%">
+        <html style="background-color: ${background_color}; height: 100%; overscroll-behavior: none; overflow: hidden">
             <head>
                 <title>${safe_title}</title>
                 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">

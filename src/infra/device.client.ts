@@ -174,6 +174,8 @@ export function open_url(url: string, target: "_self" | "_blank" | string, optio
     }
     try {
         new_window.document.documentElement.innerHTML = dom_string
+        new_window.document.documentElement.style.overscrollBehavior = "none"
+        new_window.document.documentElement.style.overflow = "hidden"
     }
     catch {}
 
