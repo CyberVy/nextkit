@@ -32,18 +32,20 @@ export async function update(){
 
                 // delete legacy assets
                 // warning: all assets not in "/" will be deleted.
-                cached_relative_links.forEach(async(link, index) => {
-                    if (!latest_relative_links.includes(link)){
-                        // do not check "/" here because it has already been checked
-                        if (link === "/" || link.startsWith("/?")) return
-                        
-                        static_resource_cache.delete(keys[index]).then(r => {
-                            if (r) return
-                            return static_resource_cache.delete(keys[index].url)
+                setTimeout(() => {
+                    cached_relative_links.forEach(async(link, index) => {
+                        if (!latest_relative_links.includes(link)){
+                            // do not check "/" here because it has already been checked
+                            if (link === "/" || link.startsWith("/?")) return
                             
-                        }).then(() => console.log(`SW: The legacy asset(${link}) is deleted.`))
-                    }
-                })
+                            static_resource_cache.delete(keys[index]).then(r => {
+                                if (r) return
+                                return static_resource_cache.delete(keys[index].url)
+                                
+                            }).then(() => console.log(`SW: The legacy asset(${link}) is deleted.`))
+                        }
+                    })
+                }, 1500)
 
                 // silent update
                 latest_relative_links.forEach(async(link) => {
