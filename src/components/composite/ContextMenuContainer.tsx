@@ -41,6 +41,7 @@ function ContextMenu({
 }: ContextMenuProps){
     const { sections, onSelect, enable_vibration = true, ...remainingMenuProps } = menuProps
     const backdrop_press_active_ref = useRef(false)
+    const context_menu_active_ref = useRef(false)
     const [show_context_menu, set_show_context_menu] = useState(false)
     const [context_menu_point, set_context_menu_point] = useState<[number, number]>([0, 0])
     const [context_menu_render_point, set_context_menu_render_point] = useState<[number, number]>([0, 0])
@@ -207,6 +208,19 @@ function ContextMenu({
                                 onContextMenu={event => {
                                     event.preventDefault()
                                     event.stopPropagation()
+                                }}
+                                onPointerDown={event => {
+                                    event.stopPropagation()
+                                    context_menu_active_ref.current = true
+                                }}
+                                // In iOS PWA, an onClick event can be triggered automatically 
+                                // when a new element appears on the screen where the finger touched
+                                // This makes sure the onClick event is triggered after an onPointerDown event
+                                onClickCapture={event => {
+                                    if (!context_menu_active_ref.current){
+                                        event.stopPropagation()
+                                    }
+                                    context_menu_active_ref.current = false
                                 }}
                                 onClick={event => {
                                     event.stopPropagation()
