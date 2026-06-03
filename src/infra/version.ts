@@ -1,16 +1,63 @@
 export const is_dev = process.env.NODE_ENV === "development"
 import { version as package_version } from "../../package.json"
+import type { CacheStorageItemController } from "./storage.client"
 const version = `${package_version}${is_dev ? "dev" : ""}`
 export default version
 export const static_resource_cache_name = "static-resource-cache"
+export async function update(static_resource_cache: CacheStorageItemController){
 
-export async function delete_static_resource_caches_of_all_versions(){
-    const cache_keys = await caches.keys()
-    for (const key of cache_keys){
-        if (key.startsWith(static_resource_cache_name)){
-            // delete all legacy caches
-            await caches.delete(key)
-            console.log(`${key} is deleted.`)
+    const latest_index_html_response = await fetch("/")
+    if (latest_index_html_response.status !== 200) return
+
+    const latest_index_html_text = await latest_index_html_response.clone().text()
+
+    const keys = await static_resource_cache.keys
+    if (!keys) return
+
+    for (const key of keys){
+        const url = new URL(key.url)
+        if (url.pathname === "/"){
+            const cached_index_html_response = await static_resource_cache.get(key)
+            if (!cached_index_html_response) break
+
+            const cached_index_html_text = await cached_index_html_response.text()
+            if (latest_index_html_text !== cached_index_html_text){
+                static_resource_cache.delete(key)
+                static_resource_cache.set(key, latest_index_html_response).then(() => console.log(`SW: Updated /.`))
+
+                const latest_relative_links = get_relative_links_from_html_string(latest_index_html_text)
+                const cached_relative_links: string[] = []
+                for (const key of keys){
+                    cached_relative_links.push(new URL(key.url).pathname + new URL(key.url).search)
+                }
+
+                // delete legacy assets
+                // warning: all assets not in "/" will be deleted.
+                setTimeout(() => {
+                    cached_relative_links.forEach(async(link, index) => {
+                        if (!latest_relative_links.includes(link)){
+                            // do not check "/" here because it has already been checked
+                            if (link === "/" || link.startsWith("/?")) return
+                            
+                            static_resource_cache.delete(keys[index]).then(r => {
+                                if (r) return
+                                return static_resource_cache.delete(keys[index].url)
+                                
+                            }).then(() => console.log(`SW: The legacy asset(${link}) is deleted.`))
+                        }
+                    })
+                }, 1500)
+
+                // silent update
+                latest_relative_links.forEach(async(link) => {
+                    if (!cached_relative_links.includes(link)){
+                        fetch(link).then(link_response => {
+                            static_resource_cache.set(new URL(link, location.origin), link_response)
+                        }).then(() => console.log(`SW: Updated ${link}.`))
+                    }
+                })
+            }
+            break
         }
     }
 }

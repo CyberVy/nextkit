@@ -26,7 +26,7 @@ export { keep_alive_for_once, auto_keep_alive_by_video_states } from "./keep_ali
 export { LocalStorageItemController, CacheStorageItemController } from "./storage.client"
 
 // version.ts
-export { static_resource_cache_name, delete_static_resource_caches_of_all_versions, is_later_version } from "./version"
+export { static_resource_cache_name, is_later_version, update } from "./version"
 export { default as version } from "./version"
 
 // window_hub.client.ts
