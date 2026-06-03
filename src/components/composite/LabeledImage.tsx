@@ -1,10 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { string_icons } from "@/components/ui_constants"
 import { generate_cover_image } from "@/infra/data_generation_lib"
 
-import { is_ios_device, vibrate } from "@/infra/device.client"
+import { is_ios_device } from "@/infra/device.client"
 import { useInViewport } from "@/components/hooks"
 import { ContextMenu } from "@/components/composite/ContextMenuContainer"
 import type { ContextMenuProps } from "@/components/composite/ContextMenuContainer"
@@ -24,9 +23,7 @@ export type LabeledImageProps = Omit<ComponentPropsWithRef<"div">, "children"> &
     label_right?: ReactNode
     label_right_background_color?: string
     alt?: string
-    description?: ReactNode
     onClickImage?: () => void
-    onClickDelete?: () => void
     clear_margin?: number
     protected_padding?: number
     intersection_root_element?: HTMLElement | null
@@ -46,8 +43,6 @@ function LabeledImage({
     bottom_information,
     bottom_information_background_color,
     onClickImage,
-    onClickDelete,
-    description,
     image_proxy_api,
     clear_margin,
     protected_padding,
@@ -61,7 +56,6 @@ function LabeledImage({
 }: LabeledImageProps){
     const [is_ios, set_is_ios] = useState(false)
     const [is_loaded, set_is_loaded] = useState(false)
-    const [show_description, set_show_description] = useState(false)
     const [fallback_blob_url, set_fallback_blob_url] = useState("")
 
     const { ref: intersection_div_ref, in_view } = useInViewport<HTMLDivElement>({
@@ -126,7 +120,7 @@ function LabeledImage({
                 className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} select-none w-full h-full`}
                 {...props}
             >
-                {clear_margin != undefined &&
+                {clear_margin != null &&
                     <div
                         ref={intersection_div_ref}
                     >
@@ -161,7 +155,7 @@ function LabeledImage({
                                 }}
                             />
 
-                            {label_left && <div
+                            {label_left != null && <div
                                 className={`absolute top-1 left-1 px-2 text-white text-xs font-bold rounded-md ${label_left_background_color || ""} ${is_loaded ? "block" : "hidden"}`}
                                 onTouchEnd={event => {
                                     event.stopPropagation()
@@ -170,7 +164,7 @@ function LabeledImage({
                                 {label_left}
                             </div>}
 
-                            {label_right && <div
+                            {label_right != null && <div
                                 className={`absolute top-1 right-2 px-2 text-white text-xs font-bold rounded-md ${label_right_background_color || ""} ${is_loaded ? "block" : "hidden"}`}
                                 onTouchEnd={event => {
                                     event.stopPropagation()
@@ -179,7 +173,7 @@ function LabeledImage({
                                 {label_right}
                             </div>}
 
-                            {top_information && <div
+                            {top_information != null && <div
                                 className={`absolute ${label_left ? "top-6" : "top-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${top_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden max-h-12 max-w-1/2`}
                                 onTouchEnd={event => {
                                     event.stopPropagation()
@@ -188,56 +182,14 @@ function LabeledImage({
                                 {top_information}
                             </div>}
 
-                            {bottom_information && <div
-                                className={`absolute ${onClickDelete ? "bottom-6" : "bottom-1"} left-1 px-1 text-pink-50 text-xs rounded-md ${bottom_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden  max-h-4 max-w-4/5`}
+                            {bottom_information != null && <div
+                                className={`absolute bottom-1 left-1 px-1 text-pink-50 text-xs rounded-md ${bottom_information_background_color || ""} ${is_loaded ? "block" : "hidden"} overflow-hidden  max-h-4 max-w-4/5`}
                                 onTouchEnd={event => {
                                     event.stopPropagation()
                                 }}
                             >
                                 {bottom_information}
                             </div>}
-
-                            <div>
-                                {description &&
-                                    <button
-                                        className={`opacity-70 border hover:cursor-pointer absolute bottom-1 right-1 px-2 text-white text-xs font-bold rounded-md ${is_loaded ? "block" : "hidden"}`}
-                                        onClick={() => {
-                                            vibrate()
-                                            set_show_description(!show_description)
-                                        }}
-                                        onTouchEnd={event => {
-                                            event.stopPropagation()
-                                        }}
-                                        onMouseEnter={() => {
-                                            set_show_description(true)
-                                        }}
-                                        onMouseLeave={() => {
-                                            set_show_description(false)
-                                        }}
-                                    >
-                                        {string_icons.info}
-                                    </button>}
-                                <div
-                                    className={`mx-2 bg-black/50 absolute bottom-10 right-2 px-2 py-1 text-white text-sm rounded-lg ${show_description ? "block" : "hidden"}`}
-                                >
-                                    <div className="text-center whitespace-pre-line max-h-75 max-w-[50vw] overflow-auto">
-                                        {description}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {onClickDelete && <button
-                                className="absolute bottom-1 left-1 px-2 text-red-400/80 border text-xs rounded-md hover:cursor-pointer"
-                                onClick={() => {
-                                    vibrate()
-                                    onClickDelete()
-                                }}
-                                onTouchEnd={event => {
-                                    event.stopPropagation()
-                                }}
-                            >
-                                {string_icons.del}
-                            </button>}
                         </>}
                 </div>
             </div>
