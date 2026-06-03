@@ -1,16 +1,17 @@
 "use client"
 
-import version, { delete_static_resource_caches_of_all_versions } from "@/infra/version"
+import version, { update, static_resource_cache_name } from "@/infra/version"
 import { string_icons } from "@/components/ui_constants"
 import { useState } from "react"
 import { vibrate } from "@/infra/device.client"
-
+import type { ReactNode } from "react"
 import type { ComponentPropsWithRef } from "react"
+import { CacheStorageItemController } from "@/infra"
 
 type VersionProps = Omit<ComponentPropsWithRef<"div">, "children">
 
 const Version = function Version({ className = "", ref, ...props }: VersionProps){
-    const [clear_cache_icon, set_cache_icon] = useState(string_icons.del)
+    const [clear_cache_icon, set_cache_icon] = useState<ReactNode>(string_icons.reset)
 
     return (
         <div
@@ -23,12 +24,12 @@ const Version = function Version({ className = "", ref, ...props }: VersionProps
             </span>
             <button
                 type="button"
-                className={"ml-1 text-xs hover:cursor-pointer text-red-400 rounded-md"}
+                className={"ml-1 text-xs hover:cursor-pointer text-green-600 dark:text-green-300 rounded-md"}
                 onClick={() => {
                     vibrate()
                     set_cache_icon(string_icons.success)
-                    delete_static_resource_caches_of_all_versions()
-                        .then(() => setTimeout(() => set_cache_icon(string_icons.del), 2000))
+                    update(new CacheStorageItemController(static_resource_cache_name))
+                        .then(() => setTimeout(() => set_cache_icon(string_icons.reset), 2000))
                 }}
             >
                 {clear_cache_icon}
