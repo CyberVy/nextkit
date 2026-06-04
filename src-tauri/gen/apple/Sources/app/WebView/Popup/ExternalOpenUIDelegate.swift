@@ -37,6 +37,7 @@ final class ExternalOpenUIDelegate: NSObject, WKUIDelegate {
         // iOS-side extra inject script is intentionally disabled; all inject logic is centralized in Rust/Tauri.
         let popupWebView = WKWebView(frame: .zero, configuration: configuration)
         popupWebView.customUserAgent = webView.customUserAgent
+        popupWebView.tintColor = webView.tintColor
         popupWebView.allowsBackForwardNavigationGestures = webView.allowsBackForwardNavigationGestures
         popupWebView.uiDelegate = self
 
