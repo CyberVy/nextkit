@@ -110,7 +110,6 @@ function LabeledImage({
 
     return (
         <ContextMenu
-            onClickTrigger={onClickImage}
             sections={context_menu?.sections || []}
             {...context_menu}
             className={className}
@@ -152,6 +151,12 @@ function LabeledImage({
                                         await generate_cover_image(alt, {}).then(set_fallback_blob_url)
                                     }
                                     set_is_loaded(true)
+                                }}
+                                onClick={() => {
+                                    onClickImage?.()
+                                }}
+                                onTouchEnd={event => {
+                                    event.stopPropagation()
                                 }}
                             />
 
