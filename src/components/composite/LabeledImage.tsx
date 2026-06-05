@@ -116,7 +116,7 @@ function LabeledImage({
             ref={ref}
         >
             <div
-                className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} select-none w-full h-full`}
+                className={`${in_view ? "intersection-in-view" : "intersection-not-in-view"} select-none cursor-default w-full h-full`}
                 {...props}
             >
                 {clear_margin != null &&
