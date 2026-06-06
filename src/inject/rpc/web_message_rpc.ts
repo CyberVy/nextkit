@@ -1,3 +1,5 @@
+import { handle_request, request_to_window } from "@/infra/message.client"
+
 const rpc_cache: Record<string, unknown> = {}
 
 function get_object_from_underscore_key(segment: string): unknown{
@@ -65,41 +67,23 @@ function assign(path: string, value: unknown){
 // Usages:
 // w = window.open("http://104.16.0.0")
 // Register web rpc in http://104.16.0.0
-// w.addEventListener("message", event => {
-//     if (event.data.func === "register_web_message_rpc" && event.data.result === "success" && event.data.origin === "http://104.16.0.0"){
-//         w.postMessage({func:"rpc_execute",args:["console.log",["1","2","3"]]},"*")
-//         w.postMessage({func:"rpc_assign",args:["__test__",2]},"*")
-//     }
-// })
+// request_to_window(w, { type: "rpc_execute", args: ["console.log", ["1", "2", "3"]] })
+// request_to_window(w, { type: "rpc_assign", args: ["__test__", 2] })
 export function register_web_message_rpc(){
-    const callback = (event: MessageEvent) => {
-        let data: {func?: string, args?: unknown[]} = {}
-        if (typeof event.data === "string"){
-            try {
-                data = JSON.parse(event.data)
-            }
-            catch {
-                return
-            }
+    handle_request("rpc_execute", (payload) => {
+        const args = payload.args
+        if (Array.isArray(args)){
+            execute(...args as [string, unknown[], string | undefined])
         }
-        else {
-            data = event.data
+    })
+    handle_request("rpc_assign", (payload) => {
+        const args = payload.args
+        if (Array.isArray(args)){
+            assign(...args as [string, unknown])
         }
-        const args = data.args
-        if (data.func === "rpc_execute"){
-            if (args){
-                execute(...args as [string, unknown[], string | undefined])
-            }
-        }
-        else if (data.func === "rpc_assign"){
-            if (args){
-                assign(...args as [string, unknown])
-            }
-        }
-    }
-    window.addEventListener("message", callback)
+    })
 }
 
 export function notify_rpc_success_to_window(_window: Window){
-    _window.postMessage({ func: "register_web_message_rpc", result: "success", origin: location.href }, "*")
+    request_to_window(_window, "register_web_message_rpc", { result: "success", origin: location.href }).catch(err => console.warn(err))
 }
