@@ -1,4 +1,4 @@
-import { handle_request, request_to_window } from "@/infra/message.client"
+import { handle_web_rpc_request, web_rpc_request } from "@/infra/web_rpc.client"
 
 const rpc_cache: Record<string, unknown> = {}
 
@@ -69,21 +69,31 @@ function assign(path: string, value: unknown){
 // Register web rpc in http://104.16.0.0
 // request_to_window(w, { type: "rpc_execute", args: ["console.log", ["1", "2", "3"]] })
 // request_to_window(w, { type: "rpc_assign", args: ["__test__", 2] })
-export function register_web_message_rpc(){
-    handle_request("rpc_execute", (payload) => {
-        const args = payload.args
-        if (Array.isArray(args)){
-            execute(...args as [string, unknown[], string | undefined])
+export function register_execute_and_assign_web_rpc(){
+    handle_web_rpc_request({
+        type: "rpc_execute",
+        handler: (payload) => {
+            const args = payload.args
+            if (Array.isArray(args)){
+                execute(...args as [string, unknown[], string | undefined])
+            }
         }
     })
-    handle_request("rpc_assign", (payload) => {
-        const args = payload.args
-        if (Array.isArray(args)){
-            assign(...args as [string, unknown])
+    handle_web_rpc_request({
+        type: "rpc_assign",
+        handler: (payload) => {
+            const args = payload.args
+            if (Array.isArray(args)){
+                assign(...args as [string, unknown])
+            }
         }
     })
 }
 
 export function notify_rpc_success_to_window(_window: Window){
-    request_to_window(_window, "register_web_message_rpc", { result: "success", origin: location.href }).catch(err => console.warn(err))
+    web_rpc_request({
+        target: _window,
+        type: "register_web_message_rpc",
+        payload: { result: "success", origin: location.href }
+    }).catch(err => console.warn(err))
 }
