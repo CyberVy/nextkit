@@ -28,7 +28,7 @@ export function handle_fetch_for_static_resource(event: FetchEvent){
     if (!is_included) return false
 
     if (url.pathname === "/"){
-        update(static_resource_cache)
+        event.waitUntil(update(static_resource_cache))
     }
 
     const f = async () => {
