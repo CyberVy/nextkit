@@ -19,8 +19,8 @@ type PressGestureParams<TEvent extends { clientX: number, clientY: number }> = {
     enabled?: GestureEnabled<TEvent>
     long_press?: LongPressParams<TEvent>
     move_threshold?: number
-    stop_propagation?: boolean
-    prevent_default?: boolean
+    stop_propagation?: boolean | ((event: TEvent) => boolean)
+    prevent_default?: boolean | ((event: TEvent) => boolean)
 }
 
 const is_gesture_enabled = <TEvent, >(enabled: GestureEnabled<TEvent> | undefined, event: TEvent) => {
@@ -72,10 +72,12 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 
     const handle_event_options = (event: TEvent) => {
-        if (stop_propagation && typeof event.stopPropagation === "function"){
+        const should_stop = typeof stop_propagation === "function" ? stop_propagation(event) : stop_propagation
+        if (should_stop && typeof event.stopPropagation === "function"){
             event.stopPropagation()
         }
-        if (prevent_default && typeof event.preventDefault === "function"){
+        const should_prevent = typeof prevent_default === "function" ? prevent_default(event) : prevent_default
+        if (should_prevent && typeof event.preventDefault === "function"){
             event.preventDefault()
         }
     }

@@ -92,8 +92,6 @@ function ContextMenu({
                 if (onClickTrigger) return true
                 return (!disabled && has_context_menu)
             },
-            stop_propagation: true,
-            prevent_default: true,
             on_success: () => {
                 if (enable_vibration){
                     vibrate()
