@@ -17,6 +17,10 @@ export { ScrollToTopButton, ScrollToBottomButton, ScrollButtonGroup } from "./co
 // LabeledImage.tsx
 export { LabeledImage } from "./composite/LabeledImage"
 
+// LabeledRow.tsx
+export { LabeledRow } from "./composite/LabeledRow"
+export type { LabeledRowProps } from "./composite/LabeledRow"
+
 // ContextMenuContainer.tsx
 export { ContextMenu } from "./composite/ContextMenuContainer"
 export type { ContextMenuProps } from "./composite/ContextMenuContainer"
@@ -53,4 +57,4 @@ export {
 } from "./hooks"
 
 // icons.tsx
-export { search_icon } from "./icons"
+export { SearchIcon } from "./icons"

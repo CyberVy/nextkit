@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import {  string_icons } from "@/components/ui_constants"
-import { search_icon } from "@/components/icons"
+import { SearchIcon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/base/Buttons"
 
@@ -106,7 +106,7 @@ function SearchWordInput({ callback, className = "", description = "", ref, ...p
             />
 
             <NaiveButton
-                icon={search_icon}
+                icon={<SearchIcon />}
                 callback={() => {
                     vibrate()
                     callback(input_ref.current?.value || "")
