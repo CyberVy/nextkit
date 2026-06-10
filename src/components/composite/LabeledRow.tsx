@@ -6,7 +6,7 @@ import { ContextMenu } from "./ContextMenuContainer"
 import type { ComponentPropsWithRef, ReactNode } from "react"
 import type { ContextMenuProps } from "./ContextMenuContainer"
 
-export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children" | "title"> & {
     // Cover image properties passed to the internal LabeledImage
     src?: string
     alt?: string
@@ -16,12 +16,9 @@ export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
 
     // Layout slots
     left_indicator?: ReactNode // E.g., index numbers, playback status indicators
-    title?: ReactNode          // Title of the video/song
-    subtitle?: ReactNode       // Author/Channel/Muted information
+    title?: ReactNode          // Title of the video/song (can be a pre-styled string or ReactNode)
+    subtitle?: ReactNode       // Author/Channel/Muted information (can be a styled ReactNode)
     right_actions?: ReactNode   // Quick actions on the far right
-    
-    // Selection state
-    is_active?: boolean        // If true, applies active visual styling (glowing/colors)
     
     // Context Menu config
     context_menu?: Omit<ContextMenuProps, "children" | "disabled" | "onClickTrigger">
@@ -39,7 +36,6 @@ const LabeledRow = React.memo(function LabeledRow({
     title,
     subtitle,
     right_actions,
-    is_active = false,
     context_menu,
     onClickRow,
     onClickImage,
@@ -54,17 +50,9 @@ const LabeledRow = React.memo(function LabeledRow({
             className={`w-full ${className}`}
             ref={ref}
         >
-            {/* 
-              Outer wrapper is responsible for unified visual states like hover, active background, and rounded borders.
-              We keep click handling scoped to child containers to avoid event conflicts.
-            */}
             <div
                 {...props}
-                className={`flex items-center justify-between p-2 rounded-xl transition-all duration-150 relative ${
-                    is_active
-                        ? "bg-red-500/10 dark:bg-red-500/5 shadow-sm"
-                        : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
+                className={`flex items-center justify-between p-2 rounded-xl transition-all duration-150 relative hover:bg-black/5 dark:hover:bg-white/5 ${className}`}
                 onTouchEnd={(event) => {
                     // Stop propagation to prevent ContextMenu's onTouchEnd from calling preventDefault(),
                     // which would otherwise block synthetic click events on iOS WebKit/Safari.
@@ -78,7 +66,7 @@ const LabeledRow = React.memo(function LabeledRow({
                 >
                     {/* Left status/index */}
                     {left_indicator != null && (
-                        <div className="text-xs font-semibold w-6 text-center shrink-0 text-gray-400 dark:text-gray-500">
+                        <div className="text-xs font-semibold w-6 text-center shrink-0">
                             {left_indicator}
                         </div>
                     )}
@@ -97,16 +85,11 @@ const LabeledRow = React.memo(function LabeledRow({
 
                     {/* Meta info (Title & Channel) */}
                     <div className="min-w-0 flex-1 ml-1">
-                        <div className={`text-sm font-semibold line-clamp-1 transition-colors duration-150 ${
-                            is_active
-                                ? "text-red-600 dark:text-red-400 font-bold"
-                                : "text-foreground group-hover:text-red-600 dark:group-hover:text-red-400"
-                        }`}
-                        >
+                        <div className="text-sm font-semibold line-clamp-1 transition-colors duration-150 text-foreground">
                             {title}
                         </div>
                         {subtitle != null && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                            <div className="text-xs mt-1 line-clamp-1">
                                 {subtitle}
                             </div>
                         )}
