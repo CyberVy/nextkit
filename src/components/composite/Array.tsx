@@ -9,14 +9,14 @@ import type { ComponentPropsWithRef, ReactNode, Ref } from "react"
 
 export type ListToButtonsProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     list: string[]
-    callback?: (item: string | null) => void
+    on_select?: (item: string | null) => void
 }
 
-type StringArrayProps = Omit<ComponentPropsWithRef<"li">, "children"> & {
+type StringArrayProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     // String array rendered as list rows.
     array: string[]
-    // Optional className applied to the outer list container.
-    list_className?: string
+    // Optional className applied to the inner li elements.
+    list_class_name?: string
     // Optional title shown above the rows.
     title?: ReactNode
     // Renders an ordered list when enabled.
@@ -28,13 +28,13 @@ type StringArrayProps = Omit<ComponentPropsWithRef<"li">, "children"> & {
 function StringArray(
     {
         array,
-        list_className = "",
+        list_class_name = "",
         title,
         ordered = false,
         empty_text = "No items",
         className = "",
         ref,
-        ...item_props
+        ...props
     }: StringArrayProps){
     const list_children = (
         <>
@@ -50,9 +50,8 @@ function StringArray(
                         className={[
                             "list-none rounded-[22px] border border-transparent bg-black/2.5 px-3.5 py-3 text-[15px] font-medium leading-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition duration-300 ease-in-out",
                             "dark:bg-white/[0.035] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
-                            className,
+                            list_class_name,
                         ].filter(Boolean).join(" ")}
-                        {...item_props}
                     >
                         {text}
                     </li>
@@ -63,11 +62,13 @@ function StringArray(
 
     return (
         <div
+            ref={ref}
             className={[
                 "rounded-[28px] border border-black/8 bg-white/78 p-2.5 text-black/88 shadow-[0_18px_48px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-2xl",
                 "dark:border-white/10 dark:bg-[#111111]/78 dark:text-white/88 dark:shadow-[0_20px_52px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.03)]",
-                list_className,
+                className,
             ].filter(Boolean).join(" ")}
+            {...props}
         >
             {title &&
                 <div className="px-3.5 pb-3 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/42 dark:text-white/42">
@@ -75,18 +76,12 @@ function StringArray(
                 </div>}
 
             {ordered &&
-                <ol
-                    ref={ref as Ref<HTMLOListElement>}
-                    className="flex flex-col gap-1"
-                >
+                <ol className="flex flex-col gap-1">
                     {list_children}
                 </ol>}
 
             {!ordered &&
-                <ul
-                    ref={ref as Ref<HTMLUListElement>}
-                    className="flex flex-col gap-1"
-                >
+                <ul className="flex flex-col gap-1">
                     {list_children}
                 </ul>}
         </div>
@@ -96,7 +91,7 @@ function StringArray(
 export type { StringArrayProps }
 export { StringArray }
 
-function ListToButtons({ list, callback, className = "", ref, ...props }: ListToButtonsProps){
+function ListToButtons({ list, on_select, className = "", ref, ...props }: ListToButtonsProps){
 
     const [selected_item, set_selected_item] = useState<string | number | null>(null)
     const [is_collapsed, set_is_collapsed] = useState(true)
@@ -114,7 +109,7 @@ function ListToButtons({ list, callback, className = "", ref, ...props }: ListTo
                         {string_icons.menu} {is_collapsed ? string_icons.down_triangle : string_icons.up_triangle} {list.length}
                     </span>
                 }
-                callback={() => {
+                on_click={() => {
                     set_is_collapsed(!is_collapsed)
                 }}
                 width={"108px"}
@@ -130,7 +125,7 @@ function ListToButtons({ list, callback, className = "", ref, ...props }: ListTo
                         onClick={() => {
                             vibrate()
                             set_selected_item(item === selected_item ? null : item)
-                            callback?.(item === selected_item ? null : item)
+                            on_select?.(item === selected_item ? null : item)
                         }}
                     >
                         {item}

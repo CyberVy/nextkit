@@ -15,7 +15,7 @@ export type ContextMenuProps = VerticalMenuBarProps & {
     disabled?: boolean
     long_press_ms?: number
     close_after_select?: boolean
-    onClickTrigger?: (event: PointerEvent<HTMLDivElement>) => void
+    on_click_trigger?: (event: PointerEvent<HTMLDivElement>) => void
 }
 
 function get_context_menu_render_point(context_menu_element: HTMLElement, context_menu_point: [number, number]): [number, number]{
@@ -33,13 +33,13 @@ function ContextMenu({
     disabled = false,
     long_press_ms = 300,
     close_after_select = true,
-    onClickTrigger,
+    on_click_trigger,
     className,
     style,
     ref,
     ...menuProps
 }: ContextMenuProps){
-    const { sections, onSelect, enable_vibration = true, ...remainingMenuProps } = menuProps
+    const { sections, on_select, enable_vibration = true, ...remainingMenuProps } = menuProps
     const backdrop_press_active_ref = useRef(false)
     const context_menu_active_ref = useRef(false)
     const [show_context_menu, set_show_context_menu] = useState(false)
@@ -89,7 +89,7 @@ function ContextMenu({
         return create_press_gesture<PointerEvent<HTMLDivElement>>({
             enabled: event => {
                 if (event.button !== 0) return false
-                if (onClickTrigger) return true
+                if (on_click_trigger) return true
                 return (!disabled && has_context_menu)
             },
             on_success: () => {
@@ -99,7 +99,7 @@ function ContextMenu({
             },
             click: {
                 on_trigger: (event) => {
-                    onClickTrigger?.(event)
+                    on_click_trigger?.(event)
                 },
             },
             long_press: has_context_menu && !disabled ? {
@@ -110,7 +110,7 @@ function ContextMenu({
                 ms: long_press_ms,
             } : undefined,
         })
-    }, [long_press_ms, has_context_menu, disabled, enable_vibration, onClickTrigger, open_context_menu])
+    }, [long_press_ms, has_context_menu, disabled, enable_vibration, on_click_trigger, open_context_menu])
 
     useEffect(() => {
         return () => {
@@ -229,8 +229,8 @@ function ContextMenu({
                                 ref={set_context_menu_element}
                                 sections={sections || []}
                                 enable_vibration={enable_vibration}
-                                onSelect={(key, item) => {
-                                    onSelect?.(key, item)
+                                on_select={(key, item) => {
+                                    on_select?.(key, item)
                                     if (close_after_select === false) return
 
                                     close_context_menu()

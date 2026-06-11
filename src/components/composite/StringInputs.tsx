@@ -6,26 +6,29 @@ import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/base/Buttons"
 
 export type SearchWordInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
-    callback: (word: string) => void
+    on_search: (word: string) => void
     description?: string
+    input_ref?: React.Ref<HTMLInputElement>
 }
 
 export type StringInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
     value?: string
     default_value?: string
-    callback: (value: string) => void
+    on_change: (value: string) => void
     description: string
     enable_auto_execution?: boolean
     icon?: React.ReactNode
+    input_ref?: React.Ref<HTMLInputElement>
 }
 
 function StringInput({
     value: controlled_value,
     default_value = "",
-    callback,
+    on_change,
     description,
     enable_auto_execution = true,
     icon,
+    input_ref,
     className = "",
     ref,
     ...props
@@ -39,23 +42,23 @@ function StringInput({
     const handle_change = (new_value: string) => {
         setValue(new_value)
         if (new_value === ""){
-            callback("")
+            on_change("")
         }
         else if (enable_auto_execution){
-            callback(new_value)
+            on_change(new_value)
         }
     }
 
     const handle_clear = () => {
         vibrate()
         setValue("")
-        callback("")
+        on_change("")
     }
 
     const handle_key_down = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter"){
             event.currentTarget.blur()
-            callback(value)
+            on_change(value)
         }
     }
 
@@ -71,6 +74,7 @@ function StringInput({
                 </div>
             )}
             <input
+                ref={input_ref}
                 type="text"
                 placeholder={description}
                 value={value}
@@ -93,21 +97,21 @@ function StringInput({
     )
 }
 
-function SearchWordInput({ callback, className = "", description = "", ref, ...props }: SearchWordInputProps){
+function SearchWordInput({ on_search, className = "", description = "", input_ref, ref, ...props }: SearchWordInputProps){
     description = description || "Search for something?"
     const [value, setValue] = useState("")
 
     const handle_change = (new_value: string) => {
         setValue(new_value)
         if (new_value === ""){
-            callback("")
+            on_search("")
         }
     }
 
     const handle_clear = () => {
         vibrate()
         setValue("")
-        callback("")
+        on_search("")
     }
 
     return (
@@ -118,6 +122,7 @@ function SearchWordInput({ callback, className = "", description = "", ref, ...p
         >
             <div className="relative flex-1 flex items-center">
                 <input
+                    ref={input_ref}
                     type="text"
                     placeholder={description}
                     value={value}
@@ -125,7 +130,7 @@ function SearchWordInput({ callback, className = "", description = "", ref, ...p
                     onKeyDown={event => {
                         if (event.key === "Enter"){
                             event.currentTarget.blur()
-                            callback(value || "")
+                            on_search(value || "")
                         }
                     }}
                     className={`w-full focus:outline-none focus:ring-2 focus:ring-black/15 dark:focus:ring-white/15 focus:border-black/30 dark:focus:border-white/30 transition-all duration-300 border border-black/10 dark:border-white/10 rounded-xl bg-black/5 dark:bg-white/5 px-3 py-2.5 ${
@@ -145,8 +150,8 @@ function SearchWordInput({ callback, className = "", description = "", ref, ...p
 
             <NaiveButton
                 icon={<SearchIcon />}
-                callback={() => {
-                    callback(value || "")
+                on_click={() => {
+                    on_search(value || "")
                 }}
                 height="44px"
                 width="44px"

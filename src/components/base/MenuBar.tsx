@@ -22,8 +22,8 @@ type VerticalMenuBarItem = {
     disabled?: boolean
     // Visual tone for the item. Destructive renders in red when not selected.
     tone?: "default" | "destructive"
-    // Per-item click handler invoked after the component-level onSelect.
-    onClick?: () => void
+    // Per-item click handler invoked after the component-level on_select.
+    on_click?: () => void
 }
 
 type VerticalMenuBarSection = {
@@ -37,7 +37,7 @@ type VerticalMenuBarSection = {
     items: VerticalMenuBarItem[]
 }
 
-type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"div">, "children" | "onSelect"> & {
+type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"div">, "children" | "on_select"> & {
     // Sectioned menu data rendered by the component.
     sections: VerticalMenuBarSection[]
     // Currently selected item key for controlled selection.
@@ -45,7 +45,7 @@ type VerticalMenuBarProps = Omit<ComponentPropsWithRef<"div">, "children" | "onS
     // Initial selected item key for uncontrolled selection.
     default_selected_key?: string
     // Called when an item is selected. Receives the item key and item data.
-    onSelect?: (key: string, item: VerticalMenuBarItem) => void
+    on_select?: (key: string, item: VerticalMenuBarItem) => void
     // Optional content rendered above the menu sections.
     header?: ReactNode
     // Optional content rendered below the menu sections.
@@ -63,7 +63,7 @@ function VerticalMenuBar(
         sections,
         selected_key,
         default_selected_key,
-        onSelect,
+        on_select,
         header,
         footer,
         compact = false,
@@ -87,9 +87,9 @@ function VerticalMenuBar(
         if (selected_key === undefined){
             set_inner_selected_key(item.key)
         }
-        onSelect?.(item.key, item)
-        item.onClick?.()
-    }, [enable_vibration, onSelect, selected_key])
+        on_select?.(item.key, item)
+        item.on_click?.()
+    }, [enable_vibration, on_select, selected_key])
 
     return (
         <div
