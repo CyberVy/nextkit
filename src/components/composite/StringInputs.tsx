@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
-import {  string_icons } from "@/components/ui_constants"
+import { useEffect, useState } from "react"
 import { SearchIcon } from "@/components/icons"
 import { vibrate } from "@/infra/device.client"
 import { NaiveButton } from "@/components/base/Buttons"
@@ -12,106 +11,146 @@ export type SearchWordInputProps = Omit<React.ComponentPropsWithRef<"div">, "chi
 }
 
 export type StringInputProps = Omit<React.ComponentPropsWithRef<"div">, "children"> & {
+    value?: string
     default_value?: string
-    callback: (url: string) => void
+    callback: (value: string) => void
     description: string
-    need_button?: boolean
-    button_title?: string
-    button_height?: string
-    button_width?: string
     enable_auto_execution?: boolean
+    icon?: React.ReactNode
 }
 
 function StringInput({
-    default_value,
+    value: controlled_value,
+    default_value = "",
     callback,
     description,
-    need_button,
-    button_title,
-    button_height,
-    button_width,
     enable_auto_execution = true,
+    icon,
     className = "",
     ref,
     ...props
 }: StringInputProps){
-    const [is_collapsed, set_is_collapsed] = useState(false)
+    const [value, setValue] = useState(controlled_value !== undefined ? controlled_value : default_value)
+
+    useEffect(() => {
+        setValue(controlled_value !== undefined ? controlled_value : default_value)
+    }, [controlled_value, default_value])
+
+    const handle_change = (new_value: string) => {
+        setValue(new_value)
+        if (new_value === ""){
+            callback("")
+        }
+        else if (enable_auto_execution){
+            callback(new_value)
+        }
+    }
+
+    const handle_clear = () => {
+        vibrate()
+        setValue("")
+        callback("")
+    }
+
+    const handle_key_down = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter"){
+            event.currentTarget.blur()
+            callback(value)
+        }
+    }
+
     return (
         <div
             {...props}
             ref={ref}
-            className={className}
+            className={`relative flex items-center w-full ${className}`}
         >
-            {Boolean(need_button) && (
-                <NaiveButton
-                    width={button_width}
-                    height={button_height}
-                    icon={
-                        <span>
-                            {button_title} {is_collapsed ? string_icons.up_triangle : string_icons.down_triangle}
-                        </span>
-                    }
-                    callback={() => {
-                        vibrate()
-                        set_is_collapsed(!is_collapsed)
-                    }}
-                />
+            {icon && (
+                <div className="absolute left-3 flex items-center pointer-events-none text-black/40 dark:text-white/40">
+                    {icon}
+                </div>
             )}
-            <div className={`${is_collapsed ? "hidden" : "block"} mb-1`}>
-                <input
-                    type="text"
-                    placeholder={`${description}`}
-                    defaultValue={default_value || ""}
-                    onChange={enable_auto_execution ? event => {
-                        callback(event.target.value)
-                    } : undefined}
-                    onKeyDown={event => {
-                        if (event.key === "Enter"){
-                            event.currentTarget.blur()
-                            callback(event.currentTarget.value || "")
-                        }
-                    }}
-                    className="focus:outline-none focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 transition-shadow duration-300 ease-in-out border border-black/20 dark:border-white/20 rounded-lg px-3 py-2 w-full"
-                />
-            </div>
+            <input
+                type="text"
+                placeholder={description}
+                value={value}
+                onChange={e => handle_change(e.target.value)}
+                onKeyDown={handle_key_down}
+                className={`w-full focus:outline-none focus:ring-2 focus:ring-black/15 dark:focus:ring-white/15 focus:border-black/30 dark:focus:border-white/30 transition-all duration-300 border border-black/10 dark:border-white/10 rounded-xl bg-black/5 dark:bg-white/5 px-3 py-2.5 ${
+                    icon ? "pl-9" : ""
+                } ${value ? "pr-8" : ""}`}
+            />
+            {value && (
+                <button
+                    type="button"
+                    onClick={handle_clear}
+                    className="absolute right-3 flex items-center justify-center w-5 h-5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-black/40 dark:text-white/40 cursor-pointer"
+                >
+                    ✕
+                </button>
+            )}
         </div>
     )
 }
 
 function SearchWordInput({ callback, className = "", description = "", ref, ...props }: SearchWordInputProps){
-    description = description || "Search for something? "
-    const input_ref = useRef<HTMLInputElement>(null)
+    description = description || "Search for something?"
+    const [value, setValue] = useState("")
+
+    const handle_change = (new_value: string) => {
+        setValue(new_value)
+        if (new_value === ""){
+            callback("")
+        }
+    }
+
+    const handle_clear = () => {
+        vibrate()
+        setValue("")
+        callback("")
+    }
+
     return (
         <div
             {...props}
             ref={ref}
-            className={`flex gap-2 ${className}`}
+            className={`relative flex items-center gap-2 w-full ${className}`}
         >
-            <input
-                ref={input_ref}
-                type="text"
-                placeholder={description}
-                className="focus:outline-none focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 transition-shadow duration-300 ease-in-out border border-black/20 dark:border-white/20 rounded-lg px-3 py-2 flex-1"
-                onKeyDown={event => {
-                    if (event.key === "Enter"){
-                        event.currentTarget.blur()
-                        callback(event.currentTarget.value || "")
-                    }
-                }}
-                onChange={event => {
-                    if (event.target.value === ""){
-                        callback(event.target.value)
-                    }
-                }}
-            />
+            <div className="relative flex-1 flex items-center">
+                <input
+                    type="text"
+                    placeholder={description}
+                    value={value}
+                    onChange={e => handle_change(e.target.value)}
+                    onKeyDown={event => {
+                        if (event.key === "Enter"){
+                            event.currentTarget.blur()
+                            callback(value || "")
+                        }
+                    }}
+                    className={`w-full focus:outline-none focus:ring-2 focus:ring-black/15 dark:focus:ring-white/15 focus:border-black/30 dark:focus:border-white/30 transition-all duration-300 border border-black/10 dark:border-white/10 rounded-xl bg-black/5 dark:bg-white/5 px-3 py-2.5 ${
+                        value ? "pr-8" : ""
+                    }`}
+                />
+                {value && (
+                    <button
+                        type="button"
+                        onClick={handle_clear}
+                        className="absolute right-3 flex items-center justify-center w-5 h-5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-black/40 dark:text-white/40 cursor-pointer"
+                    >
+                        ✕
+                    </button>
+                )}
+            </div>
 
             <NaiveButton
                 icon={<SearchIcon />}
                 callback={() => {
-                    vibrate()
-                    callback(input_ref.current?.value || "")
+                    callback(value || "")
                 }}
-                height={"48px"}
+                height="44px"
+                width="44px"
+                className="rounded-xl!"
             />
         </div>
     )
