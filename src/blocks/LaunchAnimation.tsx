@@ -4,7 +4,13 @@ import { AnimatedGlowText } from "@/components"
 import { useEffect, useState } from "react"
 import { LabeledImage } from "@/components"
 
-function LaunchAnimation(){
+import { join_classes } from "@/components/utils"
+
+export type LaunchAnimationProps = {
+    className?: string
+}
+
+function LaunchAnimation({ className }: LaunchAnimationProps){
     const [welcome_sentence, set_welcome_sentence] = useState("Struggling to wake... Just five more minutes.")
     const [is_amount, set_is_amount] = useState(false)
     useEffect(() => {
@@ -17,7 +23,7 @@ function LaunchAnimation(){
     }, [])
     return (
         <div
-            className={"relative h-[calc(100vh-env(safe-area-inset-top))] w-screen overflow-hidden select-none"}
+            className={join_classes("relative h-[calc(100vh-env(safe-area-inset-top))] w-screen overflow-hidden select-none", className)}
         >
             <div className={`absolute text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}>
                 <AnimatedGlowText
