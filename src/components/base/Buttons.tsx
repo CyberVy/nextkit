@@ -9,7 +9,7 @@ import type { ComponentPropsWithRef, ReactNode } from "react"
 
 export type ButtonGroupProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     button_icons: ReactNode[]
-    callbacks?: (() => void)[]
+    on_clicks?: (() => void)[]
     item_width: string
     height: string
     default_selected_index?: number
@@ -32,7 +32,7 @@ export type NaiveButtonProps = Omit<ComponentPropsWithRef<"button">, "children">
     width?: string
     height?: string
     icon: ReactNode
-    callback?: () => void
+    on_click?: () => void
     background_color?: string
     background_color_dark?: string
     border_color?: string
@@ -45,7 +45,7 @@ function NaiveButton({
     width = "56px",
     height = "32px",
     icon,
-    callback,
+    on_click,
     background_color = "rgba(244,244,244,0.40)",
     background_color_dark = "rgba(24,24,24,0.40)",
     border_color = "rgba(0,0,0,0.10)",
@@ -97,7 +97,7 @@ function NaiveButton({
                         if (!is_ios_device()){
                             vibrate()
                         }
-                        callback?.()
+                        on_click?.()
                     }}
                 >
                     <span className={"absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"}>
@@ -111,7 +111,7 @@ function NaiveButton({
 
 function ButtonGroup({
     button_icons,
-    callbacks,
+    on_clicks,
     item_width,
     height,
     default_selected_index,
@@ -185,11 +185,11 @@ function ButtonGroup({
                                     }
                                     if (index !== selected_index){
                                         set_selected_index(index)
-                                        callbacks?.[index]?.()
+                                        on_clicks?.[index]?.()
                                     }
                                     else {
                                         set_selected_index(-1)
-                                        callbacks?.[index]?.()
+                                        on_clicks?.[index]?.()
                                     }
                                 }}
                                 style={{

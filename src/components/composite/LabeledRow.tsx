@@ -10,9 +10,9 @@ export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children" | "t
     // Cover image properties passed to the internal LabeledImage
     src?: string
     alt?: string
-    image_className?: string
+    image_class_name?: string
     image_proxy_api?: string
-    onClickImage?: () => void
+    on_click_image?: () => void
 
     // Layout slots
     left_indicator?: ReactNode // E.g., index numbers, playback status indicators
@@ -21,24 +21,24 @@ export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children" | "t
     right_actions?: ReactNode   // Quick actions on the far right
     
     // Context Menu config
-    context_menu?: Omit<ContextMenuProps, "children" | "disabled" | "onClickTrigger">
+    context_menu?: Omit<ContextMenuProps, "children" | "disabled" | "on_click_trigger">
     
     // Callbacks
-    onClickRow?: () => void
+    on_click_row?: () => void
 }
 
 const LabeledRow = React.memo(function LabeledRow({
     src,
     alt,
-    image_className,
+    image_class_name,
     image_proxy_api,
     left_indicator,
     title,
     subtitle,
     right_actions,
     context_menu,
-    onClickRow,
-    onClickImage,
+    on_click_row,
+    on_click_image,
     className = "",
     ref,
     ...props
@@ -62,7 +62,7 @@ const LabeledRow = React.memo(function LabeledRow({
                 {/* Main clickable area: covers left indicator, thumbnail, and texts */}
                 <div
                     className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer group"
-                    onClick={onClickRow}
+                    onClick={on_click_row}
                 >
                     {/* Left status/index */}
                     {left_indicator != null && (
@@ -76,9 +76,9 @@ const LabeledRow = React.memo(function LabeledRow({
                         <LabeledImage
                             src={src}
                             alt={alt}
-                            image_className={image_className}
+                            image_class_name={image_class_name}
                             image_proxy_api={image_proxy_api}
-                            onClickImage={onClickImage}
+                            on_click_image={on_click_image}
                             className="w-full h-full object-cover"
                         />
                     </div>

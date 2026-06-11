@@ -4,31 +4,58 @@ import { vibrate } from "@/infra/device.client"
 
 import type { CSSProperties, ComponentPropsWithRef } from "react"
 
-type CheckboxProps = Omit<ComponentPropsWithRef<"input">, "type"> & {
+type CheckboxProps = Omit<ComponentPropsWithRef<"label">, "onChange"> & {
     background_color?: string
     picker_color?: string
+    input_ref?: React.Ref<HTMLInputElement>
+    checked?: boolean
+    default_checked?: boolean
+    disabled?: boolean
+    name?: string
+    on_change?: (checked: boolean) => void
 }
 
 const Checkbox = function Checkbox(
-    { background_color = "#e9e9ea", picker_color = "#34c759", children, disabled, ref, ...props }: CheckboxProps){
+    {
+        background_color = "#e9e9ea",
+        picker_color = "#34c759",
+        input_ref,
+        checked,
+        default_checked,
+        disabled,
+        name,
+        on_change,
+        children,
+        className,
+        style,
+        ref,
+        ...props
+    }: CheckboxProps
+){
     return (
         <label
+            ref={ref}
             className={[
                 "inline-flex select-none items-center gap-3",
-                disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
+                disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer",
+                className
             ].filter(Boolean).join(" ")}
+            style={style}
+            {...props}
         >
             {children}
             <span className="relative h-7.75 w-12.75 shrink-0">
                 <input
-                    {...props}
-                    onClick={event => {
-                        props.onClick?.(event)
+                    type="checkbox"
+                    checked={checked}
+                    defaultChecked={default_checked}
+                    disabled={disabled}
+                    name={name}
+                    onChange={event => {
+                        on_change?.(event.target.checked)
                         vibrate()
                     }}
-                    ref={ref}
-                    type="checkbox"
-                    disabled={disabled}
+                    ref={input_ref}
                     className="peer sr-only"
                 />
                 <span

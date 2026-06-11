@@ -29,7 +29,7 @@ function LaunchAnimation(){
             <div className={`${is_amount ? "translate-x-[100vw]" : "-translate-x-1/1"} left-0 top-3/7 -translate-y-1/1 absolute transition duration-1500`}>
                 <div className={"w-12 h-12"}>
                     <LabeledImage
-                        image_className={"rounded-xl"}
+                        image_class_name={"rounded-xl"}
                         src={"/icons/192x192.png"}
                     />
                 </div>

@@ -17,17 +17,17 @@ export type LabeledImageProps = Omit<ComponentPropsWithRef<"div">, "children"> &
     bottom_information_background_color?: string
     image_proxy_api?: string
     image_props?: Omit<ComponentPropsWithoutRef<"img">, "children" | "src" | "alt" | "className" | "onClick" | "onContextMenu" | "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel" | "onPointerLeave" | "onTouchEnd">
-    image_className?: string
+    image_class_name?: string
     label_left?: ReactNode
     label_left_background_color?: string
     label_right?: ReactNode
     label_right_background_color?: string
     alt?: string
-    onClickImage?: () => void
+    on_click_image?: () => void
     clear_margin?: number
     protected_padding?: number
     intersection_root_element?: HTMLElement | null
-    context_menu?: Omit<ContextMenuProps, "children" | "disabled" | "onClickTrigger">
+    context_menu?: Omit<ContextMenuProps, "children" | "disabled" | "on_click_trigger">
     className?: string
 }
 
@@ -42,14 +42,14 @@ function LabeledImage({
     top_information_background_color,
     bottom_information,
     bottom_information_background_color,
-    onClickImage,
+    on_click_image,
     image_proxy_api,
     clear_margin,
     protected_padding,
     intersection_root_element,
     context_menu,
     image_props,
-    image_className,
+    image_class_name,
     className,
     ref,
     ...props
@@ -139,7 +139,7 @@ function LabeledImage({
                                 {...image_props}
                                 alt={alt || ""}
                                 src={resolved_src}
-                                className={`${image_className || ""} w-full h-full object-cover [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
+                                className={`${image_class_name || ""} w-full h-full object-cover [-webkit-touch-callout:none] ${is_ios ? "[-webkit-user-drag:none]" : ""}`}
                                 onLoad={event => {
                                     set_is_loaded(true)
                                     set_img_size([event.currentTarget.width, event.currentTarget.height])
@@ -153,7 +153,7 @@ function LabeledImage({
                                     set_is_loaded(true)
                                 }}
                                 onClick={() => {
-                                    onClickImage?.()
+                                    on_click_image?.()
                                 }}
                                 onTouchEnd={event => {
                                     event.stopPropagation()

@@ -9,7 +9,7 @@ import type { ComponentPropsWithRef, RefObject } from "react"
 
 export type ScrollButtonProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     element_ref?: RefObject<HTMLDivElement | null>
-    callback?: () => void
+    on_scroll?: () => void
     position_class_name?: string
 }
 
@@ -31,7 +31,7 @@ const scroll_button_group_props = {
     selected_text_color_dark: "rgba(244,244,244,0.95)",
 }
 
-function scroll_element({ element_ref, callback }: ScrollButtonProps, position: "top" | "bottom"){
+function scroll_element({ element_ref, on_scroll }: ScrollButtonProps, position: "top" | "bottom"){
     if (!element_ref?.current){
         const { documentElement } = document
         // use window.outerHeight
@@ -41,15 +41,15 @@ function scroll_element({ element_ref, callback }: ScrollButtonProps, position: 
         // for Apple Webkit
         // https://bugs.webkit.org/show_bug.cgi?id=210009
         documentElement.scrollTop = position === "top" ? 0 : documentElement.scrollHeight - window.innerHeight - 1
-        callback?.()
+        on_scroll?.()
         return
     }
 
     element_ref.current.scrollTop = position === "top" ? 0 : element_ref.current.scrollHeight - element_ref.current.clientHeight - 1
-    callback?.()
+    on_scroll?.()
 }
 
-const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, callback, position_class_name, className, ref, ...props }: ScrollButtonProps){
+const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, on_scroll, position_class_name, className, ref, ...props }: ScrollButtonProps){
     return (
         <div
             {...props}
@@ -58,14 +58,14 @@ const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, c
         >
             <ButtonGroup
                 button_icons={[string_icons.up_triangle]}
-                callbacks={[() => scroll_element({ element_ref, callback }, "top")]}
+                on_clicks={[() => scroll_element({ element_ref, on_scroll }, "top")]}
                 {...scroll_button_group_props}
             />
         </div>
     )
 })
 
-const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_ref, callback, position_class_name, className, ref, ...props }: ScrollButtonProps){
+const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_ref, on_scroll, position_class_name, className, ref, ...props }: ScrollButtonProps){
     return (
         <div
             {...props}
@@ -74,14 +74,14 @@ const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_
         >
             <ButtonGroup
                 button_icons={[string_icons.down_triangle]}
-                callbacks={[() => scroll_element({ element_ref, callback }, "bottom")]}
+                on_clicks={[() => scroll_element({ element_ref, on_scroll }, "bottom")]}
                 {...scroll_button_group_props}
             />
         </div>
     )
 })
 
-const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, callback, position_class_name, className, ref, ...props }: ScrollButtonProps){
+const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, on_scroll, position_class_name, className, ref, ...props }: ScrollButtonProps){
     return (
         <div
             {...props}
@@ -90,9 +90,9 @@ const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, 
         >
             <ButtonGroup
                 button_icons={[string_icons.up_triangle, string_icons.down_triangle]}
-                callbacks={[
-                    () => scroll_element({ element_ref, callback }, "top"),
-                    () => scroll_element({ element_ref, callback }, "bottom")
+                on_clicks={[
+                    () => scroll_element({ element_ref, on_scroll }, "top"),
+                    () => scroll_element({ element_ref, on_scroll }, "bottom")
                 ]}
                 {...{ ...scroll_button_group_props, item_width: "52px" }}
             />
