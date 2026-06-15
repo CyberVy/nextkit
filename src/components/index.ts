@@ -58,3 +58,8 @@ export {
 
 // icons.tsx
 export { SearchIcon } from "./icons"
+
+// ViewSwitcher.tsx
+export { ViewSwitcher } from "./composite/ViewSwitcher"
+export type { View, ViewSwitcherProps } from "./composite/ViewSwitcher"
+

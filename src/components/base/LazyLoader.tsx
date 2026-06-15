@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, ReactNode, RefObject, useCallback } from 'react'
 import type { FC, ComponentPropsWithRef } from "react"
+import { is_element_hidden } from "@/components/utils"
 
 export type LazyContainerProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     children: ReactNode
@@ -63,10 +64,18 @@ const LazyContainer: FC<LazyContainerProps> = ({
                 else {
                     // The element leaves the viewport
                     if (hasLoaded_ref.current && element_ref.current){
+                        // If the element (or its parent) has display: none, skip unmounting to prevent layout collapse.
+                        if (is_element_hidden(element_ref.current)){
+                            return
+                        }
+
+                        const width = element_ref.current.offsetWidth
+                        const height = element_ref.current.offsetHeight
+
                         // Capture the actual rendered dimensions just before hiding the content
                         set_dimensions({
-                            width: element_ref.current.offsetWidth,
-                            height: element_ref.current.offsetHeight,
+                            width,
+                            height,
                         })
                         // Unmount the real children to save memory
                         set_is_visible(false)

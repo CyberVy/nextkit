@@ -1,0 +1,16 @@
+.viewswitcher-toolbar {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(body:has(.hide-viewswitcher-toolbar:not(.hidden):not([hidden]))) .viewswitcher-toolbar-bottom {
+    transform: translate(0%, 150%) scale(0.9) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+:global(body:has(.hide-viewswitcher-toolbar:not(.hidden):not([hidden]))) .viewswitcher-toolbar-top {
+    transform: translate(0%, -150%) scale(0.9) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

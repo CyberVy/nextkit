@@ -141,7 +141,7 @@ function ButtonGroup({
             {...props}
             ref={ref}
             className={join_classes(
-                "inline-block select-none rounded-[22px] border p-1 backdrop-blur-2xl",
+                "inline-flex flex-row items-center select-none rounded-[22px] border p-1 backdrop-blur-2xl",
                 "bg-(--button-group-background-color) border-(--button-group-border-color)",
                 "shadow-[0_8px_22px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.24)]",
                 "dark:bg-(--button-group-background-color-dark) dark:border-(--button-group-border-color-dark)",
