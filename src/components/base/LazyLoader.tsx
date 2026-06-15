@@ -2,6 +2,13 @@ import { useState, useEffect, useRef, ReactNode, RefObject, useCallback } from '
 import type { FC, ComponentPropsWithRef } from "react"
 import { is_element_hidden } from "@/components/utils"
 
+export type KeepLoadedMargin = {
+    top?: number
+    bottom?: number
+    left?: number
+    right?: number
+}
+
 export type LazyContainerProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     children: ReactNode
     initial_placeholder?: ReactNode
@@ -9,6 +16,7 @@ export type LazyContainerProps = Omit<ComponentPropsWithRef<"div">, "children"> 
     rootMargin?: string
     // Accepts a DOM Element, a React Ref object, or null (defaults to browser viewport)
     root?: Element | RefObject<Element | null> | null
+    keep_loaded_margin?: KeepLoadedMargin
 }
 
 const LazyContainer: FC<LazyContainerProps> = ({
@@ -17,10 +25,18 @@ const LazyContainer: FC<LazyContainerProps> = ({
     threshold = 0,
     rootMargin = '200px', // A larger margin is recommended for smoother scrolling
     root = null,
+    keep_loaded_margin,
     className,
     ref,
     ...props
 }) => {
+    const {
+        top: keep_loaded_top,
+        bottom: keep_loaded_bottom,
+        left: keep_loaded_left,
+        right: keep_loaded_right,
+    } = keep_loaded_margin || {}
+
     // Track visibility of the element in the viewport
     const [is_visible, set_is_visible] = useState<boolean>(false)
     // Track if the element has been rendered at least once
@@ -69,6 +85,64 @@ const LazyContainer: FC<LazyContainerProps> = ({
                             return
                         }
 
+                        let should_keep_loaded = false
+
+                        if (
+                            keep_loaded_top !== undefined ||
+                            keep_loaded_bottom !== undefined ||
+                            keep_loaded_left !== undefined ||
+                            keep_loaded_right !== undefined
+                        ){
+                            const rect = element_ref.current.getBoundingClientRect()
+                            
+                            let element_absolute_top = 0
+                            let element_absolute_bottom = 0
+                            let element_absolute_left = 0
+                            let element_absolute_right = 0
+                            let scroll_content_height = 0
+                            let scroll_content_width = 0
+
+                            if (rootElement){
+                                const rootRect = rootElement.getBoundingClientRect()
+                                element_absolute_top = rect.top - rootRect.top + rootElement.scrollTop
+                                element_absolute_bottom = rect.bottom - rootRect.top + rootElement.scrollTop
+                                element_absolute_left = rect.left - rootRect.left + rootElement.scrollLeft
+                                element_absolute_right = rect.right - rootRect.left + rootElement.scrollLeft
+                                scroll_content_height = rootElement.scrollHeight
+                                scroll_content_width = rootElement.scrollWidth
+                            }
+                            else {
+                                element_absolute_top = rect.top + window.scrollY
+                                element_absolute_bottom = rect.bottom + window.scrollY
+                                element_absolute_left = rect.left + window.scrollX
+                                element_absolute_right = rect.right + window.scrollX
+                                scroll_content_height = document.documentElement.scrollHeight
+                                scroll_content_width = document.documentElement.scrollWidth
+                            }
+
+                            const distance_from_top = element_absolute_top
+                            const distance_from_bottom = scroll_content_height - element_absolute_bottom
+                            const distance_from_left = element_absolute_left
+                            const distance_from_right = scroll_content_width - element_absolute_right
+
+                            if (keep_loaded_top !== undefined && distance_from_top <= keep_loaded_top){
+                                should_keep_loaded = true
+                            }
+                            if (keep_loaded_bottom !== undefined && distance_from_bottom <= keep_loaded_bottom){
+                                should_keep_loaded = true
+                            }
+                            if (keep_loaded_left !== undefined && distance_from_left <= keep_loaded_left){
+                                should_keep_loaded = true
+                            }
+                            if (keep_loaded_right !== undefined && distance_from_right <= keep_loaded_right){
+                                should_keep_loaded = true
+                            }
+                        }
+
+                        if (should_keep_loaded){
+                            return
+                        }
+
                         const width = element_ref.current.offsetWidth
                         const height = element_ref.current.offsetHeight
 
@@ -99,7 +173,15 @@ const LazyContainer: FC<LazyContainerProps> = ({
                 observer.unobserve(currentRef)
             }
         }
-    }, [threshold, rootMargin, root])
+    }, [
+        threshold,
+        rootMargin,
+        root,
+        keep_loaded_top,
+        keep_loaded_bottom,
+        keep_loaded_left,
+        keep_loaded_right
+    ])
 
     // If the element is out of the viewport but was loaded before, 
     // lock its container size to prevent scrollbar layout shifts.
