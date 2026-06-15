@@ -21,6 +21,10 @@ export { LabeledImage } from "./composite/LabeledImage"
 export { LabeledRow } from "./composite/LabeledRow"
 export type { LabeledRowProps } from "./composite/LabeledRow"
 
+// LazyLoader.tsx
+export { LazyContainer } from "./base/LazyLoader"
+export type { LazyContainerProps, KeepLoadedMargin } from "./base/LazyLoader"
+
 // ContextMenuContainer.tsx
 export { ContextMenu } from "./composite/ContextMenuContainer"
 export type { ContextMenuProps } from "./composite/ContextMenuContainer"
