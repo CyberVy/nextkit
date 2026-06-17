@@ -49,9 +49,11 @@ function FullscreenModalContainer({ className = "", children, enable_scroll_butt
             {enable_scroll_button &&
                 <>
                     <ScrollToTopButton
+                        className="bottom-4 right-4"
                         element_ref={container_ref}
                     />
                     <ScrollToBottomButton
+                        className="bottom-4 right-17"
                         element_ref={container_ref}
                     />
                 </>}

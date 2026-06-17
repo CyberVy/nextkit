@@ -10,7 +10,7 @@ import type { ComponentPropsWithRef, RefObject } from "react"
 export type ScrollButtonProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     element_ref?: RefObject<HTMLDivElement | null>
     on_scroll?: () => void
-    position_class_name?: string
+    offset?: number
 }
 
 const scroll_button_group_props = {
@@ -31,7 +31,7 @@ const scroll_button_group_props = {
     selected_text_color_dark: "rgba(244,244,244,0.95)",
 }
 
-function scroll_element({ element_ref, on_scroll }: ScrollButtonProps, position: "top" | "bottom"){
+function scroll_element({ element_ref, on_scroll, offset = 0 }: ScrollButtonProps, position: "top" | "bottom"){
     if (!element_ref?.current){
         const { documentElement } = document
         // use window.outerHeight
@@ -40,59 +40,59 @@ function scroll_element({ element_ref, on_scroll }: ScrollButtonProps, position:
         // css: min-height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         // for Apple Webkit
         // https://bugs.webkit.org/show_bug.cgi?id=210009
-        documentElement.scrollTop = position === "top" ? 0 : documentElement.scrollHeight - window.innerHeight - 1
+        documentElement.scrollTop = position === "top" ? 0 + offset : documentElement.scrollHeight - window.innerHeight - offset
         on_scroll?.()
         return
     }
 
-    element_ref.current.scrollTop = position === "top" ? 0 : element_ref.current.scrollHeight - element_ref.current.clientHeight - 1
+    element_ref.current.scrollTop = position === "top" ? 0 + offset : element_ref.current.scrollHeight - element_ref.current.clientHeight - offset
     on_scroll?.()
 }
 
-const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, on_scroll, position_class_name, className, ref, ...props }: ScrollButtonProps){
+const ScrollToTopButton = React.memo(function ScrollToTopButton({ element_ref, on_scroll, offset = 1, className, ref, ...props }: ScrollButtonProps){
     return (
         <div
             {...props}
             ref={ref}
-            className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4", className)}
+            className={join_classes("fixed z-10 select-none text-2xl", className)}
         >
             <ButtonGroup
                 button_icons={[string_icons.up_triangle]}
-                on_clicks={[() => scroll_element({ element_ref, on_scroll }, "top")]}
+                on_clicks={[() => scroll_element({ element_ref, on_scroll, offset }, "top")]}
                 {...scroll_button_group_props}
             />
         </div>
     )
 })
 
-const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_ref, on_scroll, position_class_name, className, ref, ...props }: ScrollButtonProps){
+const ScrollToBottomButton = React.memo(function ScrollToBottomButton({ element_ref, on_scroll, offset = 1, className, ref, ...props }: ScrollButtonProps){
     return (
         <div
             {...props}
             ref={ref}
-            className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-17", className)}
+            className={join_classes("fixed z-10 select-none text-2xl", className)}
         >
             <ButtonGroup
                 button_icons={[string_icons.down_triangle]}
-                on_clicks={[() => scroll_element({ element_ref, on_scroll }, "bottom")]}
+                on_clicks={[() => scroll_element({ element_ref, on_scroll, offset }, "bottom")]}
                 {...scroll_button_group_props}
             />
         </div>
     )
 })
 
-const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, on_scroll, position_class_name, className, ref, ...props }: ScrollButtonProps){
+const ScrollButtonGroup = React.memo(function ScrollButtonGroup ({ element_ref, on_scroll, offset = 0, className, ref, ...props }: ScrollButtonProps){
     return (
         <div
             {...props}
             ref={ref}
-            className={join_classes("fixed z-10 select-none text-2xl", position_class_name || "bottom-4 right-4", className)}
+            className={join_classes("fixed z-10 select-none text-2xl", className)}
         >
             <ButtonGroup
                 button_icons={[string_icons.up_triangle, string_icons.down_triangle]}
                 on_clicks={[
-                    () => scroll_element({ element_ref, on_scroll }, "top"),
-                    () => scroll_element({ element_ref, on_scroll }, "bottom")
+                    () => scroll_element({ element_ref, on_scroll, offset }, "top"),
+                    () => scroll_element({ element_ref, on_scroll, offset }, "bottom")
                 ]}
                 {...{ ...scroll_button_group_props, item_width: "52px" }}
             />
