@@ -52,7 +52,7 @@ const LabeledRow = React.memo(function LabeledRow({
         >
             <div
                 {...props}
-                className={`flex items-center justify-between p-2 rounded-xl transition-all duration-150 relative hover:bg-black/5 dark:hover:bg-white/5 ${className}`}
+                className={`flex items-center justify-between p-2 rounded-xl transition-all duration-150 relative hover:bg-black/5 dark:hover:bg-white/5`}
                 onTouchEnd={(event) => {
                     // Stop propagation to prevent ContextMenu's onTouchEnd from calling preventDefault(),
                     // which would otherwise block synthetic click events on iOS WebKit/Safari.
