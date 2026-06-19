@@ -73,7 +73,7 @@ function FloatingModalContainer({ className = "", children, ref, ...props }: Flo
             className={[
                 "fixed",
                 "h-[20vh] w-[80vw]",
-                "rounded-[30px] border border-black/8 bg-white/78 p-2.5 text-black/88 shadow-[0_18px_48px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-2xl",
+                "rounded-[30px] border border-black/8 bg-white/78 p-1 text-black/88 shadow-[0_18px_48px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-2xl",
                 "dark:border-white/10 dark:bg-[#111111]/78 dark:text-white/88 dark:shadow-[0_20px_52px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.03)]",
                 className
             ].filter(Boolean).join(" ")}
