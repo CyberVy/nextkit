@@ -67,3 +67,7 @@ export { SearchIcon } from "./icons"
 export { ViewSwitcher } from "./composite/ViewSwitcher"
 export type { View, ViewSwitcherProps } from "./composite/ViewSwitcher"
 
+// Migration.tsx
+export { MigrationExport, MigrationMerge, MigrationOverwrite } from "./composite/Migration"
+export type { MigrationExportProps, MigrationMergeProps, MigrationOverwriteProps } from "./composite/Migration"
+

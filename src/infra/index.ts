@@ -34,3 +34,6 @@ export { register } from "./window_hub.client"
 
 // window_hub.types.ts
 export type { WindowHubSendOptions, WindowHubMessageHandler, WindowHubMessenger, WindowHubIncomingEnvelope } from "./window_hub.types"
+
+// migration.client.ts
+export { MigrationService } from "./migration.client"
