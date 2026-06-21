@@ -23,7 +23,7 @@ export async function update(static_resource_cache: CacheStorageItemController){
             const cached_index_html_text = await cached_index_html_response.text()
             if (latest_index_html_text !== cached_index_html_text){
                 static_resource_cache.delete(key)
-                static_resource_cache.set(key, latest_index_html_response).then(() => console.log(`SW: Updated /.`))
+                static_resource_cache.set(key, latest_index_html_response).then(() => console.log(`Update: Updated /.`))
 
                 const latest_relative_links = get_relative_links_from_html_string(latest_index_html_text)
                 const cached_relative_links: string[] = []
@@ -43,17 +43,25 @@ export async function update(static_resource_cache: CacheStorageItemController){
                                 if (r) return
                                 return static_resource_cache.delete(keys[index].url)
                                 
-                            }).then(() => console.log(`SW: The legacy asset(${link}) is deleted.`))
+                            }).then(() => console.log(`Update: The legacy asset(${link}) is deleted.`))
                         }
                     })
                 }, 1500)
 
                 // silent update
-                latest_relative_links.forEach(async(link) => {
+                latest_relative_links.forEach((link) => {
                     if (!cached_relative_links.includes(link)){
                         fetch(link).then(link_response => {
-                            static_resource_cache.set(new URL(link, location.origin), link_response)
-                        }).then(() => console.log(`SW: Updated ${link}.`))
+                            if (link_response.status === 200){
+                                static_resource_cache.set(new URL(link, location.origin), link_response)
+                                    .then(() => console.log(`Update: Updated ${link}.`))
+                            } 
+                            else {
+                                console.warn(`Update: Skip caching failed response for ${link} (status: ${link_response.status})`)
+                            }
+                        }).catch(err => {
+                            console.error(`Update: Failed to update asset ${link}:`, err)
+                        })
                     }
                 })
             }
