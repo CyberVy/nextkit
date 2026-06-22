@@ -30,7 +30,7 @@ function MigrationAlertModal({
                 enter_from={{ transform: "scale(0)" }}
                 enter_to={{ transform: "scale(1)" }}
                 show={show}
-                className="fixed top-1/2 left-1/2 z-100"
+                className="fixed inset-0 z-100"
             >
                 <FloatingModalContainer className="w-80! h-auto! min-h-40! p-1! top-1/2 left-1/2 -translate-1/2 select-none">
                     <div className="flex flex-col justify-between h-full w-full p-2">
