@@ -6,4 +6,9 @@ commands.allow = [
   "window_hub_register",
   "window_hub_unregister",
   "window_hub_send",
+  "create_child_webview",
+  "destroy_child_webview",
+  "set_window_layout",
+  "post_message_to_main",
+  "post_message_to_webview",
 ]

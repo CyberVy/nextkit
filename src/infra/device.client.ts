@@ -67,7 +67,7 @@ export function is_in_native(){
     if (typeof window === "undefined"){
         return false
     }
-    return Boolean(window.__TAURI_INTERNALS__ || window.__TAURI__)
+    return Boolean(window.__TAURI__)
 }
 
 export function is_in_browser(){
