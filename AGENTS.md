@@ -9,19 +9,26 @@
   - Put app-specific composite UI here, such as search, playlist, player, history, settings, and auth blocks.
 - `src/components/`: base reusable UI components and UI infrastructure.
   - Put framework-level or reusable primitives here.
-- `src/core/`: core domain logic and pure app logic.
-- `src/infra/`: infrastructure, platform adapters, and shared types.
+  - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
+- `src/core/`: core domain logic, algorithms, and pure app logic.
+- `src/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
   - `*.client.ts`: browser-only utilities.
-  - `types.ts`: shared types.
+  - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
+  - `types.ts` or other utilities: shared system/adapter interfaces.
+- `src/inject/`: client-side scripts injected directly into external WebViews.
+  - Contains script entries like `inject.main.ts` and target patches like `net/xhr.inject.ts`.
 - `src/sw/`: service worker source (build/packaged to `public/sw.js`).
   - `fetch/`: fetch/cache worker modules.
 - `public/`: static assets, icons, `manifest.json`, and built SW entry.
 - `scripts/`: local scripts.
+- `cli/`: local CLI helper utilities.
+- `draft/`: temporary sandboxes and development draft files.
 - `src-tauri/`: Tauri (Rust) backend and native app configuration.
   - `src/main.rs`: desktop/mobile app entry point.
   - `src/lib.rs`: shared Tauri command/runtime wiring.
-  - `src/fetch.rs`: Rust-side fetch/network helpers.
-  - `src/inject.ts` and `src/inject.js`: WebView injection script source/output.
+  - `src/commands/`: backend IPC commands exposed to the web frontend.
+  - `src/webview/` and `src/window/`: controllers for Tauri WebView and native window management.
+  - `src/logging.rs`: application logger setup.
   - `Cargo.toml` and `Cargo.lock`: Rust package manifest and lockfile.
   - `build.rs`: Tauri/Rust build script.
   - `tauri.conf.json`, `tauri.ios.conf.json`, `tauri.macos.conf.json`: platform configs.
@@ -42,6 +49,7 @@
 - Constants: `SCREAMING_SNAKE_CASE` for module-level immutable values (e.g. `DESKTOP_USER_AGENT`); use `snake_case` for local values.
 - Type imports: use `import type` when importing only types.
 - Path aliases: prefer `@/` for imports under `src/`.
+- WebView injection scripts: use `*.inject.ts` (source) and `*.inject.js` (compiled output).
 
 ## Layering Rules
 
@@ -49,6 +57,12 @@
 - `src/blocks/` may depend on `src/components/`, `src/core/`, and `src/infra/`.
 - `src/app/` is responsible for route entry points and composing blocks.
 - Keep business UI out of `src/components/`, place it in `src/blocks/`.
+- `src/inject/` represents code running inside isolated third-party WebViews:
+  - It must **NEVER** import modules from `src/app/`, `src/blocks/`, or `src/components/`.
+  - It should remain lightweight, standalone, and only import from its local modules (`src/inject/infra/` or `src/inject/net/`).
+- Web IPC Communications:
+  - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](file:///Users/dp/CodeProject/nextkit/src/infra/web_ipc.client.ts)).
+  - Shared data types used across the IPC boundary must be defined in `src/core/types.ts` or `src/infra/types.ts` for consistency.
 
 ## Base Rules
 
