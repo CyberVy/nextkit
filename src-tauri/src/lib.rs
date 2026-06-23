@@ -1,3 +1,5 @@
+use tauri::Manager;
+
 mod commands;
 mod logging;
 mod webview;
@@ -6,7 +8,15 @@ mod window;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     window::state_persistence::register(tauri::Builder::default())
-        .manage(commands::window_hub::WindowHubState::default())
+        .manage(window::layout::WindowLayoutState::default())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Resized(_) = event {
+                if let Some(layout_state) = window.try_state::<window::layout::WindowLayoutState>()
+                {
+                    let _ = layout_state.apply_layout::<tauri::Wry>(window);
+                }
+            }
+        })
         .setup(|app| {
             logging::init(app)?;
             webview::create_main_window(app)?;
@@ -14,9 +24,11 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::fetch::fetch,
-            commands::window_hub::window_hub_register,
-            commands::window_hub::window_hub_unregister,
-            commands::window_hub::window_hub_send
+            commands::layout::create_child_webview,
+            commands::layout::destroy_child_webview,
+            commands::layout::set_window_layout,
+            commands::message::post_message_to_main,
+            commands::message::post_message_to_webview
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

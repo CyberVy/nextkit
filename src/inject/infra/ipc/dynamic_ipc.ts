@@ -1,4 +1,4 @@
-import { handle_web_rpc_request, web_rpc_request } from "@/infra/web_rpc.client"
+import { handle_web_ipc, web_ipc_call } from "@/infra/web_ipc.client"
 
 export type RemoteProxy<T> = {
     [K in keyof T]: T[K] extends (...args: infer A) => infer R
@@ -18,18 +18,18 @@ export function remote(targetWindow: Window): any{
         return new Proxy(() => {}, {
             get(target, prop: string){
                 if (prop === "$execute"){
-                    return () => web_rpc_request({
+                    return () => web_ipc_call({
                         target: targetWindow,
-                        type: "rpc_chain",
+                        type: "ipc_chain",
                         payload: { steps }
                     })
                 }
                 if (prop === "$set"){
                     return (value: any) => {
                         steps.push({ op: "set", value })
-                        return web_rpc_request({
+                        return web_ipc_call({
                             target: targetWindow,
-                            type: "rpc_chain",
+                            type: "ipc_chain",
                             payload: { steps }
                         })
                     }
@@ -48,9 +48,9 @@ export function remote(targetWindow: Window): any{
     return createProxy([])
 }
 
-export function register_dynamic_rpc(){
-    handle_web_rpc_request({
-        type: "rpc_chain",
+export function register_dynamic_ipc(){
+    handle_web_ipc({
+        type: "ipc_chain",
         handler: async (payload) => {
             const { steps } = payload as { steps: any[] }
             let current: any = window
@@ -82,10 +82,10 @@ export function register_dynamic_rpc(){
     })
 }
 
-export function notify_rpc_success_to_window(_window: Window){
-    web_rpc_request({
+export function notify_ipc_success_to_window(_window: Window){
+    web_ipc_call({
         target: _window,
-        type: "register_web_message_rpc",
+        type: "register_web_message_ipc",
         payload: { result: "success", origin: location.href }
-    }).catch(err => console.warn(err))
+    }).catch((err: any) => console.warn(err))
 }

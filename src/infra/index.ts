@@ -29,11 +29,11 @@ export { LocalStorageItemController, CacheStorageItemController } from "./storag
 export { static_resource_cache_name, is_later_version, update } from "./version"
 export { default as version } from "./version"
 
-// window_hub.client.ts
-export { register } from "./window_hub.client"
-
-// window_hub.types.ts
-export type { WindowHubSendOptions, WindowHubMessageHandler, WindowHubMessenger, WindowHubIncomingEnvelope } from "./window_hub.types"
 
 // migration.client.ts
 export { MigrationService } from "./migration.client"
+
+// webview.client.ts
+export { create_child_webview, destroy_child_webview, set_window_layout } from "./webview.client"
+export type { LayoutItem } from "./webview.client"
+

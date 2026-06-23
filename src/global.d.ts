@@ -5,7 +5,11 @@ declare global {
         webkit?: {
             messageHandlers?: Record<string, unknown>
         }
-        __TAURI__?: unknown
+                __TAURI__?: {
+            core?: {
+                invoke?: <T = any>(cmd: string, payload?: any) => Promise<T>
+            }
+        }
         __TAURI_INTERNALS__?: unknown
     }
 }
