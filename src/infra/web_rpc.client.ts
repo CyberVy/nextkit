@@ -8,6 +8,7 @@ export interface RPCRequest {
     readonly id: string
     readonly type: string
     readonly payload: Record<string, unknown>
+    readonly sender_webview_label?: string
 }
 
 export interface RPCResponse {
@@ -44,6 +45,7 @@ export type RPCRequestTarget =
     | "service-worker"
     | "parent"
     | "opener"
+    | string
 
 export interface WebRPCRequestOptions {
     target: RPCRequestTarget
@@ -59,6 +61,8 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
     let sender: Window | ServiceWorker | MessagePort | Client | null = null
     let listener: EventTarget = typeof window !== "undefined" ? window : self
     let use_origin = false
+    let is_tauri_webview = false
+    let target_webview_label: string | null = null
 
     if (typeof target === "string"){
         if (target === "service-worker"){
@@ -82,6 +86,10 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
             sender = window.opener
             use_origin = true
         }
+        else {
+            is_tauri_webview = true
+            target_webview_label = target
+        }
     }
     else {
         sender = target
@@ -97,7 +105,7 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
         }
     }
 
-    if (!sender){
+    if (!sender && !is_tauri_webview){
         throw new Error("Invalid RPC request target")
     }
 
@@ -120,7 +128,18 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
         listener.addEventListener("message", callback)
 
         const msg: RPCRequest = { id, type, payload }
-        if (use_origin){
+        if (is_tauri_webview && target_webview_label){
+            if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
+                window.__TAURI__.core.invoke("post_message_to_webview", {
+                    label: target_webview_label,
+                    message: msg
+                }).catch(reject)
+            }
+            else {
+                reject(new Error("Tauri invoke is not available in this context"))
+            }
+        }
+        else if (use_origin){
             (sender as Window).postMessage(msg, "*")
         }
         else {
@@ -146,14 +165,24 @@ export function handle_web_rpc_request(options: WebRPCHandleOptions): () => void
         const event_data = parse_message_data(msg_event.data) as RPCRequest | null
         if (!event_data) return
         if (event_data.type !== type) return
-        if (!msg_event.source) return
+        if (!msg_event.source && !event_data.sender_webview_label) return
 
         const result = await handler(event_data.payload)
-        if (is_window(msg_event.source)){
-            msg_event.source.postMessage({ id: event_data.id, result } as RPCResponse, "*")
+        if (event_data.sender_webview_label){
+            if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
+                window.__TAURI__.core.invoke("post_message_to_webview", {
+                    label: event_data.sender_webview_label,
+                    message: { id: event_data.id, result } as RPCResponse
+                }).catch((err: any) => console.warn(`Failed to route RPC reply to ${event_data.sender_webview_label}:`, err))
+            }
         }
-        else {
-            (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as RPCResponse)
+        else if (msg_event.source){
+            if (is_window(msg_event.source)){
+                msg_event.source.postMessage({ id: event_data.id, result } as RPCResponse, "*")
+            }
+            else {
+                (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as RPCResponse)
+            }
         }
     }
 
