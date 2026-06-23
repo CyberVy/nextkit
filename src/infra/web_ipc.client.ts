@@ -1,18 +1,41 @@
-let id_counter = 0
-
-function create_id(): string{
-    return Date.now().toString(36) + "_" + (id_counter++).toString(36) + "_" + Math.random().toString(36).slice(2)
-}
-
-export interface RPCRequest {
+interface IPCRequest {
     readonly id: string
     readonly type: string
     readonly payload: Record<string, unknown>
+    readonly sender_webview_label?: string
 }
 
-export interface RPCResponse {
+interface IPCResponse {
     readonly id: string
     readonly result: unknown
+}
+
+type IPCRequestTarget =
+    | Window
+    | ServiceWorker
+    | MessagePort
+    | Client
+    | "service-worker"
+    | "parent"
+    | "opener"
+    | string
+
+export interface WebIPCRequestParams {
+    target: IPCRequestTarget
+    type: string
+    payload?: Record<string, unknown>
+    delay?: number
+}
+
+export interface WebIPCHandleParams {
+    type: string
+    handler: (payload: Record<string, unknown>) => unknown | Promise<unknown>
+    listener?: MessagePort | Window | ServiceWorkerContainer | typeof self
+}
+
+let id_counter = 0
+function create_id(): string{
+    return Date.now().toString(36) + "_" + (id_counter++).toString(36) + "_" + Math.random().toString(36).slice(2)
 }
 
 function parse_message_data(data: unknown): Record<string, unknown> | null{
@@ -36,29 +59,15 @@ function is_window(target: unknown): target is Window{
     return "window" in target && "postMessage" in target
 }
 
-export type RPCRequestTarget =
-    | Window
-    | ServiceWorker
-    | MessagePort
-    | Client
-    | "service-worker"
-    | "parent"
-    | "opener"
+export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }: WebIPCRequestParams): Promise<unknown>{
 
-export interface WebRPCRequestOptions {
-    target: RPCRequestTarget
-    type: string
-    payload?: Record<string, unknown>
-    delay?: number
-}
-
-export async function web_rpc_request(options: WebRPCRequestOptions): Promise<unknown>{
-    const { target, type, payload = {}, delay = 30000 } = options
     const id = create_id()
 
     let sender: Window | ServiceWorker | MessagePort | Client | null = null
     let listener: EventTarget = typeof window !== "undefined" ? window : self
     let use_origin = false
+    let is_tauri_webview = false
+    let target_webview_label: string | null = null
 
     if (typeof target === "string"){
         if (target === "service-worker"){
@@ -82,6 +91,10 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
             sender = window.opener
             use_origin = true
         }
+        else {
+            is_tauri_webview = true
+            target_webview_label = target
+        }
     }
     else {
         sender = target
@@ -97,19 +110,19 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
         }
     }
 
-    if (!sender){
-        throw new Error("Invalid RPC request target")
+    if (!sender && !is_tauri_webview){
+        throw new Error("Invalid IPC request target")
     }
 
     return new Promise<unknown>((resolve, reject) => {
         const timer = setTimeout(() => {
             listener.removeEventListener("message", callback)
-            reject(new Error(`RPC request timeout for type: ${type}`))
+            reject(new Error(`IPC request timeout for type: ${type}`))
         }, delay)
 
         const callback = (event: Event) => {
             const msg_event = event as MessageEvent
-            const event_data = parse_message_data(msg_event.data) as RPCResponse | null
+            const event_data = parse_message_data(msg_event.data) as IPCResponse | null
             if (event_data && event_data.id === id){
                 clearTimeout(timer)
                 listener.removeEventListener("message", callback)
@@ -119,8 +132,19 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
 
         listener.addEventListener("message", callback)
 
-        const msg: RPCRequest = { id, type, payload }
-        if (use_origin){
+        const msg: IPCRequest = { id, type, payload }
+        if (is_tauri_webview && target_webview_label){
+            if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
+                window.__TAURI__.core.invoke("post_message_to_webview", {
+                    label: target_webview_label,
+                    message: msg
+                }).catch(reject)
+            }
+            else {
+                reject(new Error("Tauri invoke is not available in this context"))
+            }
+        }
+        else if (use_origin){
             (sender as Window).postMessage(msg, "*")
         }
         else {
@@ -129,31 +153,34 @@ export async function web_rpc_request(options: WebRPCRequestOptions): Promise<un
     })
 }
 
-export interface WebRPCHandleOptions {
-    type: string
-    handler: (payload: Record<string, unknown>) => unknown | Promise<unknown>
-    listener?: MessagePort | Window | ServiceWorkerContainer | typeof self
-}
-
-export function handle_web_rpc_request(options: WebRPCHandleOptions): () => void{
-    const { type, handler, listener = typeof self !== "undefined" ? self : undefined } = options
+export function handle_web_ipc({ type, handler, listener = typeof self !== "undefined" ? self : undefined } : WebIPCHandleParams): () => void{
     if (!listener){
         throw new Error("No message listener target available")
     }
 
     const message_callback = async (event: Event) => {
         const msg_event = event as MessageEvent
-        const event_data = parse_message_data(msg_event.data) as RPCRequest | null
+        const event_data = parse_message_data(msg_event.data) as IPCRequest | null
         if (!event_data) return
         if (event_data.type !== type) return
-        if (!msg_event.source) return
+        if (!msg_event.source && !event_data.sender_webview_label) return
 
         const result = await handler(event_data.payload)
-        if (is_window(msg_event.source)){
-            msg_event.source.postMessage({ id: event_data.id, result } as RPCResponse, "*")
+        if (event_data.sender_webview_label){
+            if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
+                window.__TAURI__.core.invoke("post_message_to_webview", {
+                    label: event_data.sender_webview_label,
+                    message: { id: event_data.id, result } as IPCResponse
+                }).catch((err: any) => console.warn(`Failed to route IPC reply to ${event_data.sender_webview_label}:`, err))
+            }
         }
-        else {
-            (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as RPCResponse)
+        else if (msg_event.source){
+            if (is_window(msg_event.source)){
+                msg_event.source.postMessage({ id: event_data.id, result } as IPCResponse, "*")
+            }
+            else {
+                (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as IPCResponse)
+            }
         }
     }
 

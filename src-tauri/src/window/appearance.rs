@@ -1,5 +1,6 @@
 use tauri::{Manager, Runtime, Theme, WebviewWindow, WebviewWindowBuilder};
 
+#[allow(dead_code)]
 fn background_color_for_theme(theme: Theme) -> tauri::webview::Color {
     match theme {
         Theme::Dark => tauri::webview::Color(0, 0, 0, 255),
@@ -39,10 +40,15 @@ pub fn sync<R: Runtime>(window: &WebviewWindow<R>) -> tauri::Result<()> {
             }
         });
     }
+    #[cfg(not(desktop))]
+    {
+        let _ = window;
+    }
 
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn reveal<R: Runtime>(window: &WebviewWindow<R>, focus: bool) -> tauri::Result<()> {
     #[cfg(desktop)]
     {
@@ -53,6 +59,11 @@ pub fn reveal<R: Runtime>(window: &WebviewWindow<R>, focus: bool) -> tauri::Resu
         if focus {
             let _ = window.set_focus();
         }
+    }
+    #[cfg(not(desktop))]
+    {
+        let _ = window;
+        let _ = focus;
     }
 
     Ok(())
