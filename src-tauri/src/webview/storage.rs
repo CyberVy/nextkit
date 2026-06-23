@@ -2,7 +2,7 @@ use tauri::{Manager, Runtime, WebviewWindowBuilder};
 
 pub fn configure<'a, R, M, C>(
     manager: &C,
-    mut builder: WebviewWindowBuilder<'a, R, M>,
+    #[allow(unused_mut)] mut builder: WebviewWindowBuilder<'a, R, M>,
 ) -> tauri::Result<WebviewWindowBuilder<'a, R, M>>
 where
     R: Runtime,

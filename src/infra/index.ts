@@ -37,3 +37,8 @@ export type { WindowHubSendOptions, WindowHubMessageHandler, WindowHubMessenger,
 
 // migration.client.ts
 export { MigrationService } from "./migration.client"
+
+// webview.client.ts
+export { create_child_webview, destroy_child_webview, set_window_layout } from "./webview.client"
+export type { LayoutItem } from "./webview.client"
+
