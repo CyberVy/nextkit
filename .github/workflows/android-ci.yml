@@ -33,7 +33,7 @@ jobs:
         run: rustup target add aarch64-linux-android
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android SDK packages
         run: |
