@@ -145,14 +145,16 @@ jobs:
 
       - name: Upload signed IPA to release
         if: ${{ steps.signing_mode.outputs.has_signing == 'true' }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ github.event.release.tag_name }}
           files: ios-release.ipa
 
       - name: Upload unsigned device build to release
         if: ${{ steps.signing_mode.outputs.has_signing != 'true' }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ github.event.release.tag_name }}
           files: |
             ios-device-unsigned.ipa
             ios-device-unsigned-app.zip
