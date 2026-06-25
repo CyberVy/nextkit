@@ -3,7 +3,7 @@ export {}
 declare global {
     interface Window {
         webkit?: {
-            messageHandlers?: Record<string, unknown>
+            messageHandlers?: Record<string, any>
         }
                 __TAURI__?: {
             core?: {

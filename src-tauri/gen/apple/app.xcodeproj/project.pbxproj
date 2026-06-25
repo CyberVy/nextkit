@@ -16,15 +16,16 @@
 		618672DC8A5E0605441C9935 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E2B15F176E4B041AE33EEEA /* UIKit.framework */; };
 		836D84C5F07860664DAF79C8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F57162F5CC7AEDD55F173D /* WebKit.framework */; };
 		9D59FB167BB4E699DA17D1E9 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04B56F58E2E44DDE1D67E7B7 /* MetalKit.framework */; };
-		C6BD59C055C986EA4A77FDA2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */; };
-		C869023DDFE275D42F3FBF29 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 39EEC6A55698228E08917A52 /* libapp.a */; };
-		E68F6CFDAED6503ABB4044A5 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE1209BFDECB28E00189B168 /* Metal.framework */; };
 		AA2200000000000000000001 /* WebViewAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2200000000000000000002 /* WebViewAppearance.swift */; };
 		AA2200000000000000000003 /* ExternalOpenUIDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2200000000000000000004 /* ExternalOpenUIDelegate.swift */; };
 		AA2200000000000000000005 /* WebViewBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2200000000000000000006 /* WebViewBootstrap.swift */; };
 		AA2200000000000000000007 /* FullPageScreenshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2200000000000000000008 /* FullPageScreenshot.swift */; };
 		AA2200000000000000000009 /* PopupWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA220000000000000000000A /* PopupWebViewController.swift */; };
 		AA220000000000000000000B /* WebViewAppBoundDomains.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA220000000000000000000C /* WebViewAppBoundDomains.swift */; };
+		C6BD59C055C986EA4A77FDA2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */; };
+		C869023DDFE275D42F3FBF29 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 39EEC6A55698228E08917A52 /* libapp.a */; };
+		E241518B2FEDEEBD00B0A70A /* WebViewUserAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E241518A2FEDEEBD00B0A70A /* WebViewUserAgent.swift */; };
+		E68F6CFDAED6503ABB4044A5 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE1209BFDECB28E00189B168 /* Metal.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,17 +42,18 @@
 		682535EEFE1DA20BE07B123C /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		81E326B61ED92E1D1EECF952 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9FACFFCB6E3743955F72464C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		CE1209BFDECB28E00189B168 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
-		D8F57162F5CC7AEDD55F173D /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		F3673D372C5ABDD1AD6E7067 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		FBC720DFA1D01F55B0A32344 /* Nextkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nextkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2200000000000000000002 /* WebViewAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewAppearance.swift; sourceTree = "<group>"; };
 		AA2200000000000000000004 /* ExternalOpenUIDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalOpenUIDelegate.swift; sourceTree = "<group>"; };
 		AA2200000000000000000006 /* WebViewBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewBootstrap.swift; sourceTree = "<group>"; };
 		AA2200000000000000000008 /* FullPageScreenshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullPageScreenshot.swift; sourceTree = "<group>"; };
 		AA220000000000000000000A /* PopupWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupWebViewController.swift; sourceTree = "<group>"; };
 		AA220000000000000000000C /* WebViewAppBoundDomains.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewAppBoundDomains.swift; sourceTree = "<group>"; };
+		AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CE1209BFDECB28E00189B168 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		D8F57162F5CC7AEDD55F173D /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		E241518A2FEDEEBD00B0A70A /* WebViewUserAgent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebViewUserAgent.swift; sourceTree = "<group>"; };
+		F3673D372C5ABDD1AD6E7067 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		FBC720DFA1D01F55B0A32344 /* Nextkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nextkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,43 @@
 			);
 			sourceTree = "<group>";
 		};
+		AA2200000000000000000065 /* Screenshot */ = {
+			isa = PBXGroup;
+			children = (
+				AA2200000000000000000008 /* FullPageScreenshot.swift */,
+			);
+			path = Screenshot;
+			sourceTree = "<group>";
+		};
+		AA2200000000000000000066 /* WebView */ = {
+			isa = PBXGroup;
+			children = (
+				E241518A2FEDEEBD00B0A70A /* WebViewUserAgent.swift */,
+				AA220000000000000000000C /* WebViewAppBoundDomains.swift */,
+				AA2200000000000000000002 /* WebViewAppearance.swift */,
+				AA2200000000000000000067 /* Popup */,
+				AA2200000000000000000065 /* Screenshot */,
+			);
+			path = WebView;
+			sourceTree = "<group>";
+		};
+		AA2200000000000000000067 /* Popup */ = {
+			isa = PBXGroup;
+			children = (
+				AA2200000000000000000004 /* ExternalOpenUIDelegate.swift */,
+				AA220000000000000000000A /* PopupWebViewController.swift */,
+			);
+			path = Popup;
+			sourceTree = "<group>";
+		};
+		AA2200000000000000000068 /* Bootstrap */ = {
+			isa = PBXGroup;
+			children = (
+				AA2200000000000000000006 /* WebViewBootstrap.swift */,
+			);
+			path = Bootstrap;
+			sourceTree = "<group>";
+		};
 		BAFB695BB8415511FEC74542 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
@@ -162,42 +201,6 @@
 				AA2200000000000000000066 /* WebView */,
 			);
 			path = app;
-			sourceTree = "<group>";
-		};
-		AA2200000000000000000065 /* Screenshot */ = {
-			isa = PBXGroup;
-			children = (
-				AA2200000000000000000008 /* FullPageScreenshot.swift */,
-			);
-			path = Screenshot;
-			sourceTree = "<group>";
-		};
-		AA2200000000000000000066 /* WebView */ = {
-			isa = PBXGroup;
-			children = (
-				AA220000000000000000000C /* WebViewAppBoundDomains.swift */,
-				AA2200000000000000000002 /* WebViewAppearance.swift */,
-				AA2200000000000000000067 /* Popup */,
-				AA2200000000000000000065 /* Screenshot */,
-			);
-			path = WebView;
-			sourceTree = "<group>";
-		};
-		AA2200000000000000000067 /* Popup */ = {
-			isa = PBXGroup;
-			children = (
-				AA2200000000000000000004 /* ExternalOpenUIDelegate.swift */,
-				AA220000000000000000000A /* PopupWebViewController.swift */,
-			);
-			path = Popup;
-			sourceTree = "<group>";
-		};
-		AA2200000000000000000068 /* Bootstrap */ = {
-			isa = PBXGroup;
-			children = (
-				AA2200000000000000000006 /* WebViewBootstrap.swift */,
-			);
-			path = Bootstrap;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -293,6 +296,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E241518B2FEDEEBD00B0A70A /* WebViewUserAgent.swift in Sources */,
 				AA2200000000000000000003 /* ExternalOpenUIDelegate.swift in Sources */,
 				AA2200000000000000000007 /* FullPageScreenshot.swift in Sources */,
 				AA2200000000000000000009 /* PopupWebViewController.swift in Sources */,
