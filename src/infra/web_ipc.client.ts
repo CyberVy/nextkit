@@ -1,8 +1,43 @@
+export class WebviewWindowProxy{
+    constructor(public readonly label: string){}
+
+    get window(){
+        return this
+    }
+
+    postMessage(message: any, targetOrigin: string = "*"){
+        const any_window = window as any
+        if (typeof window !== "undefined" && any_window.webkit?.messageHandlers?.tauriPopupBridge){
+            any_window.webkit.messageHandlers.tauriPopupBridge.postMessage({
+                target_label: this.label,
+                message: message
+            })
+        } 
+        else if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
+            window.__TAURI__.core.invoke("post_message_to_webview", {
+                label: this.label,
+                message: message
+            }).catch((err: any) => {
+                console.warn(`[WebviewWindowProxy] Failed to route postMessage to ${this.label}:`, err)
+            })
+        } 
+        else {
+            console.warn(`[WebviewWindowProxy] IPC transport not available to post message to ${this.label}`)
+        }
+    }
+
+    close(){
+        if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
+            window.__TAURI__.core.invoke("destroy_child_webview", { label: this.label }).catch(console.error)
+        }
+    }
+}
+
+
 interface IPCRequest {
     readonly id: string
     readonly type: string
     readonly payload: Record<string, unknown>
-    readonly sender_webview_label?: string
 }
 
 interface IPCResponse {
@@ -51,12 +86,11 @@ function parse_message_data(data: unknown): Record<string, unknown> | null{
     return data && typeof data === "object" ? (data as Record<string, unknown>) : null
 }
 
-// warning: target instanceof Window is not reliable for windows created by window.open and iframe.contentWindow
 function is_window(target: unknown): target is Window{
     if (!target) return false
     if (typeof target !== "object") return false
 
-    return "window" in target && "postMessage" in target
+    return ("window" in target || "label" in target) && "postMessage" in target
 }
 
 export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }: WebIPCRequestParams): Promise<unknown>{
@@ -66,8 +100,6 @@ export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }
     let sender: Window | ServiceWorker | MessagePort | Client | null = null
     let listener: EventTarget = typeof window !== "undefined" ? window : self
     let use_origin = false
-    let is_tauri_webview = false
-    let target_webview_label: string | null = null
 
     if (typeof target === "string"){
         if (target === "service-worker"){
@@ -92,8 +124,8 @@ export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }
             use_origin = true
         }
         else {
-            is_tauri_webview = true
-            target_webview_label = target
+            sender = new WebviewWindowProxy(target) as unknown as Window
+            use_origin = true
         }
     }
     else {
@@ -110,7 +142,7 @@ export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }
         }
     }
 
-    if (!sender && !is_tauri_webview){
+    if (!sender){
         throw new Error("Invalid IPC request target")
     }
 
@@ -133,18 +165,7 @@ export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }
         listener.addEventListener("message", callback)
 
         const msg: IPCRequest = { id, type, payload }
-        if (is_tauri_webview && target_webview_label){
-            if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
-                window.__TAURI__.core.invoke("post_message_to_webview", {
-                    label: target_webview_label,
-                    message: msg
-                }).catch(reject)
-            }
-            else {
-                reject(new Error("Tauri invoke is not available in this context"))
-            }
-        }
-        else if (use_origin){
+        if (use_origin){
             (sender as Window).postMessage(msg, "*")
         }
         else {
@@ -163,24 +184,14 @@ export function handle_web_ipc({ type, handler, listener = typeof self !== "unde
         const event_data = parse_message_data(msg_event.data) as IPCRequest | null
         if (!event_data) return
         if (event_data.type !== type) return
-        if (!msg_event.source && !event_data.sender_webview_label) return
+        if (!msg_event.source) return
 
         const result = await handler(event_data.payload)
-        if (event_data.sender_webview_label){
-            if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
-                window.__TAURI__.core.invoke("post_message_to_webview", {
-                    label: event_data.sender_webview_label,
-                    message: { id: event_data.id, result } as IPCResponse
-                }).catch((err: any) => console.warn(`Failed to route IPC reply to ${event_data.sender_webview_label}:`, err))
-            }
+        if (is_window(msg_event.source)){
+            msg_event.source.postMessage({ id: event_data.id, result } as IPCResponse, "*")
         }
-        else if (msg_event.source){
-            if (is_window(msg_event.source)){
-                msg_event.source.postMessage({ id: event_data.id, result } as IPCResponse, "*")
-            }
-            else {
-                (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as IPCResponse)
-            }
+        else {
+            (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as IPCResponse)
         }
     }
 

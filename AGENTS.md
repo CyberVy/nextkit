@@ -12,11 +12,11 @@
   - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
 - `src/core/`: core domain logic, algorithms, and pure app logic.
 - `src/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
-  - `*.client.ts`: browser-only utilities.
+  - `*.client.ts`: browser/webview-only client integrations.
   - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
   - `types.ts` or other utilities: shared system/adapter interfaces.
 - `src/inject/`: client-side scripts injected directly into external WebViews.
-  - Contains script entries like `inject.main.ts` and target patches like `net/xhr.inject.ts`.
+  - Organized into `infra/` (environment/IPC polyfills) and `core/` (business/product logic injections), each using `index.ts` as the entry point.
 - `src/sw/`: service worker source (build/packaged to `public/sw.js`).
   - `fetch/`: fetch/cache worker modules.
 - `public/`: static assets, icons, `manifest.json`, and built SW entry.
@@ -61,7 +61,7 @@
   - It must **NEVER** import modules from `src/app/`, `src/blocks/`, or `src/components/`.
   - It should remain lightweight, standalone, and only import from its local modules (`src/inject/infra/` or `src/inject/net/`).
 - Web IPC Communications:
-  - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](file:///Users/dp/CodeProject/nextkit/src/infra/web_ipc.client.ts)).
+  - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](file:///Users/dp/CodeProject/metuber/src/infra/web_ipc.client.ts)).
   - Shared data types used across the IPC boundary must be defined in `src/core/types.ts` or `src/infra/types.ts` for consistency.
 
 ## Base Rules

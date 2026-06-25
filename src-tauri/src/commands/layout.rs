@@ -26,6 +26,13 @@ pub async fn create_child_webview(
         let mut webview_builder =
             WebviewBuilder::new(&label, WebviewUrl::External(parsed_url)).auto_resize();
 
+        let label_script = format!(
+            "window.__TAURI_WEBVIEW_LABEL__ = '{}'; window.__TAURI_OPENER_LABEL__ = '{}';",
+            label,
+            window.label()
+        );
+        webview_builder = webview_builder.initialization_script(&label_script);
+
         if !inject_script.is_empty() {
             webview_builder = webview_builder.initialization_script(inject_script);
         }
