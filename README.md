@@ -46,7 +46,7 @@ Development scripts are managed via `package.json`.
 
 | Command               | Description                                                                   |
 |:----------------------|:------------------------------------------------------------------------------|
-| `npm run dev`         | Starts the Next.js dev server (port 4000) and the Service Worker watcher.     |
+| `npm run dev`         | Starts the Next.js dev server and the Service Worker watcher.     |
 | `npm run build`       | Builds the static export of the site and minifies the Service Worker.         |
 | `npm run start`       | Serves the production build locally (from the `out` directory).               |
 | `npm run tauri <cmd>` | Executes Tauri commands (e.g., `npm run tauri dev` or `npm run tauri build`). |

@@ -4,7 +4,13 @@
   "description": "Create Apps with NextKit",
   "version": "0.1.0",
   "private": true,
+  "bin": {
+    "nextkit": "./cli/dist/index.js"
+  },
   "scripts": {
+    "cli": "node cli/dist/index.js",
+    "build:cli": "esbuild cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=cli/dist/index.js --banner:js=\"#!/usr/bin/env node\"",
+    "prepare": "npm run build:cli",
     "tauri": "cargo tauri",
     "dev": "npm run dev:sw & next dev -p 4000",
     "build": "npm run build:sw & next build",
@@ -30,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3"
   },
   "type": "module"
