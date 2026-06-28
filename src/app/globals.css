@@ -3,6 +3,9 @@
 :root {
     overscroll-behavior-x: none;
     scrollbar-width: none;
+    &::-webkit-scrollbar{
+        display: none;
+    }
     /* workaround for fixed element position error on iOS fullscreen container */                    
     min-height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
     padding: env(safe-area-inset-top) 0 0 0;
