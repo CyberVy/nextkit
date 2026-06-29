@@ -18,21 +18,6 @@ pub(crate) fn create_main_window<R: Runtime>(app: &mut tauri::App<R>) -> tauri::
     Ok(())
 }
 
-#[cfg(desktop)]
-fn create_popup<R: Runtime>(
-    app: &tauri::AppHandle<R>,
-    url: &tauri::Url,
-    features: tauri::webview::NewWindowFeatures,
-) -> tauri::Result<tauri::WebviewWindow<R>> {
-    let webview_builder = window::popup::create_popup_window_builder(app, url, features);
-    let webview_builder = apply_default_webview_settings(app, webview_builder)?;
-
-    let popup_window = webview_builder.build()?;
-    window::appearance::bind_theme_change_listener(&popup_window)?;
-    window::appearance::reveal(&popup_window, true)?;
-    Ok(popup_window)
-}
-
 pub(crate) fn apply_default_webview_settings<'a, R, M, C>(
     manager: &C,
     builder: WebviewWindowBuilder<'a, R, M>,
@@ -58,7 +43,7 @@ where
     #[cfg(desktop)]
     let builder = {
         let builder = builder.visible(false);
-        window::popup::register_popup_webview_handler(manager, builder, create_popup)
+        window::popup::register_popup_webview_handler(manager, builder)
     };
     let builder = inject::inject_startup_scripts(builder);
     Ok(builder)

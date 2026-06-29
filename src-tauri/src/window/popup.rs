@@ -2,7 +2,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(desktop)]
-use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder, LogicalPosition, LogicalSize, WebviewBuilder};
+use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder};
 
 #[cfg(desktop)]
 static POPUP_WINDOW_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -22,22 +22,14 @@ fn default_size<R: Runtime>(app: &AppHandle<R>) -> (f64, f64) {
 }
 
 #[cfg(desktop)]
-pub(crate) fn register_popup_webview_handler<'a, R, M, C, F>(
+pub(crate) fn register_popup_webview_handler<'a, R, M, C>(
     manager: &C,
     builder: WebviewWindowBuilder<'a, R, M>,
-    create_popup: F,
 ) -> WebviewWindowBuilder<'a, R, M>
 where
     R: Runtime,
     M: Manager<R>,
     C: Manager<R>,
-    F: Fn(
-            &AppHandle<R>,
-            &tauri::Url,
-            tauri::webview::NewWindowFeatures,
-        ) -> tauri::Result<WebviewWindow<R>>
-        + Send
-        + 'static,
 {
     let app = manager.app_handle().clone();
 
@@ -50,50 +42,44 @@ where
                 .map(|w| w.label().to_string())
                 .unwrap_or_else(|| "main".to_string());
 
-            match create_popup(&app, &url, features) {
+            let popup_label = format!(
+                "popup-{}",
+                POPUP_WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
+            );
+
+            let webview_builder = create_popup_window_builder(&app, popup_label.clone(), &url, features);
+
+            // Apply default webview settings
+            let mut webview_builder = match crate::webview::apply_default_webview_settings(&app, webview_builder) {
+                Ok(configured_builder) => configured_builder,
+                Err(error) => {
+                    log::error!("failed to apply default webview settings for popup: {error}");
+                    return tauri::webview::NewWindowResponse::Deny;
+                }
+            };
+
+            // Inject script to set window label and opener label
+            let label_script = format!(
+                "window.__TAURI_WEBVIEW_LABEL__ = '{}'; window.__TAURI_OPENER_LABEL__ = '{}';",
+                popup_label,
+                opener_label
+            );
+            webview_builder = webview_builder.initialization_script(&label_script);
+
+            // Inject custom script
+            let inject_script = include_str!("../inject.js").trim();
+            if !inject_script.is_empty() {
+                webview_builder = webview_builder.initialization_script(inject_script);
+            }
+
+            // Build and reveal popup window
+            match webview_builder.build() {
                 Ok(popup_window) => {
-                    let child_label = format!("{}-webview", popup_window.label());
-                    let mut webview_builder = WebviewBuilder::new(
-                        &child_label,
-                        WebviewUrl::External(url.clone()),
-                    )
-                    .auto_resize()
-                    .on_document_title_changed(|webview, title| {
-                        let _ = webview.window().set_title(&title);
-                    });
-
-                    let label_script = format!(
-                        "window.__TAURI_WEBVIEW_LABEL__ = '{}'; window.__TAURI_OPENER_LABEL__ = '{}';",
-                        child_label,
-                        opener_label
-                    );
-                    webview_builder = webview_builder.initialization_script(&label_script);
-
-                    let inject_script = include_str!("../inject.js").trim();
-                    if !inject_script.is_empty() {
-                        webview_builder = webview_builder.initialization_script(inject_script);
-                    }
-
-                    let scale_factor = popup_window.scale_factor().unwrap_or(1.0);
-                    let inner_size = popup_window
-                        .inner_size()
-                        .map(|s| s.to_logical::<f64>(scale_factor))
-                        .unwrap_or_else(|_| LogicalSize::new(0.0, 0.0));
-
-                    if let Some(window) = app.get_window(popup_window.label()) {
-                        if let Err(error) = window.add_child(
-                            webview_builder,
-                            LogicalPosition::new(0.0, 0.0),
-                            inner_size,
-                        ) {
-                            log::error!("failed to add child webview to popup window: {error}");
-                        }
-                    } else {
-                        log::error!("failed to find underlying window for popup {}", popup_window.label());
-                    }
+                    let _ = crate::window::appearance::bind_theme_change_listener(&popup_window);
+                    let _ = crate::window::appearance::reveal(&popup_window, true);
                 }
                 Err(error) => {
-                    log::error!("failed to create popup window for {url}: {error}");
+                    log::error!("failed to build popup window for {url}: {error}");
                 }
             }
 
@@ -105,24 +91,16 @@ where
 #[cfg(desktop)]
 pub(crate) fn create_popup_window_builder<'a, R: Runtime>(
     app: &'a AppHandle<R>,
+    label: String,
     url: &tauri::Url,
     features: tauri::webview::NewWindowFeatures,
 ) -> WebviewWindowBuilder<'a, R, AppHandle<R>> {
-    let popup_label = format!(
-        "popup-{}",
-        POPUP_WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
-    );
-
     let (default_width, default_height) = default_size(app);
 
     let mut webview_builder = WebviewWindowBuilder::new(
         app,
-        popup_label,
-        WebviewUrl::External(
-            "about:blank"
-                .parse()
-                .expect("about:blank should always parse"),
-        ),
+        label,
+        WebviewUrl::External(url.clone()),
     )
     .title(url.as_str());
 
