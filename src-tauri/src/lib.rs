@@ -19,7 +19,7 @@ pub fn run() {
         })
         .setup(|app| {
             logging::init(app)?;
-            webview::create_main_window(app)?;
+            window::create_main_window(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

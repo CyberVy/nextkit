@@ -49,6 +49,11 @@ where
 
             let webview_builder = create_popup_window_builder(&app, popup_label.clone(), &url, features);
 
+            // Apply window decorations & settings
+            let webview_builder = crate::window::appearance::apply_platform_decorations(webview_builder);
+            let webview_builder = webview_builder.visible(false);
+            let webview_builder = register_popup_webview_handler(&app, webview_builder);
+
             // Apply default webview settings
             let mut webview_builder = match crate::webview::apply_default_webview_settings(&app, webview_builder) {
                 Ok(configured_builder) => configured_builder,
