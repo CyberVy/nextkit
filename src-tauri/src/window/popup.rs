@@ -2,7 +2,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(desktop)]
-use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder, LogicalPosition, LogicalSize, WebviewBuilder};
 
 #[cfg(desktop)]
 static POPUP_WINDOW_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -42,12 +42,62 @@ where
     let app = manager.app_handle().clone();
 
     builder.on_new_window(
-        move |url, features| match create_popup(&app, &url, features) {
-            Ok(window) => tauri::webview::NewWindowResponse::Create { window },
-            Err(error) => {
-                log::error!("failed to create popup window for {url}: {error}");
-                tauri::webview::NewWindowResponse::Deny
+        move |url, features| {
+            let opener_label = app
+                .webview_windows()
+                .values()
+                .find(|w| w.is_focused().unwrap_or(false))
+                .map(|w| w.label().to_string())
+                .unwrap_or_else(|| "main".to_string());
+
+            match create_popup(&app, &url, features) {
+                Ok(popup_window) => {
+                    let child_label = format!("{}-webview", popup_window.label());
+                    let mut webview_builder = WebviewBuilder::new(
+                        &child_label,
+                        WebviewUrl::External(url.clone()),
+                    )
+                    .auto_resize()
+                    .on_document_title_changed(|webview, title| {
+                        let _ = webview.window().set_title(&title);
+                    });
+
+                    let label_script = format!(
+                        "window.__TAURI_WEBVIEW_LABEL__ = '{}'; window.__TAURI_OPENER_LABEL__ = '{}';",
+                        child_label,
+                        opener_label
+                    );
+                    webview_builder = webview_builder.initialization_script(&label_script);
+
+                    let inject_script = include_str!("../inject.js").trim();
+                    if !inject_script.is_empty() {
+                        webview_builder = webview_builder.initialization_script(inject_script);
+                    }
+
+                    let scale_factor = popup_window.scale_factor().unwrap_or(1.0);
+                    let inner_size = popup_window
+                        .inner_size()
+                        .map(|s| s.to_logical::<f64>(scale_factor))
+                        .unwrap_or_else(|_| LogicalSize::new(0.0, 0.0));
+
+                    if let Some(window) = app.get_window(popup_window.label()) {
+                        if let Err(error) = window.add_child(
+                            webview_builder,
+                            LogicalPosition::new(0.0, 0.0),
+                            inner_size,
+                        ) {
+                            log::error!("failed to add child webview to popup window: {error}");
+                        }
+                    } else {
+                        log::error!("failed to find underlying window for popup {}", popup_window.label());
+                    }
+                }
+                Err(error) => {
+                    log::error!("failed to create popup window for {url}: {error}");
+                }
             }
+
+            tauri::webview::NewWindowResponse::Deny
         },
     )
 }
@@ -74,16 +124,22 @@ pub(crate) fn builder<'a, R: Runtime>(
                 .expect("about:blank should always parse"),
         ),
     )
-    .title(url.as_str())
-    .on_document_title_changed(|window, title| {
-        let _ = window.set_title(&title);
-    });
+    .title(url.as_str());
 
-    if features.size().is_none() {
+    if let Some(size) = features.size() {
+        webview_builder = webview_builder.inner_size(size.width, size.height);
+    } else {
         webview_builder = webview_builder.inner_size(default_width, default_height);
     }
 
-    webview_builder = webview_builder.window_features(features);
+    if let Some(position) = features.position() {
+        webview_builder = webview_builder.position(position.x, position.y);
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        webview_builder = webview_builder.window_features(features);
+    }
 
     webview_builder
 }
