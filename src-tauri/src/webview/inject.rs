@@ -2,7 +2,7 @@ use tauri::{Manager, Runtime, WebviewWindowBuilder};
 
 const INJECT_SCRIPT: &str = include_str!("../inject.js");
 
-pub fn configure<'a, R, M>(
+pub fn inject_startup_scripts<'a, R, M>(
     builder: WebviewWindowBuilder<'a, R, M>,
 ) -> WebviewWindowBuilder<'a, R, M>
 where

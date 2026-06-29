@@ -9,7 +9,7 @@ fn background_color_for_theme(theme: Theme) -> tauri::webview::Color {
     }
 }
 
-pub fn configure_builder<'a, R, M>(
+pub fn apply_platform_decorations<'a, R, M>(
     builder: WebviewWindowBuilder<'a, R, M>,
 ) -> WebviewWindowBuilder<'a, R, M>
 where
@@ -26,7 +26,7 @@ where
     }
 }
 
-pub fn sync<R: Runtime>(window: &WebviewWindow<R>) -> tauri::Result<()> {
+pub fn bind_theme_change_listener<R: Runtime>(window: &WebviewWindow<R>) -> tauri::Result<()> {
     #[cfg(desktop)]
     {
         let theme = window.theme().unwrap_or(Theme::Light);

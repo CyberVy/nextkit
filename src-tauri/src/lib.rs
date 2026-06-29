@@ -7,7 +7,7 @@ mod window;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    window::state_persistence::register(tauri::Builder::default())
+    window::state_persistence::register_window_state_plugin(tauri::Builder::default())
         .manage(window::layout::WindowLayoutState::default())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Resized(_) = event {

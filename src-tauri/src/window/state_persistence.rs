@@ -1,6 +1,6 @@
 use tauri::{Builder, Runtime};
 
-pub fn register<R: Runtime>(builder: Builder<R>) -> Builder<R> {
+pub fn register_window_state_plugin<R: Runtime>(builder: Builder<R>) -> Builder<R> {
     #[cfg(desktop)]
     {
         let state_flags = tauri_plugin_window_state::StateFlags::all()

@@ -1,6 +1,6 @@
 use tauri::{Manager, Runtime, WebviewWindowBuilder};
 
-pub fn configure<'a, R, M>(
+pub fn hide_until_page_loaded<'a, R, M>(
     builder: WebviewWindowBuilder<'a, R, M>,
 ) -> WebviewWindowBuilder<'a, R, M>
 where

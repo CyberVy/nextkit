@@ -22,7 +22,7 @@ fn default_size<R: Runtime>(app: &AppHandle<R>) -> (f64, f64) {
 }
 
 #[cfg(desktop)]
-pub(crate) fn configure<'a, R, M, C, F>(
+pub(crate) fn register_popup_webview_handler<'a, R, M, C, F>(
     manager: &C,
     builder: WebviewWindowBuilder<'a, R, M>,
     create_popup: F,
@@ -103,7 +103,7 @@ where
 }
 
 #[cfg(desktop)]
-pub(crate) fn builder<'a, R: Runtime>(
+pub(crate) fn create_popup_window_builder<'a, R: Runtime>(
     app: &'a AppHandle<R>,
     url: &tauri::Url,
     features: tauri::webview::NewWindowFeatures,
