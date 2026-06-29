@@ -1,6 +1,6 @@
 use tauri::{App, Runtime, WebviewWindowBuilder};
 
-pub(crate) fn builder<'a, R: Runtime>(
+pub(crate) fn create_main_window_builder<'a, R: Runtime>(
     app: &'a App<R>,
 ) -> tauri::Result<WebviewWindowBuilder<'a, R, App<R>>> {
     let main_window_config = app
@@ -13,5 +13,5 @@ pub(crate) fn builder<'a, R: Runtime>(
         .expect("main window config not found");
 
     let webview_builder = WebviewWindowBuilder::from_config(app, main_window_config)?;
-    Ok(super::no_flicker::configure(webview_builder))
+    Ok(super::no_flicker::hide_until_page_loaded(webview_builder))
 }

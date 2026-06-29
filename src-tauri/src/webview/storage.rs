@@ -1,6 +1,6 @@
 use tauri::{Manager, Runtime, WebviewWindowBuilder};
 
-pub fn configure<'a, R, M, C>(
+pub fn setup_shared_data_directory<'a, R, M, C>(
     manager: &C,
     #[allow(unused_mut)] mut builder: WebviewWindowBuilder<'a, R, M>,
 ) -> tauri::Result<WebviewWindowBuilder<'a, R, M>>
