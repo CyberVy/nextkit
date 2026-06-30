@@ -33,29 +33,28 @@ where
 {
     let app = manager.app_handle().clone();
 
-    builder.on_new_window(
-        move |url, features| {
-            let opener_label = app
-                .webview_windows()
-                .values()
-                .find(|w| w.is_focused().unwrap_or(false))
-                .map(|w| w.label().to_string())
-                .unwrap_or_else(|| "main".to_string());
+    builder.on_new_window(move |url, features| {
+        let opener_label = app
+            .webview_windows()
+            .values()
+            .find(|w| w.is_focused().unwrap_or(false))
+            .map(|w| w.label().to_string())
+            .unwrap_or_else(|| "main".to_string());
 
-            let popup_label = format!(
-                "popup-{}",
-                POPUP_WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
-            );
+        let popup_label = format!(
+            "popup-{}",
+            POPUP_WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
+        );
 
-            let webview_builder = create_popup_window_builder(&app, popup_label.clone(), &url, features);
+        let mut webview_builder =
+            create_popup_window_builder(&app, popup_label.clone(), &url, features).visible(false);
 
-            // Apply window decorations & settings
-            let webview_builder = crate::window::appearance::apply_platform_decorations(webview_builder);
-            let webview_builder = webview_builder.visible(false);
-            let webview_builder = register_popup_webview_handler(&app, webview_builder);
+        webview_builder = crate::window::appearance::apply_platform_decorations(webview_builder);
+        webview_builder = register_popup_webview_handler(&app, webview_builder);
 
-            // Apply default webview settings
-            let mut webview_builder = match crate::webview::apply_default_webview_settings(&app, webview_builder) {
+        // Apply default webview settings
+        let mut webview_builder =
+            match crate::webview::apply_default_webview_settings(&app, webview_builder) {
                 Ok(configured_builder) => configured_builder,
                 Err(error) => {
                     log::error!("failed to apply default webview settings for popup: {error}");
@@ -63,34 +62,32 @@ where
                 }
             };
 
-            // Inject script to set window label and opener label
-            let label_script = format!(
-                "window.__TAURI_WEBVIEW_LABEL__ = '{}'; window.__TAURI_OPENER_LABEL__ = '{}';",
-                popup_label,
-                opener_label
-            );
-            webview_builder = webview_builder.initialization_script(&label_script);
+        // Inject script to set window label and opener label
+        let label_script = format!(
+            "window.__TAURI_WEBVIEW_LABEL__ = '{}'; window.__TAURI_OPENER_LABEL__ = '{}';",
+            popup_label, opener_label
+        );
+        webview_builder = webview_builder.initialization_script(&label_script);
 
-            // Inject custom script
-            let inject_script = include_str!("../inject.js").trim();
-            if !inject_script.is_empty() {
-                webview_builder = webview_builder.initialization_script(inject_script);
+        // Inject custom script
+        let inject_script = include_str!("../inject.js").trim();
+        if !inject_script.is_empty() {
+            webview_builder = webview_builder.initialization_script(inject_script);
+        }
+
+        // Build and reveal popup window
+        match webview_builder.build() {
+            Ok(popup_window) => {
+                let _ = crate::window::appearance::bind_theme_change_listener(&popup_window);
+                let _ = crate::window::appearance::reveal(&popup_window, true);
             }
-
-            // Build and reveal popup window
-            match webview_builder.build() {
-                Ok(popup_window) => {
-                    let _ = crate::window::appearance::bind_theme_change_listener(&popup_window);
-                    let _ = crate::window::appearance::reveal(&popup_window, true);
-                }
-                Err(error) => {
-                    log::error!("failed to build popup window for {url}: {error}");
-                }
+            Err(error) => {
+                log::error!("failed to build popup window for {url}: {error}");
             }
+        }
 
-            tauri::webview::NewWindowResponse::Deny
-        },
-    )
+        tauri::webview::NewWindowResponse::Deny
+    })
 }
 
 #[cfg(desktop)]
@@ -102,12 +99,12 @@ pub(crate) fn create_popup_window_builder<'a, R: Runtime>(
 ) -> WebviewWindowBuilder<'a, R, AppHandle<R>> {
     let (default_width, default_height) = default_size(app);
 
-    let mut webview_builder = WebviewWindowBuilder::new(
-        app,
-        label,
-        WebviewUrl::External(url.clone()),
-    )
-    .title(url.as_str());
+    let mut webview_builder =
+        WebviewWindowBuilder::new(app, label, WebviewUrl::External(url.clone()))
+            .title(url.as_str())
+            .on_document_title_changed(|webview, title| {
+                let _ = webview.set_title(&title);
+            });
 
     if let Some(size) = features.size() {
         webview_builder = webview_builder.inner_size(size.width, size.height);

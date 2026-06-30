@@ -114,4 +114,3 @@ pub async fn set_window_layout(
         Err("Window layout is not supported on this platform".to_string())
     }
 }
-

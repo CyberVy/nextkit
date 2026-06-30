@@ -29,7 +29,8 @@ pub(crate) fn create_main_window<R: Runtime>(app: &mut App<R>) -> tauri::Result<
         super::popup::register_popup_webview_handler(app_handle, webview_builder)
     };
 
-    let webview_builder = crate::webview::apply_default_webview_settings(app_handle, webview_builder)?;
+    let webview_builder =
+        crate::webview::apply_default_webview_settings(app_handle, webview_builder)?;
 
     let main_window = webview_builder.build()?;
     super::appearance::bind_theme_change_listener(&main_window)?;
