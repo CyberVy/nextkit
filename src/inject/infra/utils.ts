@@ -1,3 +1,5 @@
+import { web_ipc_call } from "@/infra/web_ipc.client"
+
 export function execute_after_dom_content_loaded(callback: () => void){
     if (document.readyState === "loading"){
         document.addEventListener("DOMContentLoaded", callback, { once: true })
@@ -26,5 +28,12 @@ export function safe_define_property(target: unknown, key: PropertyKey, descript
         // Some runtimes expose non-configurable descriptors.
         return false
     }
+}
+export function notify_injection_success_of_window(_window: Window){
+    web_ipc_call({
+        target: _window,
+        type: "on_injection_success",
+        payload: { origin: location.href }
+    }).catch((err: any) => console.warn(err))
 }
 
