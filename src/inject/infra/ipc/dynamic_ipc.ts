@@ -81,11 +81,3 @@ export function register_dynamic_ipc(){
         }
     })
 }
-
-export function notify_ipc_success_to_window(_window: Window){
-    web_ipc_call({
-        target: _window,
-        type: "register_web_message_ipc",
-        payload: { result: "success", origin: location.href }
-    }).catch((err: any) => console.warn(err))
-}
