@@ -61,16 +61,24 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
         headers_record[k] = v
     })
 
+    let request_body: string | undefined = undefined
+    if (init && init.body){
+        if (typeof init.body === "string"){
+            request_body = init.body
+        }
+        else {
+            request_body = String(init.body)
+        }
+    }
 
     if (is_in_native() && !cors_proxy){
-        const native_response = await invoke("fetch", { req: { url: url, headers: headers_record, method: request_method } }) as {body:string, headers:HeadersInit, status:number}
+        const native_response = await invoke("fetch", { req: { url: url, headers: headers_record, method: request_method, body: request_body } }) as {body:string, headers:HeadersInit, status:number}
         return new Response(native_response.body, {
             status: native_response.status,
             headers: native_response.headers
         })
     }
     else {
-
         if (typeof window !== "undefined"){
             if (init){
                 init.credentials = "include"
@@ -78,10 +86,7 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
             else {
                 init = new Request(url, { credentials: "include" })
             }
-            return await fetch(`${cors_proxy}${url}`, init)
         }
-        else {
-            return await fetch(url, init)
-        }
+        return await fetch(`${cors_proxy}${url}`, init)
     }
 }
