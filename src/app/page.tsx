@@ -7,9 +7,7 @@ import { Version } from "@/components"
 export default function Page(){
     const [show_launch_animation, set_show_launch_animation] = useState(true)
 
-    useEffect(() => {
-        setTimeout(() => set_show_launch_animation(false), 1500)
-    }, [])
+
 
     // register service worker
     useEffect(() => {
@@ -23,7 +21,7 @@ export default function Page(){
     return (
         <>
             {show_launch_animation &&
-                <LaunchAnimation/>}
+                <LaunchAnimation on_finish={() => set_show_launch_animation(false)} />}
 
             <div className={`${show_launch_animation ? "hidden" : "block"}`}>
                 <div className="fixed left-1/2 top-1/2 -translate-1/2">
