@@ -14,11 +14,12 @@
 - `src/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
   - `*.client.ts`: browser/webview-only client integrations.
   - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
-  - `types.ts` or other utilities: shared system/adapter interfaces.
 - `src/inject/`: client-side scripts injected directly into external WebViews.
   - Organized into `infra/` (environment/IPC polyfills) and `core/` (business/product logic injections), each using `index.ts` as the entry point.
-- `src/sw/`: service worker source (build/packaged to `public/sw.js`).
-  - `fetch/`: fetch/cache worker modules.
+- `src/sw/`: service worker source (built/packaged to `public/sw.js`).
+  - `core/`: core service worker logic (e.g., image/video cache, playlist handlers).
+  - `infra/`: service worker infrastructure/adapters (e.g., static resource cache).
+  - `main.worker.ts`: entry worker script.
 - `public/`: static assets, icons, `manifest.json`, and built SW entry.
 - `scripts/`: local scripts.
 - `cli/`: local CLI helper utilities.
@@ -49,7 +50,17 @@
 - Constants: `SCREAMING_SNAKE_CASE` for module-level immutable values (e.g. `DESKTOP_USER_AGENT`); use `snake_case` for local values.
 - Type imports: use `import type` when importing only types.
 - Path aliases: prefer `@/` for imports under `src/`.
-- WebView injection scripts: use `*.inject.ts` (source) and `*.inject.js` (compiled output).
+- WebView injection scripts: entry point is `src-tauri/src/inject.ts` (source) and `src-tauri/src/inject.js` (compiled output). Sub-modules under `src/inject/` may use `*.inject.ts` naming.
+- Type Definitions: Follow the proximity principle (define types close to where they are used). Avoid creating separate type files (like `types.ts` or `*.types.ts`) unless the type declarations are highly complex or repeatedly reused across multiple files.
+
+## UI & Dialog Rules
+
+- **Emoji Prohibition**: Do not use emojis in any UI text or icons.
+- **Icons & SVGs**: Write SVG components in the corresponding `icons.tsx` based on the UI position (e.g., `src/components/icons.tsx` for generic component-level icons, `src/blocks/icons.tsx` for block-level business icons). Do not use inline SVGs or external icon library imports.
+- **Modals & Dialogs**:
+  - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`).
+  - Use [ModalContainer.tsx](src/components/composite/ModalContainer.tsx) to build modals and dialog components.
+  - If a modal requires animations, cooperate with [AnimationContainer.tsx](src/components/animation/AnimationContainer.tsx).
 
 ## Layering Rules
 
@@ -57,22 +68,24 @@
 - `src/blocks/` may depend on `src/components/`, `src/core/`, and `src/infra/`.
 - `src/app/` is responsible for route entry points and composing blocks.
 - Keep business UI out of `src/components/`, place it in `src/blocks/`.
-- `src/inject/` represents code running inside isolated third-party WebViews:
-  - It must **NEVER** import modules from `src/app/`, `src/blocks/`, or `src/components/`.
-  - It should remain lightweight, standalone, and only import from its local modules (`src/inject/infra/` or `src/inject/net/`).
+- Non-UI Environments (`src/inject/` and `src/sw/`):
+  - They **CAN** import modules from `src/core/` and `src/infra/` (excluding any React/UI-related modules).
+  - They must **NEVER** import modules from UI-related directories: `src/app/`, `src/blocks/`, or `src/components/`.
+  - Other direct subdirectories under `src/` (such as `src/app/`, `src/blocks/`, `src/components/`, `src/core/`, `src/infra/`) must **NEVER** import modules from `src/inject/` or `src/sw/` (except their compiled outputs).
 - Web IPC Communications:
-  - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](file:///Users/dp/CodeProject/metuber/src/infra/web_ipc.client.ts)).
-  - Shared data types used across the IPC boundary must be defined in `src/core/types.ts` or `src/infra/types.ts` for consistency.
+  - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](src/infra/web_ipc.client.ts)).
+  - Shared data types used across the IPC boundary should follow the general type rules and be defined close to their usage/IPC client implementation.
 
 ## Base Rules
 
 - Match existing naming, formatting, and import style in every file.
 - Keep edits minimal and targeted; avoid sweeping reformatting.
 - Do not add new dependencies unless necessary; always try to reuse existing interfaces.
-- If no suitable interface exists, inform the developer and request adding one.
-- If the interface is simple, you may design it yourself.
-- If the interface is complex and would require external dependencies, evaluate the dependency for stability, maintainability, and code quality first.
-- If no suitable dependency exists and the interface is important, design it cautiously and explicitly inform the developer; only proceed to output code after developer approval.
+- Interface Reuse & Search Priority:
+  - Prioritize referencing the module's `index.ts` (e.g., `src/infra/index.ts`) and use the interfaces exported there.
+  - If no `index.ts` exists, search the corresponding module directory to check for suitable interfaces.
+  - If no suitable interface exists, design one yourself if it is simple. If it is complex or requires external dependencies, evaluate the dependency for stability, maintainability, and code quality first.
+  - If no suitable dependency exists and the interface is important, design it cautiously and explicitly inform the developer; only proceed to output code after developer approval.
 - Prioritize human readability: keep logic simple, direct, and minimal.
 - Do not add verbose or convoluted logic just to make code "work".
 - Avoid unnecessary fallback mechanisms.
