@@ -3,18 +3,17 @@
 import { AnimatedGlowText } from "@/components"
 import { useEffect, useState } from "react"
 import { LabeledImage } from "@/components"
-
+import { AnimationContainer } from "@/components"
 import { join_classes } from "@/components/utils"
 
 export type LaunchAnimationProps = {
     className?: string
+    on_finish?: () => void
 }
 
-function LaunchAnimation({ className }: LaunchAnimationProps){
+function LaunchAnimation({ className, on_finish }: LaunchAnimationProps){
     const [welcome_sentence, set_welcome_sentence] = useState("Struggling to wake... Just five more minutes.")
-    const [is_amount, set_is_amount] = useState(false)
     useEffect(() => {
-        set_is_amount(true)
         const welcome_sentences = [
             "Are we there yet? Oh, right. Waking up.",
             "Ugh, waking up is hard."
@@ -32,14 +31,23 @@ function LaunchAnimation({ className }: LaunchAnimationProps){
                 />
             </div>
 
-            <div className={`${is_amount ? "translate-x-[100vw]" : "-translate-x-1/1"} left-0 top-3/7 -translate-y-1/1 absolute transition duration-1500`}>
+            <AnimationContainer
+                show={true}
+                duration={1500}
+                easing="cubic-bezier(0.4, 0, 0.2, 1)"
+                enter_from={{ transform: "translate(-100%, -100%)" }}
+                enter_to={{ transform: "translate(100vw, -100%)" }}
+                on_enter_end={on_finish}
+                className="left-0 top-3/7 absolute"
+                style={{ transform: "translate(-100%, -100%)" }}
+            >
                 <div className={"w-12 h-12"}>
                     <LabeledImage
                         image_class_name={"rounded-xl"}
                         src={"/icons/192x192.png"}
                     />
                 </div>
-            </div>
+            </AnimationContainer>
         </div>
     )
 }
