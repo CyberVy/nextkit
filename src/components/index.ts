@@ -71,3 +71,7 @@ export type { View, ViewSwitcherProps } from "./composite/ViewSwitcher"
 export { MigrationExport, MigrationMerge, MigrationOverwrite } from "./composite/Migration"
 export type { MigrationExportProps, MigrationMergeProps, MigrationOverwriteProps } from "./composite/Migration"
 
+// ScrollSentry.tsx
+export { ScrollSentry } from "./composite/ScrollSentry"
+export type { ScrollSentryProps } from "./composite/ScrollSentry"
+
