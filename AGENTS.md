@@ -56,6 +56,7 @@
 ## UI & Dialog Rules
 
 - **Emoji Prohibition**: Do not use emojis in any UI text or icons.
+- **Color Restrictions**: Do not use a large number of colors when designing the UI. Only black, white, gray, and colors controlled by transparency/opacity are allowed.
 - **Icons & SVGs**: Write SVG components in the corresponding `icons.tsx` based on the UI position (e.g., `src/components/icons.tsx` for generic component-level icons, `src/blocks/icons.tsx` for block-level business icons). Do not use inline SVGs or external icon library imports.
 - **Modals & Dialogs**:
   - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`).
@@ -64,6 +65,7 @@
 
 ## Layering Rules
 
+- **Module Dependencies**: Mutual dependencies between modules are prohibited. Modules must either remain independent or maintain a unidirectional dependency.
 - `src/components/` must not depend on `src/blocks/`.
 - `src/blocks/` may depend on `src/components/`, `src/core/`, and `src/infra/`.
 - `src/app/` is responsible for route entry points and composing blocks.
