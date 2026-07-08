@@ -28,19 +28,15 @@ export function useInViewport<T extends HTMLElement>({
     root_margin = 0,
     protected_padding = 0,
     threshold = 0,
-    initial_in_view = true,
+    initial_in_view = false,
 }: UseInViewportOptions = {}){
     const [element, set_element] = useState<T | null>(null)
-    const [in_view, set_in_view] = useState(initial_in_view)
+    const [is_intersecting, set_is_intersecting] = useState(initial_in_view)
     const ref = useCallback((next_element: T | null) => {
         set_element(next_element)
     }, [])
 
     useEffect(() => {
-        if (!enabled){
-            set_in_view(initial_in_view)
-            return
-        }
         if (!element) return
 
         const observer = new IntersectionObserver((entries) => {
@@ -49,18 +45,20 @@ export function useInViewport<T extends HTMLElement>({
                 const root_element = root || document.documentElement
                 if (protected_padding){
                     if (target_element.offsetTop - root_element.offsetTop <= protected_padding || target_element.offsetTop - root_element.offsetTop >= root_element.scrollHeight - protected_padding){
-                        set_in_view(true)
+                        set_is_intersecting(true)
                         return
                     }
                 }
 
-                set_in_view(entry.isIntersecting)
+                set_is_intersecting(entry.isIntersecting)
             })
         }, { threshold: threshold, rootMargin: get_root_margin(root_margin), root: root || null })
         observer.observe(element)
 
         return () => observer.disconnect()
-    }, [element, enabled, initial_in_view, protected_padding, root, root_margin, threshold])
+    }, [element, protected_padding, root, root_margin, threshold])
+
+    const in_view = enabled && is_intersecting
 
     return { ref: ref, in_view: in_view }
 }
