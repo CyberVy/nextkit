@@ -1,5 +1,4 @@
 import { is_in_native } from "@/infra/device.client"
-import { invoke } from "@tauri-apps/api/core"
 
 export type NestedRecordValue<T> = NestedRecord<T> | T | NestedRecordValue<T>[]
 export interface NestedRecord<T> {
@@ -71,8 +70,8 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
         }
     }
 
-    if (is_in_native() && !cors_proxy){
-        const native_response = await invoke("fetch", { req: { url: url, headers: headers_record, method: request_method, body: request_body } }) as {body:string, headers:HeadersInit, status:number}
+    if (is_in_native() && !cors_proxy && window.__TAURI__?.core?.invoke){
+        const native_response = await window.__TAURI__.core.invoke("fetch", { req: { url: url, headers: headers_record, method: request_method, body: request_body } }) as {body:string, headers:HeadersInit, status:number}
         return new Response(native_response.body, {
             status: native_response.status,
             headers: native_response.headers
