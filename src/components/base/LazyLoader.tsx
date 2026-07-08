@@ -11,6 +11,8 @@ export type KeepLoadedMargin = {
 
 export type LazyContainerProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
     children: ReactNode
+    // The placeholder element should have the same dimensions as the children to avoid layout shifts (CLS).
+    // These dimensions must be set in advance before the initial layout occurs.
     initial_placeholder?: ReactNode
     threshold?: number | number[]
     rootMargin?: string
