@@ -23,6 +23,7 @@
 - `public/`: static assets, icons, `manifest.json`, and built SW entry.
 - `scripts/`: local scripts.
 - `cli/`: local CLI helper utilities.
+  - [debug/](cli/debug): frontend debug bridge utility (SSE & HTTP server) for host-to-browser agent communication.
 - `draft/`: temporary sandboxes and development draft files.
 - `src-tauri/`: Tauri (Rust) backend and native app configuration.
   - `src/main.rs`: desktop/mobile app entry point.
@@ -94,3 +95,18 @@
 - Prefer minimal implementation over defensive coding.
 - If any files have been edited, use related tools to check if the edits are valid and acceptable
 (e.g. `tsc`, `tsx`, `eslint`, `cargo`, `pyright`, `pylint`, `python`, `node`)
+
+## AI Debugging & Communication (Frontend Debug Bridge)
+
+When running the Next.js dev server via `npm run dev`, a debug bridge is automatically launched via [launch.ts](cli/debug/launch.ts) that allows direct, silent bidirectional communication with the browser/Tauri webview context.
+- **Frontend Logs**: Read [logs.jsonl](.debug/logs.jsonl) (in JSON Lines format) to inspect console output and errors in real-time.
+- **Execute Commands**: Write a JSON command to [request.json](.debug/request.json):
+  ```json
+  { "id": "any_unique_id", "code": "document.title" }
+  ```
+- **Read Results**: Read [response.json](.debug/response.json) for command output:
+  ```json
+  { "id": "any_unique_id", "success": true, "result": "..." }
+  ```
+- **Sub-Agent Delegation**: When implementing new features or fixing bugs, prefer delegating validation and log monitoring to a sub-agent. The sub-agent should actively use the Frontend Debug Bridge to execute tests, verify UI correctness, and tail [logs.jsonl](.debug/logs.jsonl) to ensure no regressions or runtime console errors are introduced.
+Do NOT use other network sockets or web requests. Communicate strictly through these mailbox files under the `.debug/` directory during development.
