@@ -14,15 +14,36 @@ if (!fs.existsSync(DEBUG_DIR)){
     fs.mkdirSync(DEBUG_DIR, { recursive: true })
 }
 
-// Function to find a free port starting from 9999
-function find_free_port(start_port: number): Promise<number>{
+function get_debug_host(): string{
+    const arg = process.argv.find((a) => a.startsWith("--debug-host="))
+    if (arg){
+        return arg.split("=")[1]
+    }
+    return process.env.npm_config_debug_host || "127.0.0.1"
+}
+
+function get_debug_port(): number{
+    const arg = process.argv.find((a) => a.startsWith("--debug-port="))
+    if (arg){
+        const val = parseInt(arg.split("=")[1], 10)
+        if (!isNaN(val)) return val
+    }
+    if (process.env.npm_config_debug_port){
+        const val = parseInt(process.env.npm_config_debug_port, 10)
+        if (!isNaN(val)) return val
+    }
+    return 9999
+}
+
+// Function to find a free port starting from the given port
+function find_free_port(start_port: number, host: string): Promise<number>{
     return new Promise((resolve) => {
         const server = net.createServer()
         server.unref()
         server.on("error", () => {
-            resolve(find_free_port(start_port + 1))
+            resolve(find_free_port(start_port + 1, host))
         })
-        server.listen(start_port, "127.0.0.1", () => {
+        server.listen(start_port, host, () => {
             const address = server.address()
             const port = typeof address === "string" ? start_port : address?.port || start_port
             server.close(() => {
@@ -34,17 +55,19 @@ function find_free_port(start_port: number): Promise<number>{
 
 async function main(){
     try {
-        const port = await find_free_port(9999)
+        const host = get_debug_host()
+        const start_port = get_debug_port()
+        const port = await find_free_port(start_port, host)
 
         // Write port to port.txt
         fs.writeFileSync(PORT_FILE, String(port), "utf8")
 
         // Generate public/debug_bridge.js
         const template = fs.readFileSync(TEMPLATE_PATH, "utf8")
-        const generated = template.replace("{{SERVER_URL}}", `http://127.0.0.1:${port}`)
+        const generated = template.replace("{{PORT}}", String(port))
         fs.writeFileSync(PUBLIC_BRIDGE_PATH, generated, "utf8")
 
-        console.log(`[Debug Bridge Init] Generated public/debug_bridge.js pointing to port ${port}`)
+        console.log(`[Debug Bridge Init] Generated public/debug_bridge.js pointing to port ${port} on host ${host}`)
     }
     catch (err){
         console.error("[Debug Bridge Init] Initialization failed:", err)

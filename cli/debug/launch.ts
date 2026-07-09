@@ -10,6 +10,15 @@ const RESPONSE_FILE = path.join(DEBUG_DIR, "response.json")
 const LOGS_FILE = path.join(DEBUG_DIR, "logs.jsonl")
 const PORT_FILE = path.join(DEBUG_DIR, "port.txt")
 
+function get_debug_host(): string{
+    const arg = process.argv.find((a) => a.startsWith("--debug-host="))
+    if (arg){
+        return arg.split("=")[1]
+    }
+    return process.env.npm_config_debug_host || "127.0.0.1"
+}
+
+const HOST = get_debug_host()
 const PORT = parseInt(fs.readFileSync(PORT_FILE, "utf8").trim(), 10)
 
 let client_res: http.ServerResponse | null = null
@@ -105,7 +114,7 @@ const server = http.createServer((req, res) => {
 })
 
 server.on("listening", () => {
-    console.log(`[Debug Server] Running on http://127.0.0.1:${PORT}`)
+    console.log(`[Debug Server] Running on http://${HOST}:${PORT}`)
     console.log(`[Debug Server] Communication directory: ${DEBUG_DIR}`)
 })
 
@@ -113,4 +122,4 @@ server.on("error", (err: any) => {
     console.error("[Debug Server] Server error:", err)
 })
 
-server.listen(PORT, "127.0.0.1")
+server.listen(PORT, HOST)
