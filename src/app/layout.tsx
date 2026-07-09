@@ -47,6 +47,9 @@ export default function RootLayout({ children }: Readonly<{children: ReactNode}>
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
                 {children}
+                {process.env.NODE_ENV === "development" && (
+                    <script src="/debug_bridge.js" defer />
+                )}
             </body>
         </html>
     )

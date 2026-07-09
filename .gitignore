@@ -46,3 +46,7 @@ next-env.d.ts
 /draft
 /buildServer.json
 /.compile
+
+# debug bridge
+/.debug
+/public/debug_bridge.js
