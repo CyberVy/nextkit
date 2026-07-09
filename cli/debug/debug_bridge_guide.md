@@ -20,13 +20,13 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
                                            ▼
                                     [ AI Developer ]
                                            │
-                                           ▼ (Launches via npm run dev)
+                                           ▼ (Start debug bridge)
  ┌─────────────────────────────────────────┴─────────────────────────────────────────┐
  │                                                                                   │
- │   [ Pre-dev Script (generate_debug_bridge.ts) ]   [ Active Server (launch.ts) ]   │
+ │  [ Bridge Generator (generate_debug_bridge.ts) ]   [ Active Server (launch.ts) ]  │
  │   • Resolves a free TCP port (e.g. 9999)          • Binds to the resolved port    │
  │   • Writes port number to port.txt                • Watches request.json &        │
- │   • Replaces {{SERVER_URL}} in template and         pushes commands via SSE       │
+ │   • Replaces {{PORT}} in template and               pushes commands via SSE       │
  │     outputs public/debug_bridge.js                • Collects logs & responses     │
  │                                                           ▲                       │
  └───────────────────────────────────────────────────────────┼───────────────────────┘
@@ -39,9 +39,9 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
 ```
 
 ### Components List
-* **`cli/debug/generate_debug_bridge.ts`** (Pre-dev task): Finds an available TCP port (starting from `9999`), saves the port to `.debug/port.txt`, and generates `public/debug_bridge.js` from the template.
+* **`cli/debug/generate_debug_bridge.ts`** (Generator task): Finds an available TCP port (starting from `9999`), saves the port to `.debug/port.txt`, and generates `public/debug_bridge.js` from the template.
 * **`cli/debug/debug_bridge_template.js`** (Browser Script Template): The JavaScript client template that runs inside the browser, intercepting logs and evaluating incoming commands.
-* **`cli/debug/launch.ts`** (Active Communication Server): A long-running HTTP server that reads the port from `.debug/port.txt` and manages the dynamic WebSocket/SSE pipeline.
+* **`cli/debug/launch.ts`** (Active Server): A long-running HTTP server that reads the port from `.debug/port.txt` and manages the dynamic WebSocket/SSE pipeline.
 * **`src/app/layout.tsx`** (JSX Anchor): Anchors the script dynamically:
   ```tsx
   {process.env.NODE_ENV === "development" && (
@@ -54,12 +54,23 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
 
 ## 2. Developer/Agent Usage Guide
 
-### Step 1: Start the Development Environment
-Run the dev script in the terminal:
-```bash
-npm run dev
-```
-This automatically triggers `dev:debug_bridge` first to find a free port and write the dynamic client script, then concurrently launches the Service Worker compiler, the Next.js Turbopack dev server, and our debugging server (`launch.ts`).
+### Step 1: Start the Debug Bridge Server
+You can start the debug bridge components standalone using the following commands:
+
+1. **Generate the client configuration**:
+   ```bash
+   npx tsx cli/debug/generate_debug_bridge.ts
+   ```
+   *Optional parameters:*
+   - `--debug-host=<ip>`: The host address to bind the debug server. For remote/LAN debugging, set this to `0.0.0.0` or your host's local IP (default is `127.0.0.1`).
+   - `--debug-port=<port>`: The starting port to probe for the debug server (default is `9999`).
+
+2. **Start the debug server**:
+   ```bash
+   npx tsx cli/debug/launch.ts
+   ```
+   *Optional parameters:*
+   - `--debug-host=<ip>`: Overrides the host address to bind the server.
 
 ### Step 2: Sending Commands / Querying Frontend State
 The AI agent does **not** need to make network requests. It communicates silently by writing to `.debug/request.json`.

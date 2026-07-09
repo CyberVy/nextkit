@@ -1,7 +1,8 @@
 (function (){
     if (typeof window === "undefined") return
 
-    const SERVER_URL = "{{SERVER_URL}}"
+    const PORT = "{{PORT}}"
+    const SERVER_URL = "http://" + window.location.hostname + ":" + PORT
 
     // 1. Hook console logs
     const original_console = {
