@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { description, title } from "../../package.json"
 import type { ReactNode } from "react"
-
+import Script from "next/script"
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: Readonly<{children: ReactNode}>
             >
                 {children}
                 {process.env.NODE_ENV === "development" && (
-                    <script src="/debug_bridge.js" defer />
+                    <Script src="/debug_bridge.js" strategy="afterInteractive" />
                 )}
             </body>
         </html>
