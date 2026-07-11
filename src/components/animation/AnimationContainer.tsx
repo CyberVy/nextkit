@@ -9,6 +9,9 @@ import type { AnimationContainerProps } from "@/components/animation/types"
  * If the children are laid out against a different coordinate system than the container,
  * the animation's reference coordinates can become incorrect.
  * The failure mode may also differ across browser engines because their implementations are not identical.
+ * 
+ * Note: To ensure exit animations play correctly, do not conditionally unmount this component
+ * in the parent. Use `show={state}` and `unmount_on_exit={true}` instead.
  */
 function AnimationContainer({
     show = true, children, className, style,
