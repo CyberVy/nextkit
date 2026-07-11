@@ -14,7 +14,7 @@ export function remote<T>(targetWindow: Window): RemoteProxy<T>
 export function remote(targetWindow: Window): any{
     const steps: any[] = []
 
-    const createProxy = (path: string[]): any => {
+    const create_proxy = (path: string[]): any => {
         return new Proxy(() => {}, {
             get(target, prop: string){
                 if (prop === "$execute"){
@@ -36,16 +36,16 @@ export function remote(targetWindow: Window): any{
                 }
 
                 steps.push({ op: "get", name: prop })
-                return createProxy([...path, prop])
+                return create_proxy([...path, prop])
             },
             apply(target, thisArg, argList){
                 steps.push({ op: "call", args: argList })
-                return createProxy(path)
+                return create_proxy(path)
             }
         })
     }
 
-    return createProxy([])
+    return create_proxy([])
 }
 
 export function register_dynamic_ipc(){

@@ -134,7 +134,7 @@ function ContextMenu({
         }
     }, [close_context_menu, show_context_menu])
 
-    const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    const handle_context_menu = (event: React.MouseEvent<HTMLDivElement>) => {
         if (disabled || !has_context_menu) return
 
         event.preventDefault()
@@ -150,7 +150,7 @@ function ContextMenu({
                     className,
                 ].filter(Boolean).join(" ")}
                 style={style}
-                onContextMenu={handleContextMenu}
+                onContextMenu={handle_context_menu}
                 onPointerDown={press_gesture.on_pointer_down}
                 onPointerMove={press_gesture.on_pointer_move}
                 onPointerUp={press_gesture.on_pointer_up}

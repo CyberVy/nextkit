@@ -39,7 +39,7 @@
   - `gen/`: generated native project artifacts.
   - `target/`: Rust build outputs (generated).
 
-## Naming Conventions
+## Naming Conventions (Statically enforced by ESLint)
 
 - Types, interfaces, classes, enums, and type aliases: `PascalCase` (e.g. `PlayerState`).
 - React components: `PascalCase` filenames and exports (e.g. `GlobalSettingButton`).
@@ -56,45 +56,30 @@
 
 ## UI & Dialog Rules
 
-- **Emoji Prohibition**: Do not use emojis in any UI text or icons.
-- **Color Restrictions**: Do not use a large number of colors when designing the UI. Only black, white, gray, and colors controlled by transparency/opacity are allowed.
-- **Icons & SVGs**: Write SVG components in the corresponding `icons.tsx` based on the UI position (e.g., `src/components/icons.tsx` for generic component-level icons, `src/blocks/icons.tsx` for block-level business icons). Do not use inline SVGs or external icon library imports.
+- **Emoji Prohibition (Statically enforced by ESLint)**: Do not use emojis in any UI text or icons.
+- **Color Restrictions (AI Only)**: Do not use a large number of colors when designing the UI. Only black, white, gray, and colors controlled by transparency/opacity are allowed. (Humans are exempt, but AI must strictly follow this to avoid flashy layout designs).
+- **Icons & SVGs (Statically enforced by ESLint)**: Write SVG components in the corresponding `icons.tsx` based on the UI position (e.g., `src/components/icons.tsx` for generic component-level icons, `src/blocks/icons.tsx` for block-level business icons). Do not use inline SVGs or external icon library imports.
 - **Modals & Dialogs**:
-  - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`).
+  - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`). (Statically enforced by ESLint).
   - Use [ModalContainer.tsx](src/components/composite/ModalContainer.tsx) to build modals and dialog components.
   - If a modal requires animations, cooperate with [AnimationContainer.tsx](src/components/animation/AnimationContainer.tsx).
 
-## Layering Rules
+## Layering Rules (Statically enforced by ESLint)
 
-- **Module Dependencies**: Mutual dependencies between modules are prohibited. Modules must either remain independent or maintain a unidirectional dependency.
-- `src/components/` must not depend on `src/blocks/`.
-- `src/blocks/` may depend on `src/components/`, `src/core/`, and `src/infra/`.
-- `src/app/` is responsible for route entry points and composing blocks.
-- Keep business UI out of `src/components/`, place it in `src/blocks/`.
-- Non-UI Environments (`src/inject/` and `src/sw/`):
-  - They **CAN** import modules from `src/core/` and `src/infra/` (excluding any React/UI-related modules).
-  - They must **NEVER** import modules from UI-related directories: `src/app/`, `src/blocks/`, or `src/components/`.
-  - Other direct subdirectories under `src/` (such as `src/app/`, `src/blocks/`, `src/components/`, `src/core/`, `src/infra/`) must **NEVER** import modules from `src/inject/` or `src/sw/` (except their compiled outputs).
-- Web IPC Communications:
+- **UI vs Non-UI Directories**: Only `src/app/`, `src/blocks/`, and `src/components/` are allowed to contain UI code. All other directories under `src/` (such as `src/core/`, `src/infra/`, `src/inject/`, `src/sw/`) are Non-UI environments.
+- **UI Isolation**: Non-UI environments must NEVER import modules from UI-related directories (`src/app/`, `src/blocks/`, or `src/components/`).
+- **Unidirectional UI Dependency**: `src/components/` (atomic reusable components) must NEVER depend on `src/blocks/` (composite UI blocks) or `src/app/` (route entry points). Keep business UI out of `src/components/`, place it in `src/blocks/`.
+- **Web IPC Communications**:
   - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](src/infra/web_ipc.client.ts)).
   - Shared data types used across the IPC boundary should follow the general type rules and be defined close to their usage/IPC client implementation.
 
 ## Base Rules
 
-- Match existing naming, formatting, and import style in every file.
-- Keep edits minimal and targeted; avoid sweeping reformatting.
-- Do not add new dependencies unless necessary; always try to reuse existing interfaces.
-- Interface Reuse & Search Priority:
-  - Prioritize referencing the module's `index.ts` (e.g., `src/infra/index.ts`) and use the interfaces exported there.
-  - If no `index.ts` exists, search the corresponding module directory to check for suitable interfaces.
-  - If no suitable interface exists, design one yourself if it is simple. If it is complex or requires external dependencies, evaluate the dependency for stability, maintainability, and code quality first.
-  - If no suitable dependency exists and the interface is important, design it cautiously and explicitly inform the developer; only proceed to output code after developer approval.
-- Prioritize human readability: keep logic simple, direct, and minimal.
-- Do not add verbose or convoluted logic just to make code "work".
-- Avoid unnecessary fallback mechanisms.
-- Prefer minimal implementation over defensive coding.
-- If any files have been edited, use related tools to check if the edits are valid and acceptable
-(e.g. `tsc`, `tsx`, `eslint`, `cargo`, `pyright`, `pylint`, `python`, `node`)
+- **Minimalist & Clean Code**: Keep edits minimal, direct, and targeted. Avoid sweeping reformatting, unnecessary fallback mechanisms, and defensive over-engineering. Prioritize human readability and simplicity.
+- **Refactor Before Feature**: If a new feature depends on existing mechanisms, first review if they can support the new design. Do not force new mechanisms into a design that cannot accommodate them. Propose a local refactoring plan for the existing code first, then **stop and seek developer approval** before making any changes.
+- **Style Consistency**: Match existing naming, formatting, and import styles in every file.
+- **Interface Reuse & Dependencies**: Prioritize importing from the module's `index.ts` (or the module directory) first. Only design new interfaces if none exist. Do not add new dependencies or design complex public interfaces without developer approval.
+- **Local Verification**: After editing any files, run verification tools (e.g. `tsc`, `eslint`, `cargo`) to ensure changes are valid and compile correctly.
 
 ## AI Debugging & Communication (Frontend Debug Bridge)
 
