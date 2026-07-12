@@ -1,4 +1,5 @@
 import { is_ios_device, is_android_device } from "./device.client"
+import localforage from "localforage"
 
 export interface BackupPackage {
     metadata: {
@@ -23,10 +24,10 @@ export class MigrationService{
     ): Promise<string>{
         const payload: Record<string, any> = {}
 
-        if (typeof localStorage !== "undefined"){
-            const keys = local_keys || Object.keys(localStorage)
+        if (typeof window !== "undefined"){
+            const keys = local_keys || await localforage.keys()
             for (const key of keys){
-                const val = localStorage.getItem(key)
+                const val = await localforage.getItem<string>(key)
                 if (val !== null){
                     try {
                         payload[key] = JSON.parse(val)
@@ -80,7 +81,7 @@ export class MigrationService{
                 // 2.1 Merge list mode
                 if (mode === "merge" && merge_rules[key] && Array.isArray(val)){
                     const rule = merge_rules[key]
-                    const current_str = localStorage.getItem(key)
+                    const current_str = await localforage.getItem<string>(key)
                     let current: any[] = []
                     if (current_str !== null){
                         try {
@@ -124,13 +125,13 @@ export class MigrationService{
                         }
                     }
 
-                    localStorage.setItem(key, JSON.stringify(merged))
+                    await localforage.setItem(key, JSON.stringify(merged))
                     continue
                 }
 
                 // 2.2 Overwrite mode (or non-list keys)
                 const val_str = typeof val === "string" ? val : JSON.stringify(val)
-                localStorage.setItem(key, val_str)
+                await localforage.setItem(key, val_str)
             }
 
             return { success: true }

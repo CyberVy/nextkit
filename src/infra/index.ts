@@ -23,7 +23,7 @@ export type { PressCancelReason } from "./gestures.client"
 export { keep_alive_for_once, auto_keep_alive_by_video_states } from "./keep_alive.client"
 
 // storage.client.ts
-export { LocalStorageItemController, CacheStorageItemController } from "./storage.client"
+export { LocalStorageItemController, CacheStorageItemController, LocalForageItemController } from "./storage.client"
 
 // version.ts
 export { static_resource_cache_name, is_later_version, update } from "./version"
