@@ -313,6 +313,84 @@ const namingConventionsRule = {
     }
 };
 
+const noSyncSetStateInEffectRule = {
+    meta: {
+        type: "suggestion",
+        docs: {
+            description: "Disallow synchronous setState calls inside useEffect with non-empty dependencies"
+        },
+        messages: {
+            syncSetState: "Do not call setState ('{{name}}') synchronously inside a useEffect with dependencies. Move this state synchronization logic to the render phase or trigger it via event handlers."
+        }
+    },
+    create(context) {
+        return {
+            CallExpression(node) {
+                if (node.callee.type !== "Identifier" || node.callee.name !== "useEffect") {
+                    return;
+                }
+
+                const deps = node.arguments[1];
+                if (!deps || deps.type !== "ArrayExpression" || deps.elements.length === 0) {
+                    return;
+                }
+
+                const effectCallback = node.arguments[0];
+                if (!effectCallback || (effectCallback.type !== "ArrowFunctionExpression" && effectCallback.type !== "FunctionExpression")) {
+                    return;
+                }
+
+                function checkBlock(blockNode) {
+                    if (!blockNode) return;
+                    
+                    const statements = blockNode.type === "BlockStatement" ? blockNode.body : [blockNode];
+                    
+                    for (const stmt of statements) {
+                        if (stmt.type === "ExpressionStatement") {
+                            const expr = stmt.expression;
+                            if (expr.type === "CallExpression") {
+                                checkCall(expr);
+                            }
+                        } else if (stmt.type === "IfStatement") {
+                            checkBlock(stmt.consequent);
+                            checkBlock(stmt.alternate);
+                        } else if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement" || stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
+                            checkBlock(stmt.body);
+                        } else if (stmt.type === "SwitchStatement") {
+                            for (const caseNode of stmt.cases) {
+                                for (const subStmt of caseNode.consequent) {
+                                    checkBlock(subStmt);
+                                }
+                            }
+                        } else if (stmt.type === "BlockStatement") {
+                            checkBlock(stmt);
+                        }
+                    }
+                }
+
+                function checkCall(callNode) {
+                    if (callNode.callee.type === "Identifier") {
+                        const name = callNode.callee.name;
+                        if (/^set[A-Z_]/u.test(name)) {
+                            context.report({
+                                node: callNode,
+                                messageId: "syncSetState",
+                                data: { name }
+                            });
+                        }
+                    }
+                }
+
+                if (effectCallback.body.type === "BlockStatement") {
+                    checkBlock(effectCallback.body);
+                } else if (effectCallback.body.type === "CallExpression") {
+                    checkCall(effectCallback.body);
+                }
+            }
+        };
+    }
+};
+
 export default defineConfig([
     ...next_core_web_vitals,
     {
@@ -324,7 +402,8 @@ export default defineConfig([
                     "no-emojis": noEmojisRule,
                     "no-inline-svgs": noInlineSvgsRule,
                     "layering-restrictions": layeringRestrictionsRule,
-                    "naming-conventions": namingConventionsRule
+                    "naming-conventions": namingConventionsRule,
+                    "no-sync-set-state-in-effect": noSyncSetStateInEffectRule
                 }
             }
         },
@@ -346,6 +425,7 @@ export default defineConfig([
             "local/no-inline-svgs": "warn",
             "local/layering-restrictions": "warn",
             "local/naming-conventions": "warn",
+            "local/no-sync-set-state-in-effect": "warn",
             semi: ["warn", "never"],
             "object-curly-spacing": ["warn", "always"],
             "key-spacing": ["warn", {

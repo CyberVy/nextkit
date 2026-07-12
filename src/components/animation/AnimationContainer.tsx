@@ -49,33 +49,34 @@ function AnimationContainer({
         }
     })
 
-    useEffect(() => {
+    const [prev_show, set_prev_show] = useState(show)
+
+    if (show !== prev_show){
+        set_prev_show(show)
         if (show){
-            if (render_mode === "pending"){
-                if (animate_on_mount){
-                    set_render_mode("entering")
-                }
-                else {
-                    set_render_mode("visible")
-                    return
-                }
+            if (render_mode === "exiting_to_hidden" || render_mode === "hidden" || render_mode === "exiting_to_unmount" || render_mode === "unmount"){
+                set_render_mode("entering")
             }
-            else if (render_mode === "entering"){ return }
-            else if (render_mode === "visible"){ return }
-            else if (render_mode === "exiting_to_hidden"){ set_render_mode("entering") }
-            else if (render_mode === "hidden"){ set_render_mode("entering") }
-            else if (render_mode === "exiting_to_unmount"){ set_render_mode("entering") }
-            else if (render_mode === "unmount"){ set_render_mode("entering")}
         }
         else {
-            if (render_mode === "pending"){ return }
-            else if (render_mode === "entering"){ set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden") }
-            else if (render_mode === "visible"){ set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden") }
-            else if (render_mode === "exiting_to_hidden"){ return }
-            else if (render_mode === "hidden"){ return }
-            else if (render_mode === "exiting_to_unmount"){ return}
-            else if (render_mode === "unmount"){ return }
+            if (render_mode === "entering" || render_mode === "visible"){
+                set_render_mode(unmount_on_exit ? "exiting_to_unmount" : "exiting_to_hidden")
+            }
         }
+    }
+
+    if (render_mode === "pending"){
+        if (animate_on_mount){
+            set_render_mode("entering")
+        }
+        else {
+            set_render_mode("visible")
+        }
+    }
+
+    useEffect(() => {
+        if (show && render_mode !== "entering") return
+        if (!show && render_mode !== "exiting_to_hidden" && render_mode !== "exiting_to_unmount") return
 
         const element = element_ref.current
         if (!element) return
@@ -96,11 +97,9 @@ function AnimationContainer({
 
         if (show){
             on_enter_start?.()
-            set_render_mode("entering")
         }
         else {
             on_exit_start?.()
-            set_render_mode(unmount_on_exit? "exiting_to_unmount" : "exiting_to_hidden")
         }
 
         animation.finished.then(() => {

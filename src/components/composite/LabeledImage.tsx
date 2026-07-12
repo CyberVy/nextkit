@@ -66,13 +66,19 @@ function LabeledImage({
         }
     }, [fallback_blob_url])
 
-    useEffect(() => {
-        let ignore = false
+    const [prev_src, set_prev_src] = useState(src)
 
+    if (src !== prev_src){
+        set_prev_src(src)
         if (src){
             set_fallback_blob_url("")
-            return
         }
+    }
+
+    useEffect(() => {
+        if (src) return
+
+        let ignore = false
 
         generate_cover_image(alt || "", {}).then(url => {
             if (ignore){

@@ -34,10 +34,14 @@ function StringInput({
     ...props
 }: StringInputProps){
     const [value, setValue] = useState(controlled_value !== undefined ? controlled_value : default_value)
+    const [prev_controlled_value, set_prev_controlled_value] = useState(controlled_value)
+    const [prev_default_value, set_prev_default_value] = useState(default_value)
 
-    useEffect(() => {
+    if (controlled_value !== prev_controlled_value || default_value !== prev_default_value){
+        set_prev_controlled_value(controlled_value)
+        set_prev_default_value(default_value)
         setValue(controlled_value !== undefined ? controlled_value : default_value)
-    }, [controlled_value, default_value])
+    }
 
     const handle_change = (new_value: string) => {
         setValue(new_value)
