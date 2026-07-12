@@ -1,3 +1,79 @@
+import localforage from "localforage"
+import { migration_promise } from "@/core/storage_migration"
+
+export class LocalForageItemController<T = string>{
+    public name: string
+    private static is_configured = false
+
+    constructor(name: string){
+        this.name = name
+        if (!LocalForageItemController.is_configured){
+            localforage.config({
+                name: "localForage",
+                storeName: "keyval"
+            })
+            LocalForageItemController.is_configured = true
+        }
+    }
+
+    public async get_item(): Promise<string | null>{
+        await migration_promise
+        return await localforage.getItem<string>(this.name)
+    }
+
+    public async set_item(value: string): Promise<void>{
+        await migration_promise
+        await localforage.setItem(this.name, value)
+    }
+
+    public async remove_item(): Promise<void>{
+        await migration_promise
+        await localforage.removeItem(this.name)
+    }
+
+    public get value_item(): Promise<string | null>{
+        return this.get_item()
+    }
+
+    public async get_object(): Promise<T | null>{
+        const value = await this.get_item()
+        if (value !== null){
+            try {
+                return JSON.parse(value) as T
+            }
+            catch (e){
+                console.error(`Failed to parse LocalForage item ${this.name}:`, e)
+                return null
+            }
+        }
+        return null
+    }
+
+    public async set_object(value_object: T): Promise<void>{
+        const value = JSON.stringify(value_object)
+        await this.set_item(value)
+    }
+
+    public async remove_object(): Promise<void>{
+        await this.remove_item()
+    }
+
+    public get value_object(): Promise<T | null>{
+        return this.get_object()
+    }
+
+    public async get(type: "object"): Promise<T | null>
+    public async get(type: "string"): Promise<string | null>
+    public async get(type: "object" | "string"){
+        if (type === "object"){
+            return this.value_object
+        }
+        else if (type === "string"){
+            return this.value_item
+        }
+    }
+}
+
 export class LocalStorageItemController<T = string>{
     public name: string
 
@@ -6,17 +82,14 @@ export class LocalStorageItemController<T = string>{
     }
 
     public get_item(): string | null{
-        if (typeof localStorage === "undefined") return null
         return localStorage.getItem(this.name)
     }
 
     public set_item(value: string): void{
-        if (typeof localStorage === "undefined") return
         return localStorage.setItem(this.name, value)
     }
 
     public remove_item(): void{
-        if (typeof localStorage === "undefined") return
         return localStorage.removeItem(this.name)
     }
 
