@@ -83,15 +83,18 @@
 
 ## AI Debugging & Communication (Frontend Debug Bridge)
 
-When running the Next.js dev server via `npm run dev`, a debug bridge is automatically launched via [launch.ts](cli/debug/launch.ts) that allows direct, silent bidirectional communication with the browser/Tauri webview context.
+When running the Next.js dev server via `npm run dev`, a debug bridge is automatically launched via [launch.ts](cli/debug/launch.ts) that allows direct, silent bidirectional communication with the browser/Tauri webview context. Before starting the dev server, check if the dev server is already running to avoid duplicate/repeated runs.
 - **Frontend Logs**: Read [logs.jsonl](.debug/logs.jsonl) (in JSON Lines format) to inspect console output and errors in real-time.
-- **Execute Commands**: Write a JSON command to [request.json](.debug/request.json):
-  ```json
-  { "id": "any_unique_id", "code": "document.title" }
+- **Execute Commands**: Synchronously execute JavaScript code in the browser/Tauri webview context using [eval.js](cli/debug/eval.js):
+  ```bash
+  node cli/debug/eval.js "document.title"
   ```
-- **Read Results**: Read [response.json](.debug/response.json) for command output:
+  This will print the response directly to stdout, for example:
   ```json
-  { "id": "any_unique_id", "success": true, "result": "..." }
+  {
+    "success": true,
+    "result": "Hello!"
+  }
   ```
+- **Execution History**: The history of executed commands and their results is stored in [history.jsonl](.debug/history.jsonl).
 - **Sub-Agent Delegation**: When implementing new features or fixing bugs, prefer delegating validation and log monitoring to a sub-agent. The sub-agent should actively use the Frontend Debug Bridge to execute tests, verify UI correctness, and tail [logs.jsonl](.debug/logs.jsonl) to ensure no regressions or runtime console errors are introduced.
-Do NOT use other network sockets or web requests. Communicate strictly through these mailbox files under the `.debug/` directory during development.
