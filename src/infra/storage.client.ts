@@ -1,212 +1,188 @@
 import localforage from "localforage"
 import { migration_promise } from "@/core/storage_migration"
 
-export class LocalForageItemController<T = string>{
-    public name: string
-    private static is_configured = false
+export class LocalForageMap<V>{
+    private lf_instance: LocalForage
 
-    constructor(name: string){
-        this.name = name
-        if (!LocalForageItemController.is_configured){
-            localforage.config({
-                name: "localForage",
-                storeName: "keyval"
-            })
-            LocalForageItemController.is_configured = true
-        }
+    constructor(store_name = "keyval", db_name = "localforage"){
+        this.lf_instance = localforage.createInstance({
+            name: db_name,
+            storeName: store_name
+        })
     }
 
-    public async get_item(): Promise<string | null>{
+    public async get(key: string): Promise<V | undefined>{
         await migration_promise
-        return await localforage.getItem<string>(this.name)
+        const val = await this.lf_instance.getItem<V>(key)
+        return val === null ? undefined : val
     }
 
-    public async set_item(value: string): Promise<void>{
+    public async set(key: string, value: V): Promise<this>{
         await migration_promise
-        await localforage.setItem(this.name, value)
+        await this.lf_instance.setItem(key, value)
+        return this
     }
 
-    public async remove_item(): Promise<void>{
+    public async has(key: string): Promise<boolean>{
         await migration_promise
-        await localforage.removeItem(this.name)
+        const keys = await this.lf_instance.keys()
+        return keys.includes(key)
     }
 
-    public get value_item(): Promise<string | null>{
-        return this.get_item()
-    }
-
-    public async get_object(): Promise<T | null>{
-        const value = await this.get_item()
-        if (value !== null){
-            try {
-                return JSON.parse(value) as T
-            }
-            catch (e){
-                console.error(`Failed to parse LocalForage item ${this.name}:`, e)
-                return null
-            }
+    public async delete(key: string): Promise<boolean>{
+        await migration_promise
+        const exists = await this.has(key)
+        if (exists){
+            await this.lf_instance.removeItem(key)
+            return true
         }
-        return null
+        return false
     }
 
-    public async set_object(value_object: T): Promise<void>{
-        const value = JSON.stringify(value_object)
-        await this.set_item(value)
+    public async clear(): Promise<void>{
+        await migration_promise
+        await this.lf_instance.clear()
     }
 
-    public async remove_object(): Promise<void>{
-        await this.remove_item()
+    public async size(): Promise<number>{
+        await migration_promise
+        return await this.lf_instance.length()
     }
 
-    public get value_object(): Promise<T | null>{
-        return this.get_object()
-    }
-
-    public async get(type: "object"): Promise<T | null>
-    public async get(type: "string"): Promise<string | null>
-    public async get(type: "object" | "string"){
-        if (type === "object"){
-            return this.value_object
-        }
-        else if (type === "string"){
-            return this.value_item
-        }
+    public async keys(): Promise<string[]>{
+        await migration_promise
+        return await this.lf_instance.keys()
     }
 }
 
-export class LocalStorageItemController<T = string>{
-    public name: string
+export class LocalStorageMap<V>{
+    private namespace: string
 
-    constructor(name: string){
-        this.name = name
+    constructor(namespace: string){
+        this.namespace = namespace
     }
 
-    public get_item(): string | null{
-        return localStorage.getItem(this.name)
+    private get_full_key(key: string): string{
+        return `${this.namespace}:${key}`
     }
 
-    public set_item(value: string): void{
-        return localStorage.setItem(this.name, value)
+    public get(key: string): V | undefined{
+        const val = localStorage.getItem(this.get_full_key(key))
+        if (val === null) return undefined
+        try {
+            return JSON.parse(val) as V
+        }
+        catch {
+            return val as unknown as V
+        }
     }
 
-    public remove_item(): void{
-        return localStorage.removeItem(this.name)
+    public set(key: string, value: V): this{
+        const val_str = typeof value === "string" ? value : JSON.stringify(value)
+        localStorage.setItem(this.get_full_key(key), val_str as string)
+        return this
     }
 
-    public get value_item(): string | null{
-        return this.get_item()
+    public has(key: string): boolean{
+        return localStorage.getItem(this.get_full_key(key)) !== null
     }
 
-    public get_object(): T | null{
-        const value = this.value_item
-        if (value !== null){
-            try {
-                return JSON.parse(value) as T
+    public delete(key: string): boolean{
+        const full_key = this.get_full_key(key)
+        if (localStorage.getItem(full_key) !== null){
+            localStorage.removeItem(full_key)
+            return true
+        }
+        return false
+    }
+
+    public clear(): void{
+        const prefix = `${this.namespace}:`
+        const keys_to_remove: string[] = []
+        for (let i = 0; i < localStorage.length; i++){
+            const key = localStorage.key(i)
+            if (key?.startsWith(prefix)){
+                keys_to_remove.push(key)
             }
-            catch (e){
-                console.error(`Failed to parse LocalStorage item ${this.name}:`, e)
-                return null
+        }
+        keys_to_remove.forEach(key => localStorage.removeItem(key))
+    }
+
+    public keys(): string[]{
+        const prefix = `${this.namespace}:`
+        const keys: string[] = []
+        for (let i = 0; i < localStorage.length; i++){
+            const key = localStorage.key(i)
+            if (key?.startsWith(prefix)){
+                keys.push(key.slice(prefix.length))
             }
         }
-        else {
-            return null
-        }
-    }
-
-    public set_object(value_object: T){
-        const value = JSON.stringify(value_object)
-        this.set_item(value)
-    }
-
-    public remove_object(): void{
-        return this.remove_item()
-    }
-
-    public get value_object(): T | null{
-        return this.get_object()
-    }
-
-    public get(type: "object"): T | null
-    public get(type: "string"): string | null
-    public get(type: "object" | "string"){
-        if (type === "object"){
-            return this.value_object
-        }
-        else if (type === "string"){
-            return this.value_item
-        }
+        return keys
     }
 }
 
-export class CacheStorageItemController{
-    public cache_storage_name: string
-    public cache_storage: Cache | null
+export class CacheStorageMap{
+    private cache_name: string
+    private cache_storage: Cache | null = null
     private ready_promise: Promise<void>
 
     constructor(name: string){
-        this.cache_storage_name = name
-        this.cache_storage = null
-
-        console.log(`CacheStorageItemController: ${name} initializing...`)
-        this.ready_promise = this.get_cache_storage().then(() => {
-            console.log(`CacheStorageItemController: ${name} initialized.`)
-        })
+        this.cache_name = name
+        this.ready_promise = this.init_cache()
     }
 
-    public async get_cache_storage(){
+    private async init_cache(): Promise<void>{
         try {
-            const cache_storage = await caches.open(this.cache_storage_name)
-            this.cache_storage = cache_storage
+            this.cache_storage = await caches.open(this.cache_name)
         }
-        catch (err){
-            console.error(err)
+        catch (e){
+            console.error(`Failed to open CacheStorage ${this.cache_name}:`, e)
         }
     }
 
-    public async wait_until_ready(){
+    private async wait_until_ready(): Promise<Cache>{
+        await this.ready_promise
+        if (!this.cache_storage){
+            throw new Error(`CacheStorage ${this.cache_name} is not initialized.`)
+        }
+        return this.cache_storage
+    }
+
+    public async get(request: RequestInfo | URL, options?: CacheQueryOptions): Promise<Response | undefined>{
+        const cache = await this.wait_until_ready()
+        return await cache.match(request, options)
+    }
+
+    public async set(request: RequestInfo | URL, response: Response): Promise<this>{
+        const cache = await this.wait_until_ready()
+        await cache.put(request, response)
+        return this
+    }
+
+    public async has(request: RequestInfo | URL, options?: CacheQueryOptions): Promise<boolean>{
+        const cached = await this.get(request, options)
+        return cached !== undefined
+    }
+
+    public async delete(request: RequestInfo | URL, options?: CacheQueryOptions): Promise<boolean>{
+        const cache = await this.wait_until_ready()
+        return await cache.delete(request, options)
+    }
+
+    public async clear(): Promise<void>{
+        await this.ready_promise
+        await caches.delete(this.cache_name)
+        this.ready_promise = this.init_cache()
         await this.ready_promise
     }
 
-    public get is_ready(){
-        return this.cache_storage !== null
+    public async size(): Promise<number>{
+        const keys = await this.keys()
+        return keys.length
     }
 
-    public async get(request: RequestInfo | URL, options?: CacheQueryOptions){
-        await this.wait_until_ready()
-        if (!this.cache_storage) return
-        return await this.cache_storage.match(request, options)
-    }
-
-    public async set(request: RequestInfo | URL, response: Response){
-        await this.wait_until_ready()
-        if (!this.cache_storage) return
-        return await this.cache_storage.put(request, response)
-    }
-
-    public async delete(request: RequestInfo | URL, options?: CacheQueryOptions){
-        await this.wait_until_ready()
-        if (!this.cache_storage) return
-        return await this.cache_storage.delete(request, options)
-    }
-
-    public async get_keys(){
-        await this.wait_until_ready()
-        if (!this.cache_storage) return
-        return this.cache_storage.keys()
-    }
-
-    public get keys(){
-        return this.get_keys()
-    }
-
-    public async destroy(){
-        return await caches.delete(this.cache_storage_name).then(r => {
-            if (r){
-                console.log(`Destroyed cache storage: ${this.cache_storage_name}`)
-            } 
-            else {
-                console.log(`Failed to destroy cache storage: ${this.cache_storage_name}`)
-            }
-        })
+    public async keys(): Promise<readonly Request[]>{
+        const cache = await this.wait_until_ready()
+        return await cache.keys()
     }
 }

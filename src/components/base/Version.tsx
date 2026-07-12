@@ -6,7 +6,7 @@ import { useState } from "react"
 import { vibrate } from "@/infra/device.client"
 import type { ReactNode } from "react"
 import type { ComponentPropsWithRef } from "react"
-import { CacheStorageItemController } from "@/infra"
+import { CacheStorageMap } from "@/infra"
 
 type VersionProps = Omit<ComponentPropsWithRef<"div">, "children">
 
@@ -28,7 +28,7 @@ const Version = function Version({ className = "", ref, ...props }: VersionProps
                 onClick={() => {
                     vibrate()
                     set_cache_icon(string_icons.success)
-                    update(new CacheStorageItemController(static_resource_cache_name))
+                    update(new CacheStorageMap(static_resource_cache_name))
                         .then(() => setTimeout(() => set_cache_icon(string_icons.reset), 2000))
                 }}
             >

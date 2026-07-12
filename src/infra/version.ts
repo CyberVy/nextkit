@@ -1,17 +1,17 @@
 export const is_dev = process.env.NODE_ENV === "development"
 import { version as package_version } from "../../package.json"
-import type { CacheStorageItemController } from "./storage.client"
+import type { CacheStorageMap } from "./storage.client"
 const version = `${package_version}${is_dev ? "dev" : ""}`
 export default version
 export const static_resource_cache_name = "static-resource-cache"
-export async function update(static_resource_cache: CacheStorageItemController){
+export async function update(static_resource_cache: CacheStorageMap){
 
     const latest_index_html_response = await fetch("/")
     if (latest_index_html_response.status !== 200) return
 
     const latest_index_html_text = await latest_index_html_response.clone().text()
 
-    const keys = await static_resource_cache.keys
+    const keys = await static_resource_cache.keys()
     if (!keys) return
 
     for (const key of keys){

@@ -1,7 +1,7 @@
 import type { RefObject } from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { is_ios_device } from "@/infra/device.client"
-import { LocalStorageItemController, LocalForageItemController } from "@/infra/storage.client"
+import { LocalStorageMap, LocalForageMap } from "@/infra/storage.client"
 
 /** root_margin: expands or shrinks the viewport area used by IntersectionObserver.
  *
@@ -116,58 +116,45 @@ export function useOptimizedRotation(){
 
     return hidden
 }
-export function useStateWithLocalStorage<T>(init_value: T, key: string): [T, ((value: (T) | ((prev: T) => T)) => void)]{
-    const storage_controller = useRef(new LocalStorageItemController<T>(key)).current
-    const [state, set_state] = useState<T>(() => {
-        if (typeof window === "undefined") return init_value
-        let init_value_from_local_storage: T | null
-        if (typeof init_value !== "string"){
-            init_value_from_local_storage = storage_controller.get_object()
-        }
-        else {
-            init_value_from_local_storage = storage_controller.get_item() as T | null
-        }
-        return init_value_from_local_storage !== null ? init_value_from_local_storage : init_value
-    })
-    const is_first_mount = useRef(true)
+export function useStateWithLocalStorage<T>(init_value: T, key: string, namespace = "hooks"): [T, ((value: (T) | ((prev: T) => T)) => void)]{
+    const storage = useMemo(() => new LocalStorageMap<T>(namespace), [namespace])
+    const [state, set_state] = useState<T>(init_value)
+    const is_string_type = typeof init_value === "string"
+    const last_state = useRef<T>(state)
 
     useEffect(() => {
-        if (is_first_mount.current){
-            is_first_mount.current = false
-            return
-        }
-
-        if (state === undefined){
-            storage_controller.remove_item()
-        }
-        else {
-            if (typeof state !== "string"){
-                storage_controller.set_object(state)
-            } 
-            else {
-                storage_controller.set_item(state as unknown as string)
+        const load_value = () => {
+            const init_value_from_local_storage = storage.get(key)
+            if (init_value_from_local_storage !== undefined){
+                set_state(init_value_from_local_storage)
             }
         }
-    }, [key, state, storage_controller])
+        load_value()
+    }, [storage, key, is_string_type])
+
+    useEffect(() => {
+        if (state === last_state.current){
+            return
+        }
+        last_state.current = state
+
+        if (state === undefined){
+            storage.delete(key)
+        }
+        else {
+            storage.set(key, state)
+        }
+    }, [key, state, storage])
 
     return [state, set_state]
 }
 
-export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: string): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
-    const storage_controller = useRef(new LocalStorageItemController<T>(key)).current
-    const [state, set_state] = useState<T>(() => {
-        if (typeof window === "undefined") return init_value
-        let init_value_from_local_storage: T | null
-        if (typeof init_value !== "string"){
-            init_value_from_local_storage = storage_controller.get_object()
-        } 
-        else {
-            init_value_from_local_storage = storage_controller.get_item() as T | null
-        }
-        return init_value_from_local_storage !== null ? init_value_from_local_storage : init_value
-    })
+export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: string, namespace = "hooks"): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
+    const storage = useMemo(() => new LocalStorageMap<T>(namespace), [namespace])
+    const [state, set_state] = useState<T>(init_value)
     const state_ref = useRef<T>(state)
-    const is_first_mount = useRef(true)
+    const is_string_type = typeof init_value === "string"
+    const last_state = useRef<T>(state)
 
     const dispatch_func = useCallback((value: (T) | ((prev: T) => T)) => {
         if (typeof value !== "function"){
@@ -183,32 +170,37 @@ export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: st
     }, [])
 
     useEffect(() => {
-        if (is_first_mount.current){
-            is_first_mount.current = false
-            return
-        }
-
-        if (state === undefined){
-            storage_controller.remove_item()
-        } 
-        else {
-            if (typeof state !== "string"){
-                storage_controller.set_object(state)
-            } 
-            else {
-                storage_controller.set_item(state as unknown as string)
+        const load_value = () => {
+            const init_value_from_local_storage = storage.get(key)
+            if (init_value_from_local_storage !== undefined){
+                set_state(init_value_from_local_storage)
+                state_ref.current = init_value_from_local_storage
             }
         }
-    }, [key, state, storage_controller])
+        load_value()
+    }, [storage, key, is_string_type])
+
+    useEffect(() => {
+        if (state === last_state.current){
+            return
+        }
+        last_state.current = state
+
+        if (state === undefined){
+            storage.delete(key)
+        } 
+        else {
+            storage.set(key, state)
+        }
+    }, [key, state, storage])
 
     return [state_ref, dispatch_func, state]
 }
 
-export function useStateWithLocalForage<T>(init_value: T, key: string): [T, ((value: (T) | ((prev: T) => T)) => void)]{
+export function useStateWithLocalForage<T>(init_value: T, key: string, store_name = "keyval"): [T, ((value: (T) | ((prev: T) => T)) => void)]{
     const [state, set_state] = useState<T>(init_value)
-    const storage_controller = useRef(new LocalForageItemController<T>(key)).current
-    const init_value_ref = useRef(init_value)
-    init_value_ref.current = init_value
+    const storage = useMemo(() => new LocalForageMap<T>(store_name), [store_name])
+    const is_string_type = typeof init_value === "string"
     const is_initialized = useRef(false)
     const user_has_set_state = useRef(false)
 
@@ -218,18 +210,12 @@ export function useStateWithLocalForage<T>(init_value: T, key: string): [T, ((va
         user_has_set_state.current = false
 
         const load_value = async () => {
-            let init_value_from_storage: T | null
-            if (typeof init_value_ref.current !== "string"){
-                init_value_from_storage = await storage_controller.get_object()
-            }
-            else {
-                init_value_from_storage = await storage_controller.get_item() as T | null
-            }
+            const init_value_from_storage = await storage.get(key)
 
             if (!active) return
 
             if (!user_has_set_state.current){
-                if (init_value_from_storage !== null){
+                if (init_value_from_storage !== undefined){
                     set_state(init_value_from_storage)
                 }
                 is_initialized.current = true
@@ -240,7 +226,7 @@ export function useStateWithLocalForage<T>(init_value: T, key: string): [T, ((va
         return () => {
             active = false
         }
-    }, [key, storage_controller])
+    }, [key, storage, is_string_type])
 
     const set_state_wrapped = useCallback((value: (T) | ((prev: T) => T)) => {
         user_has_set_state.current = true
@@ -252,27 +238,21 @@ export function useStateWithLocalForage<T>(init_value: T, key: string): [T, ((va
         if (!is_initialized.current) return
 
         if (state === undefined){
-            storage_controller.remove_item()
+            storage.delete(key)
         }
         else {
-            if (typeof state !== "string"){
-                storage_controller.set_object(state)
-            } 
-            else {
-                storage_controller.set_item(state as unknown as string)
-            }
+            storage.set(key, state)
         }
-    }, [key, state, storage_controller])
+    }, [key, state, storage])
 
     return [state, set_state_wrapped]
 }
 
-export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: string): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
+export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: string, store_name = "keyval"): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
     const [state, set_state] = useState<T>(init_value)
     const state_ref = useRef<T>(init_value)
-    const storage_controller = useRef(new LocalForageItemController<T>(key)).current
-    const init_value_ref = useRef(init_value)
-    init_value_ref.current = init_value
+    const storage = useMemo(() => new LocalForageMap<T>(store_name), [store_name])
+    const is_string_type = typeof init_value === "string"
     const is_initialized = useRef(false)
     const user_has_set_state = useRef(false)
 
@@ -297,18 +277,12 @@ export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: str
         user_has_set_state.current = false
 
         const load_value = async () => {
-            let init_value_from_storage: T | null
-            if (typeof init_value_ref.current !== "string"){
-                init_value_from_storage = await storage_controller.get_object()
-            } 
-            else {
-                init_value_from_storage = await storage_controller.get_item() as T | null
-            }
+            const init_value_from_storage = await storage.get(key)
 
             if (!active) return
 
             if (!user_has_set_state.current){
-                if (init_value_from_storage !== null){
+                if (init_value_from_storage !== undefined){
                     set_state(init_value_from_storage)
                     state_ref.current = init_value_from_storage
                 }
@@ -320,23 +294,18 @@ export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: str
         return () => {
             active = false
         }
-    }, [key, storage_controller])
+    }, [key, storage, is_string_type])
 
     useEffect(() => {
         if (!is_initialized.current) return
 
         if (state === undefined){
-            storage_controller.remove_item()
+            storage.delete(key)
         } 
         else {
-            if (typeof state !== "string"){
-                storage_controller.set_object(state)
-            } 
-            else {
-                storage_controller.set_item(state as unknown as string)
-            }
+            storage.set(key, state)
         }
-    }, [key, state, storage_controller])
+    }, [key, state, storage])
 
     return [state_ref, dispatch_func, state]
 }

@@ -20,14 +20,20 @@ export class MigrationService{
     public static async generate_backup_data(
         app_id: string,
         app_version: string,
-        local_keys?: string[]
+        local_keys?: string[],
+        db_name = "localforage",
+        store_name = "keyval"
     ): Promise<string>{
         const payload: Record<string, any> = {}
 
         if (typeof window !== "undefined"){
-            const keys = local_keys || await localforage.keys()
+            const lf = localforage.createInstance({
+                name: db_name,
+                storeName: store_name
+            })
+            const keys = local_keys || await lf.keys()
             for (const key of keys){
-                const val = await localforage.getItem<string>(key)
+                const val = await lf.getItem<string>(key)
                 if (val !== null){
                     try {
                         payload[key] = JSON.parse(val)
@@ -57,7 +63,9 @@ export class MigrationService{
     public static async restore_from_backup_data(
         json_str: string,
         expected_app_id: string,
-        options: ImportOptions
+        options: ImportOptions,
+        db_name = "localforage",
+        store_name = "keyval"
     ): Promise<{ success: boolean; error?: string }>{
         try {
             const backup_package = JSON.parse(json_str) as BackupPackage
@@ -73,6 +81,10 @@ export class MigrationService{
             }
 
             const { mode, merge_rules = {} } = options
+            const lf = localforage.createInstance({
+                name: db_name,
+                storeName: store_name
+            })
 
             // 2. Write or Merge keys
             for (const key of Object.keys(payload)){
@@ -81,7 +93,7 @@ export class MigrationService{
                 // 2.1 Merge list mode
                 if (mode === "merge" && merge_rules[key] && Array.isArray(val)){
                     const rule = merge_rules[key]
-                    const current_str = await localforage.getItem<string>(key)
+                    const current_str = await lf.getItem<string>(key)
                     let current: any[] = []
                     if (current_str !== null){
                         try {
@@ -125,13 +137,13 @@ export class MigrationService{
                         }
                     }
 
-                    await localforage.setItem(key, JSON.stringify(merged))
+                    await lf.setItem(key, JSON.stringify(merged))
                     continue
                 }
 
                 // 2.2 Overwrite mode (or non-list keys)
                 const val_str = typeof val === "string" ? val : JSON.stringify(val)
-                await localforage.setItem(key, val_str)
+                await lf.setItem(key, val_str)
             }
 
             return { success: true }
@@ -145,10 +157,12 @@ export class MigrationService{
     public static async export_file(
         app_id: string,
         app_version: string,
-        local_keys?: string[]
+        local_keys?: string[],
+        db_name = "localforage",
+        store_name = "keyval"
     ): Promise<{ success: boolean, method?: "picker" | "share" | "download", error?: string }>{
         try {
-            const backup_json = await this.generate_backup_data(app_id, app_version, local_keys)
+            const backup_json = await this.generate_backup_data(app_id, app_version, local_keys, db_name, store_name)
             const filename = `${app_id}_backup_${new Date().toISOString().slice(0, 10)}.json`
 
             const is_mobile = is_ios_device() || is_android_device()
