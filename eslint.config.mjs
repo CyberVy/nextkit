@@ -164,7 +164,8 @@ const layeringRestrictionsRule = {
         },
         messages: {
             noComponentsToBlocks: "Layering violation: 'src/components/' must not depend on 'src/blocks/' or 'src/app/'.",
-            noUiInNonUi: "Layering violation: Non-UI file '{{file}}' must not import UI-related directory '{{imported}}'."
+            noUiInNonUi: "Layering violation: Non-UI file '{{file}}' must not import UI-related directory '{{imported}}'.",
+            noCoreInInfra: "Layering violation: 'src/infra/' must not depend on 'src/core/'."
         }
     },
     create(context) {
@@ -210,6 +211,16 @@ const layeringRestrictionsRule = {
                     context.report({
                         node,
                         messageId: "noComponentsToBlocks"
+                    });
+                }
+            }
+
+            // 3. src/infra/ must not depend on src/core/
+            if (relativeFile.startsWith("src/infra/")) {
+                if (resolved.startsWith("src/core/")) {
+                    context.report({
+                        node,
+                        messageId: "noCoreInInfra"
                     });
                 }
             }
