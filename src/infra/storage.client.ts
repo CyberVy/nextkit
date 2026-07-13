@@ -1,5 +1,4 @@
 import localforage from "localforage"
-import { migration_promise } from "@/core/storage_migration"
 
 export class LocalForageMap<V>{
     private lf_instance: LocalForage
@@ -12,25 +11,21 @@ export class LocalForageMap<V>{
     }
 
     public async get(key: string): Promise<V | undefined>{
-        await migration_promise
         const val = await this.lf_instance.getItem<V>(key)
         return val === null ? undefined : val
     }
 
     public async set(key: string, value: V): Promise<this>{
-        await migration_promise
         await this.lf_instance.setItem(key, value)
         return this
     }
 
     public async has(key: string): Promise<boolean>{
-        await migration_promise
         const keys = await this.lf_instance.keys()
         return keys.includes(key)
     }
 
     public async delete(key: string): Promise<boolean>{
-        await migration_promise
         const exists = await this.has(key)
         if (exists){
             await this.lf_instance.removeItem(key)
@@ -40,17 +35,14 @@ export class LocalForageMap<V>{
     }
 
     public async clear(): Promise<void>{
-        await migration_promise
         await this.lf_instance.clear()
     }
 
     public async size(): Promise<number>{
-        await migration_promise
         return await this.lf_instance.length()
     }
 
     public async keys(): Promise<string[]>{
-        await migration_promise
         return await this.lf_instance.keys()
     }
 }
