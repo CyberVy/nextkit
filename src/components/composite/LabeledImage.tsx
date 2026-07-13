@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { generate_cover_image } from "@/infra/data_generation_lib"
+import type { CoverImageOptions } from "@/infra/data_generation_lib"
 
 import { is_ios_device } from "@/infra/device.client"
 import { ContextMenu } from "@/components/composite/ContextMenuContainer"
@@ -25,6 +26,7 @@ export type LabeledImageProps = Omit<ComponentPropsWithRef<"div">, "children"> &
     on_click_image?: () => void
     context_menu?: Omit<ContextMenuProps, "children" | "disabled" | "on_click_trigger">
     className?: string
+    generated_cover_options?: CoverImageOptions
 }
 
 function LabeledImage({
@@ -44,6 +46,7 @@ function LabeledImage({
     image_props,
     image_class_name,
     className,
+    generated_cover_options,
     ref,
     ...props
 }: LabeledImageProps){
@@ -80,7 +83,7 @@ function LabeledImage({
 
         let ignore = false
 
-        generate_cover_image(alt || "", {}).then(url => {
+        generate_cover_image(alt || "", generated_cover_options || {}).then(url => {
             if (ignore){
                 URL.revokeObjectURL(url)
                 return
@@ -91,7 +94,7 @@ function LabeledImage({
         return () => {
             ignore = true
         }
-    }, [alt, src])
+    }, [alt, src, generated_cover_options])
 
     return (
         <ContextMenu
@@ -123,7 +126,7 @@ function LabeledImage({
                         onError={async event => {
                             image_props?.onError?.(event)
                             if (src && alt && !fallback_blob_url){
-                                await generate_cover_image(alt, {}).then(set_fallback_blob_url)
+                                await generate_cover_image(alt, generated_cover_options || {}).then(set_fallback_blob_url)
                             }
                             set_is_loaded(true)
                         }}

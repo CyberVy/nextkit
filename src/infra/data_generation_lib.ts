@@ -53,6 +53,41 @@ export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000){
     return "data:audio/wav;base64," + buffer.toString("base64")
 }
 
+function wrap_text(ctx: CanvasRenderingContext2D, text: string, max_width: number): string[]{
+    const words = text.split(" ")
+    const lines: string[] = []
+    let current_line = ""
+
+    for (const word of words){
+        if (ctx.measureText(word).width > max_width){
+            for (const char of word){
+                const test_line = current_line + char
+                if (ctx.measureText(test_line).width > max_width && current_line !== ""){
+                    lines.push(current_line)
+                    current_line = char
+                }
+                else {
+                    current_line = test_line
+                }
+            }
+            continue
+        }
+
+        const test_line = current_line ? `${current_line} ${word}` : word
+        if (ctx.measureText(test_line).width > max_width && current_line !== ""){
+            lines.push(current_line)
+            current_line = word
+        }
+        else {
+            current_line = test_line
+        }
+    }
+    if (current_line){
+        lines.push(current_line)
+    }
+    return lines
+}
+
 export function generate_cover_image(title: string, options:CoverImageOptions){
     const {
         width = 1024,
@@ -80,7 +115,16 @@ export function generate_cover_image(title: string, options:CoverImageOptions){
         ctx.font = `${fontSize}px ${fontFamily}`
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
-        ctx.fillText(title, width / 2, height / 2)
+
+        const max_width = width * 0.85
+        const lines = wrap_text(ctx, title, max_width)
+        const line_height = fontSize * 1.3
+        const total_height = (lines.length - 1) * line_height + fontSize
+        const start_y = (height - total_height) / 2 + fontSize / 2
+
+        lines.forEach((line, index) => {
+            ctx.fillText(line, width / 2, start_y + index * line_height)
+        })
     }
 
     return new Promise<string>(resolve => {
