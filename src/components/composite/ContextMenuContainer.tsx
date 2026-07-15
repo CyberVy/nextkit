@@ -57,13 +57,12 @@ function ContextMenu({
     }, [])
 
     const close_context_menu = useCallback(() => {
+        backdrop_press_active_ref.current = false
         set_show_context_menu(false)
     }, [])
 
     const open_context_menu = useCallback((client_x: number, client_y: number) => {
         if (disabled || !has_context_menu) return
-
-        backdrop_press_active_ref.current = false
         set_context_menu_point([client_x, client_y])
         set_context_menu_render_point([client_x, client_y])
         set_show_context_menu(true)

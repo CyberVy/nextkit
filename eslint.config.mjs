@@ -424,8 +424,8 @@ export default defineConfig([
             "@next/next/no-img-element": "off",
             "react-hooks/exhaustive-deps": "off",
             "react-hooks/set-state-in-effect": "off",
-            "react-hooks/immutability": "off",
-            "react-hooks/refs": "off",
+            "react-hooks/immutability": "warn",
+            "react-hooks/refs": "warn",
             "react/jsx-closing-bracket-location": ["warn", "line-aligned"],
             "react/jsx-curly-newline": ["warn", {
                 multiline: "consistent",
