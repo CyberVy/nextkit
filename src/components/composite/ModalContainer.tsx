@@ -34,7 +34,7 @@ function FullscreenModalContainer({ className = "", children, enable_scroll_butt
         <div
             ref={set_container_ref}
             className={[
-                "fixed left-0 top-0 w-screen overflow-auto [scrollbar-width:none] overscroll-none",
+                "fixed left-0 top-0 w-screen overflow-auto no-scrollbar overscroll-none",
                 "h-screen",
                 // Keep 100vh as baseline in iOS containers without browser chrome (e.g. standalone/PWA).
                 // The issue is timing of dynamic viewport-related layout metrics (not dvh itself): values like offsetTop can settle later.
@@ -80,7 +80,7 @@ function FloatingModalContainer({ className = "", children, ref, ...props }: Flo
             {...props}
         >
             <div className={[
-                "overflow-auto overscroll-none [scrollbar-width:none] h-full w-full rounded-[30px] border border-black/8 bg-black/2.5 p-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.46)]",
+                "overflow-auto overscroll-none no-scrollbar h-full w-full rounded-[30px] border border-black/8 bg-black/2.5 p-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.46)]",
                 "dark:border-white/10 dark:bg-white/[0.035] dark:text-white/88 dark:shadow-[0_14px_32px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(255,255,255,0.04)]"
             ].filter(Boolean).join(" ")}
             >
