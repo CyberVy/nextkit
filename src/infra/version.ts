@@ -46,7 +46,7 @@ export async function update(static_resource_cache: CacheStorageMap){
                             }).then(() => console.log(`Update: The legacy asset(${link}) is deleted.`))
                         }
                     })
-                }, 1500)
+                }, 15000)
 
                 // silent update
                 latest_relative_links.forEach((link) => {
