@@ -93,19 +93,8 @@ export class MigrationService{
                 // 2.1 Merge list mode
                 if (mode === "merge" && merge_rules[key] && Array.isArray(val)){
                     const rule = merge_rules[key]
-                    const current_str = await lf.getItem<string>(key)
-                    let current: any[] = []
-                    if (current_str !== null){
-                        try {
-                            const parsed = JSON.parse(current_str)
-                            if (Array.isArray(parsed)){
-                                current = parsed
-                            }
-                        }
-                        catch (e){
-                            console.error(`Failed to parse current key "${key}" for merging:`, e)
-                        }
-                    }
+                    const current_val = await lf.getItem<any[]>(key)
+                    const current = Array.isArray(current_val) ? current_val : []
 
                     const merged = [...current]
 
@@ -137,13 +126,12 @@ export class MigrationService{
                         }
                     }
 
-                    await lf.setItem(key, JSON.stringify(merged))
+                    await lf.setItem(key, merged)
                     continue
                 }
 
                 // 2.2 Overwrite mode (or non-list keys)
-                const val_str = typeof val === "string" ? val : JSON.stringify(val)
-                await lf.setItem(key, val_str)
+                await lf.setItem(key, val)
             }
 
             return { success: true }
