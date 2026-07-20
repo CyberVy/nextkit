@@ -83,9 +83,11 @@ const LazyContainer: FC<LazyContainerProps> = ({
                     // The element leaves the viewport
                     if (hasLoaded_ref.current && element_ref.current){
                         // If the element (or its parent) has display: none, skip unmounting to prevent layout collapse.
+                        // We use the optimized, reflow-free is_element_hidden implementation here.
                         if (is_element_hidden(element_ref.current)){
                             return
                         }
+                        const rect = entry.boundingClientRect
 
                         let should_keep_loaded = false
 
@@ -95,8 +97,6 @@ const LazyContainer: FC<LazyContainerProps> = ({
                             keep_loaded_left !== undefined ||
                             keep_loaded_right !== undefined
                         ){
-                            const rect = element_ref.current.getBoundingClientRect()
-                            
                             let element_absolute_top = 0
                             let element_absolute_bottom = 0
                             let element_absolute_left = 0
@@ -145,8 +145,8 @@ const LazyContainer: FC<LazyContainerProps> = ({
                             return
                         }
 
-                        const width = element_ref.current.offsetWidth
-                        const height = element_ref.current.offsetHeight
+                        const width = rect.width
+                        const height = rect.height
 
                         // Capture the actual rendered dimensions just before hiding the content
                         set_dimensions({

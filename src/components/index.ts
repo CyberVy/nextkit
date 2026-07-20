@@ -66,8 +66,8 @@ export {
 export { SearchIcon } from "./icons"
 
 // ViewSwitcher.tsx
-export { ViewSwitcher } from "./composite/ViewSwitcher"
-export type { View, ViewSwitcherProps } from "./composite/ViewSwitcher"
+export { ViewSwitcher, view_switcher_controller, ViewSwitcherController } from "./composite/ViewSwitcher"
+export type { View, ViewSwitcherProps, ViewSwitcherState, ViewSwitcherListener, SetToolbarVisibleOptions } from "./composite/ViewSwitcher"
 
 // Migration.tsx
 export { MigrationExport, MigrationMerge, MigrationOverwrite } from "./composite/Migration"
