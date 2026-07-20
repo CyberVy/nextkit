@@ -3,14 +3,18 @@
                 opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-:global(body:has(.hide-viewswitcher-toolbar:not(.hidden):not([hidden]))) .viewswitcher-toolbar-bottom {
+.toolbar-hidden.viewswitcher-toolbar-bottom {
     transform: translate(0%, 150%) scale(0.9) !important;
     opacity: 0 !important;
     pointer-events: none !important;
 }
 
-:global(body:has(.hide-viewswitcher-toolbar:not(.hidden):not([hidden]))) .viewswitcher-toolbar-top {
+.toolbar-hidden.viewswitcher-toolbar-top {
     transform: translate(0%, -150%) scale(0.9) !important;
     opacity: 0 !important;
     pointer-events: none !important;
+}
+
+.viewswitcher-toolbar-top {
+    top: calc(max(env(safe-area-inset-top), 12px) - var(--switcher-top-offset, 0px));
 }

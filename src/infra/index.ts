@@ -16,8 +16,8 @@ export {
 export { are_arrays_strictly_equal, are_arrays_content_equal } from "./filter"
 
 // gestures.client.ts
-export { create_press_gesture } from "./gestures.client"
-export type { PressCancelReason } from "./gestures.client"
+export { create_press_gesture, create_swipe_gesture } from "./gestures.client"
+export type { PressCancelReason, SwipeGestureParams } from "./gestures.client"
 
 // keep_alive.client.ts
 export { keep_alive_for_once, auto_keep_alive_by_video_states } from "./keep_alive.client"

@@ -190,3 +190,148 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
         reset_press,
     }
 }
+
+export interface SwipeGestureParams {
+    is_allowed: (direction: "left" | "right") => boolean
+    on_swipe_start: (direction: "left" | "right") => boolean
+    on_swipe_move: (diff_x: number) => void
+    on_swipe_end: (should_complete: boolean, target_delta: number) => void
+}
+
+export function create_swipe_gesture({
+    is_allowed,
+    on_swipe_start,
+    on_swipe_move,
+    on_swipe_end,
+}: SwipeGestureParams){
+    let bound_element: HTMLElement | null = null
+    let touch_start_ref: { x: number; y: number } | null = null
+    let is_swiping = false
+    let has_scrolled_vertically = false
+    let active_touch_target: HTMLElement | null = null
+
+    function remove_target_listeners(){
+        if (active_touch_target){
+            active_touch_target.removeEventListener("touchmove", on_touch_move)
+            active_touch_target.removeEventListener("touchend", on_touch_end)
+            active_touch_target.removeEventListener("touchcancel", on_touch_cancel)
+            active_touch_target = null
+        }
+    }
+
+    function on_touch_start(e: TouchEvent){
+        if (e.touches.length !== 1){
+            return
+        }
+
+        const touch = e.touches[0]
+        if (!touch || !e.target){
+            return
+        }
+
+        remove_target_listeners()
+
+        active_touch_target = e.target as HTMLElement
+        touch_start_ref = {
+            x: touch.clientX,
+            y: touch.clientY
+        }
+        is_swiping = false
+        has_scrolled_vertically = false
+
+        active_touch_target.addEventListener("touchmove", on_touch_move, { passive: false })
+        active_touch_target.addEventListener("touchend", on_touch_end, { passive: true })
+        active_touch_target.addEventListener("touchcancel", on_touch_cancel, { passive: true })
+    }
+
+    function on_touch_move(e: TouchEvent){
+        if (!touch_start_ref){
+            return
+        }
+
+        const touch = e.touches[0]
+        if (!touch){
+            return
+        }
+
+        const diff_x = touch.clientX - touch_start_ref.x
+        const diff_y = touch.clientY - touch_start_ref.y
+
+        if (!is_swiping){
+            if (!has_scrolled_vertically && Math.abs(diff_y) > 10 && Math.abs(diff_y) > Math.abs(diff_x)){
+                has_scrolled_vertically = true
+            }
+
+            if (!has_scrolled_vertically && Math.abs(diff_x) > Math.abs(diff_y) && Math.abs(diff_x) > 10){
+                const direction = diff_x < 0 ? "left" : "right"
+                if (is_allowed(direction)){
+                    const started = on_swipe_start(direction)
+                    if (started){
+                        touch_start_ref = {
+                            x: touch.clientX,
+                            y: touch.clientY
+                        }
+                        is_swiping = true
+                        if (e.cancelable){
+                            e.preventDefault()
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            if (e.cancelable){
+                e.preventDefault()
+            }
+            on_swipe_move(diff_x)
+        }
+    }
+
+    function on_touch_end(e: TouchEvent){
+        remove_target_listeners()
+
+        if (!is_swiping || !touch_start_ref){
+            touch_start_ref = null
+            is_swiping = false
+            return
+        }
+
+        const last_touch = e.changedTouches[0]
+        const diff_x = last_touch ? (last_touch.clientX - touch_start_ref.x) : 0
+        const width = bound_element?.getBoundingClientRect().width || window.innerWidth
+        const threshold = width * 0.2
+
+        const should_complete = Math.abs(diff_x) > threshold
+        const target_delta = should_complete
+            ? (diff_x > 0 ? width : -width)
+            : 0
+
+        on_swipe_end(should_complete, target_delta)
+
+        touch_start_ref = null
+        is_swiping = false
+    }
+
+    function on_touch_cancel(){
+        remove_target_listeners()
+
+        if (is_swiping){
+            on_swipe_end(false, 0)
+        }
+        touch_start_ref = null
+        is_swiping = false
+    }
+
+    return {
+        bind: (element: HTMLElement) => {
+            bound_element = element
+            element.addEventListener("touchstart", on_touch_start, { passive: true })
+
+            return () => {
+                element.removeEventListener("touchstart", on_touch_start)
+                remove_target_listeners()
+                bound_element = null
+            }
+        }
+    }
+}
