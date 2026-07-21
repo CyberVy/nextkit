@@ -24,6 +24,18 @@ export interface View<T extends string = string> {
     remember_scroll?: boolean
     /** Whether horizontal swipe transition is enabled for this view. Defaults to true. */
     swipe_enabled?: boolean | "left" | "right" | "both" | "none"
+    /** Control whether to hide the floating toolbar based on scroll position */
+    should_hide_toolbar?: boolean | ((scroll_y: number) => boolean)
+}
+
+function evaluate_toolbar_visibility(rule: boolean | ((scroll_y: number) => boolean) | undefined, scroll_y: number): boolean{
+    if (rule === undefined){
+        return true
+    }
+    if (typeof rule === "function"){
+        return !rule(scroll_y)
+    }
+    return !rule
 }
 
 export type ViewSwitcherProps<T extends string = string> = Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> & {
@@ -236,29 +248,59 @@ export function ViewSwitcher<T extends string = string>({
         }
     })
 
-    // Listen to scroll events and save position
+    // Listen to scroll events to:
+    // 1. Record scroll position of keep-alive views
+    // 2. Hide/show toolbar based on should_hide_toolbar config
     useEffect(() => {
         const handle_scroll = () => {
-            const { current_active_id: active_id, active_view_remember_scroll } = state_ref.current
+            const {
+                current_active_id: active_id,
+                active_view_remember_scroll,
+                views: current_views
+            } = state_ref.current
 
-            if (!active_view_remember_scroll) return
-            if (is_switching_view.current){
-                return
+            if (is_switching_view.current || is_transition_active.current) return
+            if (is_element_hidden(container_ref.current)) return
+
+            const current_scroll_y = window.scrollY
+
+            // 1. Record scroll position
+            if (active_view_remember_scroll){
+                scroll_positions.current[active_id] = current_scroll_y
             }
- 
-            // If the switcher container itself or any ancestor is hidden (display: none), do not record scroll
-            if (is_element_hidden(container_ref.current)){
-                return
+
+            // 2. Control toolbar visibility
+            const active_view_config = current_views.find((v) => v.id === active_id)
+            const rule = active_view_config?.should_hide_toolbar
+            if (rule !== undefined){
+                const is_visible = evaluate_toolbar_visibility(rule, current_scroll_y)
+                view_switcher_controller.set_toolbar_visible(id ?? "default", is_visible)
             }
-            if (is_transition_active.current){
-                return
-            }
-            scroll_positions.current[active_id] = window.scrollY
         }
 
         window.addEventListener("scroll", handle_scroll, { passive: true })
         return () => window.removeEventListener("scroll", handle_scroll)
-    }, [])
+    }, [id])
+
+    const active_view_config = views.find((v) => v.id === current_active_id)
+    const should_hide_toolbar = active_view_config?.should_hide_toolbar
+
+    // Sync toolbar visibility state based on target scroll position on view change or config change
+    useEffect(() => {
+        if (is_transition_active.current) return
+
+        if (should_hide_toolbar !== undefined){
+            // Direct target position prediction without reading window.scrollY physically
+            const target_scroll_y = active_view_remember_scroll
+                ? (scroll_positions.current[current_active_id] ?? 0)
+                : 0
+            const is_visible = evaluate_toolbar_visibility(should_hide_toolbar, target_scroll_y)
+            view_switcher_controller.set_toolbar_visible(id ?? "default", is_visible)
+        }
+        else{
+            view_switcher_controller.set_toolbar_visible(id ?? "default", true)
+        }
+    }, [id, current_active_id, should_hide_toolbar, active_view_remember_scroll, transition_state])
 
     // Restore scroll position when active view changes
     useLayoutEffect(() => {

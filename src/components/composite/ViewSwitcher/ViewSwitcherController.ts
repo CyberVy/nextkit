@@ -89,7 +89,7 @@ export class ViewSwitcherController{
     set_toolbar_visible(id: string, visible: boolean, options?: SetToolbarVisibleOptions){
         const current = this.states.get(id)
         
-        const wait_until_stable = options?.wait_until_stable ?? true
+        const wait_until_stable = options?.wait_until_stable ?? false
         
         if (wait_until_stable && current?.is_transitioning){
             this.pending_visibilities.set(id, visible)
