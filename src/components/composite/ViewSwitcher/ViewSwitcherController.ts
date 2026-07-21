@@ -4,7 +4,7 @@ export interface ViewSwitcherState {
     is_transitioning: boolean
     active_view_id: string
     target_view_id: string | null
-    delta_x: number
+    translation_x: number
 }
 
 export type ViewSwitcherListener = (state: ViewSwitcherState) => void
@@ -111,7 +111,7 @@ export class ViewSwitcherController{
                 is_transitioning: false,
                 active_view_id: "",
                 target_view_id: null,
-                delta_x: 0
+                translation_x: 0
             })
         }
     }
