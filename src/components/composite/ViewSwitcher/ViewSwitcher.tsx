@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useId } from "react"
 import type { ComponentPropsWithRef, ReactNode, TransitionEvent } from "react"
 import { is_ios_device, vibrate } from "@/infra/device.client"
 import { create_swipe_gesture } from "@/infra"
@@ -109,6 +109,9 @@ export function ViewSwitcher<T extends string = string>({
     ref,
     ...props
 }: ViewSwitcherProps<T>){
+    const default_id = useId()
+    const switcher_id = id ?? default_id
+
     // Uncontrolled state fallback
     const [internal_active_id, set_internal_active_id] = useState<T>(
         default_active_view_id ?? views[0]?.id
@@ -145,12 +148,10 @@ export function ViewSwitcher<T extends string = string>({
     const [controlled_toolbar_visible, set_controlled_toolbar_visible] = useState(true)
 
     useEffect(() => {
-        if (!id) return
-
         const unsubscribe = view_switcher_controller.register(
-            id,
+            switcher_id,
             {
-                id,
+                id: switcher_id,
                 is_toolbar_visible: true,
                 is_transitioning: transition_state !== null,
                 active_view_id: current_active_id,
@@ -166,18 +167,16 @@ export function ViewSwitcher<T extends string = string>({
         )
 
         return unsubscribe
-    }, [id])
+    }, [switcher_id])
 
     useEffect(() => {
-        if (!id) return
-
-        view_switcher_controller.update_state(id, {
+        view_switcher_controller.update_state(switcher_id, {
             is_transitioning: transition_state !== null,
             active_view_id: current_active_id,
             target_view_id: transition_state?.target_id ?? null,
             delta_x: transition_state?.delta_x ?? 0,
         })
-    }, [id, transition_state, current_active_id])
+    }, [switcher_id, transition_state, current_active_id])
 
     // Reusable scroll restoration helper that locks scroll tracking to prevent layout-shift corruption
     const restore_scroll_position = useCallback((view_id: T, scroll_y?: number) => {
@@ -274,13 +273,13 @@ export function ViewSwitcher<T extends string = string>({
             const rule = active_view_config?.should_hide_toolbar
             if (rule !== undefined){
                 const is_visible = evaluate_toolbar_visibility(rule, current_scroll_y)
-                view_switcher_controller.set_toolbar_visible(id ?? "default", is_visible)
+                view_switcher_controller.set_toolbar_visible(switcher_id, is_visible)
             }
         }
 
         window.addEventListener("scroll", handle_scroll, { passive: true })
         return () => window.removeEventListener("scroll", handle_scroll)
-    }, [id])
+    }, [switcher_id])
 
     const active_view_config = views.find((v) => v.id === current_active_id)
     const should_hide_toolbar = active_view_config?.should_hide_toolbar
@@ -295,12 +294,12 @@ export function ViewSwitcher<T extends string = string>({
                 ? (scroll_positions.current[current_active_id] ?? 0)
                 : 0
             const is_visible = evaluate_toolbar_visibility(should_hide_toolbar, target_scroll_y)
-            view_switcher_controller.set_toolbar_visible(id ?? "default", is_visible)
+            view_switcher_controller.set_toolbar_visible(switcher_id, is_visible)
         }
         else{
-            view_switcher_controller.set_toolbar_visible(id ?? "default", true)
+            view_switcher_controller.set_toolbar_visible(switcher_id, true)
         }
-    }, [id, current_active_id, should_hide_toolbar, active_view_remember_scroll, transition_state])
+    }, [switcher_id, current_active_id, should_hide_toolbar, active_view_remember_scroll, transition_state])
 
     // Restore scroll position when active view changes
     useLayoutEffect(() => {
