@@ -4,7 +4,6 @@ export interface ViewSwitcherState {
     is_transitioning: boolean
     active_view_id: string
     target_view_id: string | null
-    translation_x: number
 }
 
 export type ViewSwitcherListener = (state: ViewSwitcherState) => void
@@ -19,7 +18,7 @@ export class ViewSwitcherController{
     private global_hide_count = 0
     private pending_visibilities = new Map<string, boolean>()
 
-    register(id: string, initial_state: ViewSwitcherState, listener: ViewSwitcherListener): () => void{
+    public register(id: string, initial_state: ViewSwitcherState, listener: ViewSwitcherListener): () => void{
         const existing = this.states.get(id)
         if (existing){
             this.states.set(id, {
@@ -59,17 +58,28 @@ export class ViewSwitcherController{
         }
     }
 
-    update_state(id: string, updates: Partial<Omit<ViewSwitcherState, "id" | "is_toolbar_visible">>){
+    public update_state(id: string, updates: Partial<Omit<ViewSwitcherState, "id" | "is_toolbar_visible">>){
         const current = this.states.get(id)
         if (!current) return
 
         let changed = false
-        const updated = { ...current }
-        for (const [key, val] of Object.entries(updates)){
-            if ((updated as any)[key] !== val){
-                (updated as any)[key] = val
-                changed = true
-            }
+        let is_transitioning_changed = false
+        const updated: ViewSwitcherState = { ...current }
+
+        if (updates.is_transitioning !== undefined && updates.is_transitioning !== current.is_transitioning){
+            updated.is_transitioning = updates.is_transitioning
+            is_transitioning_changed = true
+            changed = true
+        }
+
+        if (updates.active_view_id !== undefined && updates.active_view_id !== current.active_view_id){
+            updated.active_view_id = updates.active_view_id
+            changed = true
+        }
+
+        if (updates.target_view_id !== undefined && updates.target_view_id !== current.target_view_id){
+            updated.target_view_id = updates.target_view_id
+            changed = true
         }
 
         if (changed){
@@ -82,11 +92,16 @@ export class ViewSwitcherController{
             }
 
             this.states.set(id, updated)
-            this.notify(id)
+            if (is_transitioning_changed){
+                this.notify_all()
+            }
+            else {
+                this.notify(id)
+            }
         }
     }
 
-    set_toolbar_visible(id: string, visible: boolean, options?: SetToolbarVisibleOptions){
+    public set_toolbar_visible(id: string, visible: boolean, options?: SetToolbarVisibleOptions){
         const current = this.states.get(id)
         
         const wait_until_stable = options?.wait_until_stable ?? false
@@ -110,28 +125,27 @@ export class ViewSwitcherController{
                 is_toolbar_visible: visible,
                 is_transitioning: false,
                 active_view_id: "",
-                target_view_id: null,
-                translation_x: 0
+                target_view_id: null
             })
         }
     }
 
-    show_toolbar(id: string, options?: SetToolbarVisibleOptions){
+    public show_toolbar(id: string, options?: SetToolbarVisibleOptions){
         this.set_toolbar_visible(id, true, options)
     }
 
-    hide_toolbar(id: string, options?: SetToolbarVisibleOptions){
+    public hide_toolbar(id: string, options?: SetToolbarVisibleOptions){
         this.set_toolbar_visible(id, false, options)
     }
 
-    hide_all_toolbars(){
+    public hide_all_toolbars(){
         this.global_hide_count++
         if (this.global_hide_count === 1){
             this.notify_all()
         }
     }
 
-    show_all_toolbars(){
+    public show_all_toolbars(){
         this.global_hide_count = Math.max(0, this.global_hide_count - 1)
         if (this.global_hide_count === 0){
             this.notify_all()
@@ -140,6 +154,29 @@ export class ViewSwitcherController{
 
     get_state(id: string): ViewSwitcherState | undefined{
         return this.states.get(id)
+    }
+
+    /**
+     * Checks if any registered ViewSwitcher instance (excluding optional exclude_id) is currently transitioning.
+     *
+     * CSS CONTAINING BLOCK ARCHITECTURAL NOTE:
+     * When a ViewSwitcher undergoes horizontal swipe transitions, its active/target view container
+     * is set to `position: fixed` with a `transform: translate3d(...)` property. According to CSS Specs,
+     * any element with a non-none `transform` becomes the Containing Block for its nested `position: fixed` descendants.
+     *
+     * If a nested/child ViewSwitcher initiates a transition while a parent/ancestor ViewSwitcher is still transitioning,
+     * the child's `fixed` positioning target shifts from the Viewport to the parent's container, causing vertical
+     * position offset calculation errors and visual flickering.
+     *
+     * This method acts as a cross-instance transition lock to prevent overlapping transition animations.
+     */
+    public has_any_transitioning(exclude_id?: string): boolean{
+        for (const [id, state] of this.states.entries()){
+            if (id !== exclude_id && state.is_transitioning){
+                return true
+            }
+        }
+        return false
     }
 
     private notify(id: string){
