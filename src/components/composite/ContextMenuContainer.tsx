@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { vibrate } from "@/infra/device.client"
 import { create_press_gesture } from "@/infra/gestures.client"
 import { FullscreenModalContainer } from "@/components/composite/ModalContainer"
@@ -42,6 +42,8 @@ function ContextMenu({
     const { sections, on_select, enable_vibration = true, ...remainingMenuProps } = menuProps
     const backdrop_press_active_ref = useRef(false)
     const context_menu_active_ref = useRef(false)
+    const menu_element_ref = useRef<HTMLDivElement | null>(null)
+
     const [show_context_menu, set_show_context_menu] = useState(false)
     const [context_menu_point, set_context_menu_point] = useState<[number, number]>([0, 0])
     const [context_menu_render_point, set_context_menu_render_point] = useState<[number, number]>([0, 0])
@@ -61,55 +63,59 @@ function ContextMenu({
         set_show_context_menu(false)
     }, [])
 
-    const open_context_menu = useCallback((client_x: number, client_y: number) => {
+    const open_context_menu = useCallback((client_x: number, client_y: number, target_el?: HTMLElement | null) => {
         if (disabled || !has_context_menu) return
-        set_context_menu_point([client_x, client_y])
-        set_context_menu_render_point([client_x, client_y])
+
+        let final_x = client_x
+        let final_y = client_y
+
+        if (final_x === 0 && final_y === 0 && target_el){
+            const rect = target_el.getBoundingClientRect()
+            final_x = Math.round(rect.left + rect.width / 2)
+            final_y = Math.round(rect.top + rect.height / 2)
+        }
+
+        set_context_menu_point([final_x, final_y])
+        set_context_menu_render_point([final_x, final_y])
         set_show_context_menu(true)
     }, [disabled, has_context_menu])
 
-    const set_context_menu_element = useCallback((context_menu_element: HTMLElement | null) => {
-        if (!context_menu_element) return
+    useLayoutEffect(() => {
+        if (!show_context_menu || !menu_element_ref.current) return
 
-        const next_context_menu_render_point = get_context_menu_render_point(context_menu_element, context_menu_point)
-        set_context_menu_render_point(current_context_menu_render_point => {
-            if (
-                current_context_menu_render_point[0] === next_context_menu_render_point[0]
-                && current_context_menu_render_point[1] === next_context_menu_render_point[1]
-            ){
-                return current_context_menu_render_point
+        const next_render_point = get_context_menu_render_point(menu_element_ref.current, context_menu_point)
+        set_context_menu_render_point(prev => {
+            if (prev[0] === next_render_point[0] && prev[1] === next_render_point[1]){
+                return prev
             }
-
-            return next_context_menu_render_point
+            return next_render_point
         })
-    }, [context_menu_point])
+    }, [show_context_menu, context_menu_point])
 
-    const press_gesture = useMemo(() => {
-        return create_press_gesture<PointerEvent<HTMLDivElement>>({
-            enabled: event => {
-                if (event.button !== 0) return false
-                if (on_click_trigger) return true
-                return (!disabled && has_context_menu)
+    const press_gesture = create_press_gesture<PointerEvent<HTMLDivElement>>({
+        enabled: event => {
+            if (event.button !== 0) return false
+            if (on_click_trigger) return true
+            return (!disabled && has_context_menu)
+        },
+        on_success: () => {
+            if (enable_vibration){
+                vibrate()
+            }
+        },
+        click: {
+            on_trigger: (event) => {
+                on_click_trigger?.(event)
             },
-            on_success: () => {
-                if (enable_vibration){
-                    vibrate()
-                }
+        },
+        long_press: has_context_menu && !disabled ? {
+            enabled: event => event.pointerType === "touch",
+            on_trigger: event => {
+                open_context_menu(event.clientX, event.clientY, event.currentTarget)
             },
-            click: {
-                on_trigger: (event) => {
-                    on_click_trigger?.(event)
-                },
-            },
-            long_press: has_context_menu && !disabled ? {
-                enabled: event => event.pointerType === "touch",
-                on_trigger: event => {
-                    open_context_menu(event.clientX, event.clientY)
-                },
-                ms: long_press_ms,
-            } : undefined,
-        })
-    }, [long_press_ms, has_context_menu, disabled, enable_vibration, on_click_trigger, open_context_menu])
+            ms: long_press_ms,
+        } : undefined,
+    })
 
     useEffect(() => {
         return () => {
@@ -138,7 +144,7 @@ function ContextMenu({
 
         event.preventDefault()
         event.stopPropagation()
-        open_context_menu(event.clientX, event.clientY)
+        open_context_menu(event.clientX, event.clientY, event.currentTarget)
     }
 
     return (
@@ -225,7 +231,7 @@ function ContextMenu({
                                 onTouchEnd={event => {
                                     event.stopPropagation()
                                 }}
-                                ref={set_context_menu_element}
+                                ref={menu_element_ref}
                                 sections={sections || []}
                                 enable_vibration={enable_vibration}
                                 on_select={(key, item) => {
