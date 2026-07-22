@@ -18,3 +18,7 @@
 .viewswitcher-toolbar-top {
     top: calc(max(env(safe-area-inset-top), 12px) - var(--switcher-top-offset, 0px));
 }
+
+.viewswitcher-toolbar-bottom {
+    bottom: calc(12px + var(--switcher-bottom-offset, 0px));
+}
