@@ -465,63 +465,78 @@ export function ViewSwitcher<T extends string = string>({
                 return false
             },
             on_swipe_move: (delta_x) => {
-                set_transition_state((prev) => {
-                    if (prev.status === "idle"){
-                        return prev
-                    }
+                const current_transition = state_ref.current.transition_state
+                if (current_transition.status !== "dragging") return
 
-                    const { active_view_index } = prev
-                    const { views, active_swipe_enabled } = state_ref.current
+                const { active_view_index, active_view_scroll_y } = current_transition
+                const { views, active_swipe_enabled } = state_ref.current
 
-                    const is_left_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "right"
-                    const is_right_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "left"
+                const is_left_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "right"
+                const is_right_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "left"
 
-                    let target_index = prev.target_view_index
-                    let target_id = prev.target_view_id
-                    let target_scroll_y = prev.target_view_scroll_y
-                    let actual_delta_x = delta_x
+                let target_index = current_transition.target_view_index
+                let target_id = current_transition.target_view_id
+                let target_scroll_y = current_transition.target_view_scroll_y
+                let actual_delta_x = delta_x
 
-                    if (delta_x < 0){
-                        // Dragging left (attempting to show next view)
-                        const has_next = active_view_index < views.length - 1
-                        if (has_next && is_left_allowed){
-                            const next_index = active_view_index + 1
-                            const next_id = views[next_index].id
-                            if (next_id !== target_id){
-                                target_index = next_index
-                                target_id = next_id
-                                target_scroll_y = scroll_positions_ref.current[next_id] ?? 0
-                            }
-                        }
-                        else {
-                            actual_delta_x = 0
+                if (delta_x < 0){
+                    // Dragging left (attempting to show next view)
+                    const has_next = active_view_index < views.length - 1
+                    if (has_next && is_left_allowed){
+                        const next_index = active_view_index + 1
+                        const next_id = views[next_index].id
+                        if (next_id !== target_id){
+                            target_index = next_index
+                            target_id = next_id
+                            target_scroll_y = scroll_positions_ref.current[next_id] ?? 0
                         }
                     }
-                    else if (delta_x > 0){
-                        // Dragging right (attempting to show prev view)
-                        const has_prev = active_view_index > 0
-                        if (has_prev && is_right_allowed){
-                            const prev_index = active_view_index - 1
-                            const prev_id = views[prev_index].id
-                            if (prev_id !== target_id){
-                                target_index = prev_index
-                                target_id = prev_id
-                                target_scroll_y = scroll_positions_ref.current[prev_id] ?? 0
-                            }
-                        }
-                        else {
-                            actual_delta_x = 0
+                    else {
+                        actual_delta_x = 0
+                    }
+                }
+                else if (delta_x > 0){
+                    // Dragging right (attempting to show prev view)
+                    const has_prev = active_view_index > 0
+                    if (has_prev && is_right_allowed){
+                        const prev_index = active_view_index - 1
+                        const prev_id = views[prev_index].id
+                        if (prev_id !== target_id){
+                            target_index = prev_index
+                            target_id = prev_id
+                            target_scroll_y = scroll_positions_ref.current[prev_id] ?? 0
                         }
                     }
+                    else {
+                        actual_delta_x = 0
+                    }
+                }
 
-                    return {
-                        ...prev,
-                        translation_x: actual_delta_x,
-                        target_view_index: target_index,
-                        target_view_id: target_id,
-                        target_view_scroll_y: target_scroll_y
-                    }
-                })
+                // If target view changed (direction reversed), update React state to switch target view
+                if (target_id !== current_transition.target_view_id){
+                    set_transition_state((prev) => {
+                        if (prev.status !== "dragging") return prev
+                        return {
+                            ...prev,
+                            translation_x: actual_delta_x,
+                            target_view_index: target_index,
+                            target_view_id: target_id,
+                            target_view_scroll_y: target_scroll_y
+                        }
+                    })
+                    return
+                }
+
+                // Direct DOM transform update during drag without triggering React re-renders
+                const active_el = view_elements_ref.current[current_transition.active_view_id]
+                const target_el = view_elements_ref.current[target_id]
+                if (active_el){
+                    active_el.style.transform = `translate3d(${actual_delta_x}px, 0px, 0)`
+                }
+                if (target_el){
+                    const vertical_offset = active_view_scroll_y - target_scroll_y
+                    target_el.style.transform = `translate3d(${actual_delta_x}px, ${vertical_offset}px, 0)`
+                }
             },
             on_swipe_end: (should_complete, target_delta_x) => {
                 const current_transition = state_ref.current.transition_state
