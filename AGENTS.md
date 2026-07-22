@@ -53,6 +53,7 @@
 - Path aliases: prefer `@/` for imports under `src/`.
 - WebView injection scripts: entry point is `src-tauri/src/inject.ts` (source) and `src-tauri/src/inject.js` (compiled output). Sub-modules under `src/inject/` may use `*.inject.ts` naming.
 - Type Definitions: Follow the proximity principle (define types close to where they are used). Avoid creating separate type files (like `types.ts` or `*.types.ts`) unless the type declarations are highly complex or repeatedly reused across multiple files.
+- Descriptive Naming: All variable, function, component, and file names must clearly reflect their purpose and responsibility. Use readable, self-explanatory names and strictly avoid generic, vague, or obscure names (e.g. prefer `is_sidebar_open` over `temp` or `flag`).
 
 ## UI & Dialog Rules
 
