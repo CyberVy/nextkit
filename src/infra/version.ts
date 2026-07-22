@@ -7,7 +7,7 @@ export const static_resource_cache_name = "static-resource-cache"
 export async function update(static_resource_cache: CacheStorageMap){
 
     const latest_index_html_response = await fetch("/")
-    if (latest_index_html_response.status !== 200) return
+    if (!latest_index_html_response.ok) return
 
     const latest_index_html_text = await latest_index_html_response.clone().text()
 
@@ -22,17 +22,37 @@ export async function update(static_resource_cache: CacheStorageMap){
 
             const cached_index_html_text = await cached_index_html_response.text()
             if (latest_index_html_text !== cached_index_html_text){
-                static_resource_cache.delete(key)
-                static_resource_cache.set(key, latest_index_html_response).then(() => console.log(`Update: Updated /.`))
-
                 const latest_relative_links = get_relative_links_from_html_string(latest_index_html_text)
                 const cached_relative_links: string[] = []
-                for (const key of keys){
-                    cached_relative_links.push(new URL(key.url).pathname + new URL(key.url).search)
+                for (const k of keys){
+                    cached_relative_links.push(new URL(k.url).pathname + new URL(k.url).search)
                 }
 
-                // delete legacy assets
-                // warning: all assets not in "/" will be deleted.
+                // 1. Silent update: fetch and cache all missing new static assets first
+                const fetch_promises = latest_relative_links
+                    .filter((link) => !cached_relative_links.includes(link))
+                    .map((link) => {
+                        return fetch(link).then(async (link_response) => {
+                            if (link_response.ok || link_response.type === "opaque"){
+                                await static_resource_cache.set(new URL(link, location.origin), link_response)
+                                console.log(`Update: Updated ${link}.`)
+                            }
+                            else {
+                                console.warn(`Update: Skip caching failed response for ${link} (status: ${link_response.status})`)
+                            }
+                        }).catch((err) => {
+                            console.error(`Update: Failed to update asset ${link}:`, err)
+                        })
+                    })
+
+                await Promise.all(fetch_promises)
+
+                // 2. Atomically update index.html only after all new assets are cached
+                await static_resource_cache.delete(key)
+                await static_resource_cache.set(key, latest_index_html_response)
+                console.log(`Update: Updated /.`)
+
+                // 3. Delete legacy assets after delay
                 setTimeout(() => {
                     cached_relative_links.forEach(async(link, index) => {
                         if (!latest_relative_links.includes(link)){
@@ -42,28 +62,10 @@ export async function update(static_resource_cache: CacheStorageMap){
                             static_resource_cache.delete(keys[index]).then(r => {
                                 if (r) return
                                 return static_resource_cache.delete(keys[index].url)
-                                
                             }).then(() => console.log(`Update: The legacy asset(${link}) is deleted.`))
                         }
                     })
-                }, 15000)
-
-                // silent update
-                latest_relative_links.forEach((link) => {
-                    if (!cached_relative_links.includes(link)){
-                        fetch(link).then(link_response => {
-                            if (link_response.status === 200){
-                                static_resource_cache.set(new URL(link, location.origin), link_response)
-                                    .then(() => console.log(`Update: Updated ${link}.`))
-                            } 
-                            else {
-                                console.warn(`Update: Skip caching failed response for ${link} (status: ${link_response.status})`)
-                            }
-                        }).catch(err => {
-                            console.error(`Update: Failed to update asset ${link}:`, err)
-                        })
-                    }
-                })
+                }, 5000)
             }
             break
         }
