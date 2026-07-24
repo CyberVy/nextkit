@@ -161,10 +161,6 @@ function ContextMenu({
                 onPointerUp={press_gesture.on_pointer_up}
                 onPointerCancel={press_gesture.on_pointer_cancel}
                 onPointerLeave={press_gesture.on_pointer_leave}
-                onTouchEnd={event => {
-                    // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
-                    event.preventDefault()
-                }}
             >
                 {children}
             </div>
@@ -195,12 +191,6 @@ function ContextMenu({
                                 if (!backdrop_press_active_ref.current) return
                                 close_context_menu()
                             }}
-                            onTouchEnd={event => {
-                                // Avoid the blue magnified outline shown by mobile WebKit after touch interactions.
-                                event.preventDefault()
-                                if (!backdrop_press_active_ref.current) return
-                                event.currentTarget.click()
-                            }}
                         >
                             <VerticalMenuBar
                                 className={"overscroll-none overflow-auto fixed w-[min(280px,calc(100vw-24px))]"}
@@ -226,9 +216,6 @@ function ContextMenu({
                                     context_menu_active_ref.current = false
                                 }}
                                 onClick={event => {
-                                    event.stopPropagation()
-                                }}
-                                onTouchEnd={event => {
                                     event.stopPropagation()
                                 }}
                                 ref={menu_element_ref}
