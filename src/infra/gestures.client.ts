@@ -1,5 +1,29 @@
 export type PressCancelReason = "move" | "leave" | "cancel"
 
+/**
+ * Helper to prevent mobile WebKit (iOS) blue magnifier outline on specific target elements.
+ * Only calls preventDefault on touchend when the event was triggered directly on the element itself (e.target === e.currentTarget).
+ * @param event touch event object
+ * @param should_trigger_click whether to supplement currentTarget.click() (defaults to true)
+ */
+export function prevent_ios_magnifier_on_target<TEvent extends { target: unknown; currentTarget: unknown; preventDefault?: () => void }>(
+    event: TEvent,
+    should_trigger_click = true
+){
+    if (event.target === event.currentTarget){
+        if (typeof event.preventDefault === "function"){
+            event.preventDefault()
+        }
+        if (should_trigger_click){
+            const el = event.currentTarget as { click?: () => void } | null
+            if (el && typeof el.click === "function"){
+                el.click()
+            }
+        }
+    }
+}
+
+
 type GestureEnabled<TEvent> = boolean | ((event: TEvent) => boolean)
 
 type PressGestureActionParams<TEvent extends { clientX: number, clientY: number }> = {
@@ -12,7 +36,7 @@ type LongPressParams<TEvent extends { clientX: number, clientY: number }> = Pres
     ms?: number
 }
 
-type PressGestureParams<TEvent extends { clientX: number, clientY: number }> = {
+type PressGestureParams<TEvent extends { clientX: number, clientY: number, stopPropagation?: () => void, preventDefault?: () => void }> = {
     click?: PressGestureActionParams<TEvent>
     on_cancel?: (reason: PressCancelReason, event: TEvent) => void
     on_success?: (event: TEvent) => void
@@ -208,14 +232,14 @@ export function create_swipe_gesture({
     let touch_start_ref: { x: number; y: number } | null = null
     let is_swiping = false
     let has_scrolled_vertically = false
-    let active_touch_target: HTMLElement | null = null
+    let is_listening_bound = false
 
-    function remove_target_listeners(){
-        if (active_touch_target){
-            active_touch_target.removeEventListener("touchmove", on_touch_move)
-            active_touch_target.removeEventListener("touchend", on_touch_end)
-            active_touch_target.removeEventListener("touchcancel", on_touch_cancel)
-            active_touch_target = null
+    function remove_bound_listeners(){
+        if (is_listening_bound && bound_element){
+            bound_element.removeEventListener("touchmove", on_touch_move, { capture: true })
+            bound_element.removeEventListener("touchend", on_touch_end, { capture: true })
+            bound_element.removeEventListener("touchcancel", on_touch_cancel, { capture: true })
+            is_listening_bound = false
         }
     }
 
@@ -229,9 +253,8 @@ export function create_swipe_gesture({
             return
         }
 
-        remove_target_listeners()
+        remove_bound_listeners()
 
-        active_touch_target = e.target as HTMLElement
         touch_start_ref = {
             x: touch.clientX,
             y: touch.clientY
@@ -239,9 +262,12 @@ export function create_swipe_gesture({
         is_swiping = false
         has_scrolled_vertically = false
 
-        active_touch_target.addEventListener("touchmove", on_touch_move, { passive: false })
-        active_touch_target.addEventListener("touchend", on_touch_end, { passive: true })
-        active_touch_target.addEventListener("touchcancel", on_touch_cancel, { passive: true })
+        if (bound_element){
+            bound_element.addEventListener("touchmove", on_touch_move, { passive: false, capture: true })
+            bound_element.addEventListener("touchend", on_touch_end, { passive: true, capture: true })
+            bound_element.addEventListener("touchcancel", on_touch_cancel, { passive: true, capture: true })
+            is_listening_bound = true
+        }
     }
 
     function on_touch_move(e: TouchEvent){
@@ -288,7 +314,7 @@ export function create_swipe_gesture({
     }
 
     function on_touch_end(e: TouchEvent){
-        remove_target_listeners()
+        remove_bound_listeners()
 
         if (!is_swiping || !touch_start_ref){
             touch_start_ref = null
@@ -313,7 +339,7 @@ export function create_swipe_gesture({
     }
 
     function on_touch_cancel(){
-        remove_target_listeners()
+        remove_bound_listeners()
 
         if (is_swiping){
             on_swipe_end(false, 0)
@@ -329,7 +355,7 @@ export function create_swipe_gesture({
 
             return () => {
                 element.removeEventListener("touchstart", on_touch_start)
-                remove_target_listeners()
+                remove_bound_listeners()
                 bound_element = null
             }
         }
