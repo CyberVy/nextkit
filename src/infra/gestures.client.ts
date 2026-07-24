@@ -232,17 +232,6 @@ export function create_swipe_gesture({
     let touch_start_ref: { x: number; y: number } | null = null
     let is_swiping = false
     let has_scrolled_vertically = false
-    let is_listening_bound = false
-
-    function remove_bound_listeners(){
-        if (is_listening_bound && bound_element){
-            bound_element.removeEventListener("touchmove", on_touch_move, { capture: true })
-            bound_element.removeEventListener("touchend", on_touch_end, { capture: true })
-            bound_element.removeEventListener("touchcancel", on_touch_cancel, { capture: true })
-            is_listening_bound = false
-        }
-    }
-
     function on_touch_start(e: TouchEvent){
         if (e.touches.length !== 1){
             return
@@ -253,21 +242,12 @@ export function create_swipe_gesture({
             return
         }
 
-        remove_bound_listeners()
-
         touch_start_ref = {
             x: touch.clientX,
             y: touch.clientY
         }
         is_swiping = false
         has_scrolled_vertically = false
-
-        if (bound_element){
-            bound_element.addEventListener("touchmove", on_touch_move, { passive: false, capture: true })
-            bound_element.addEventListener("touchend", on_touch_end, { passive: true, capture: true })
-            bound_element.addEventListener("touchcancel", on_touch_cancel, { passive: true, capture: true })
-            is_listening_bound = true
-        }
     }
 
     function on_touch_move(e: TouchEvent){
@@ -284,25 +264,26 @@ export function create_swipe_gesture({
         const diff_y = touch.clientY - touch_start_ref.y
 
         if (!is_swiping){
-            if (!has_scrolled_vertically && Math.abs(diff_y) > 10 && Math.abs(diff_y) > Math.abs(diff_x)){
-                has_scrolled_vertically = true
-            }
+            if (has_scrolled_vertically) return
 
-            if (!has_scrolled_vertically && Math.abs(diff_x) > Math.abs(diff_y) && Math.abs(diff_x) > 10){
-                const direction = diff_x < 0 ? "left" : "right"
-                if (is_allowed(direction)){
-                    const started = on_swipe_start(direction)
-                    if (started){
-                        touch_start_ref = {
-                            x: touch.clientX,
-                            y: touch.clientY
-                        }
-                        is_swiping = true
-                        if (e.cancelable){
-                            e.preventDefault()
-                        }
-                    }
+            const abs_x = Math.abs(diff_x)
+            const abs_y = Math.abs(diff_y)
+
+            if (abs_x <= 2 && abs_y <= 2) return
+
+            const direction = diff_x < 0 ? "left" : "right"
+            if (abs_x > abs_y * 1.5 && is_allowed(direction) && on_swipe_start(direction)){
+                touch_start_ref = {
+                    x: touch.clientX,
+                    y: touch.clientY
                 }
+                is_swiping = true
+                if (e.cancelable){
+                    e.preventDefault()
+                }
+            }
+            else {
+                has_scrolled_vertically = true
             }
         }
         else{
@@ -314,8 +295,6 @@ export function create_swipe_gesture({
     }
 
     function on_touch_end(e: TouchEvent){
-        remove_bound_listeners()
-
         if (!is_swiping || !touch_start_ref){
             touch_start_ref = null
             is_swiping = false
@@ -325,7 +304,7 @@ export function create_swipe_gesture({
         const last_touch = e.changedTouches[0]
         const diff_x = last_touch ? (last_touch.clientX - touch_start_ref.x) : 0
         const width = bound_element?.getBoundingClientRect().width || window.innerWidth
-        const threshold = width * 0.2
+        const threshold = Math.min(width * 0.2, 60)
 
         const should_complete = Math.abs(diff_x) > threshold
         const target_delta = should_complete
@@ -339,8 +318,6 @@ export function create_swipe_gesture({
     }
 
     function on_touch_cancel(){
-        remove_bound_listeners()
-
         if (is_swiping){
             on_swipe_end(false, 0)
         }
@@ -351,11 +328,16 @@ export function create_swipe_gesture({
     return {
         bind: (element: HTMLElement) => {
             bound_element = element
-            element.addEventListener("touchstart", on_touch_start, { passive: true })
+            element.addEventListener("touchstart", on_touch_start, { passive: false })
+            element.addEventListener("touchmove", on_touch_move, { passive: false })
+            element.addEventListener("touchend", on_touch_end, { passive: true })
+            element.addEventListener("touchcancel", on_touch_cancel, { passive: true })
 
             return () => {
                 element.removeEventListener("touchstart", on_touch_start)
-                remove_bound_listeners()
+                element.removeEventListener("touchmove", on_touch_move)
+                element.removeEventListener("touchend", on_touch_end)
+                element.removeEventListener("touchcancel", on_touch_cancel)
                 bound_element = null
             }
         }
