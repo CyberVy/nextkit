@@ -215,53 +215,141 @@ export function create_press_gesture<TEvent extends { clientX: number, clientY: 
     }
 }
 
-export interface SwipeGestureParams {
-    is_allowed: (direction: "left" | "right") => boolean
-    on_swipe_start: (direction: "left" | "right") => boolean
-    on_swipe_move: (diff_x: number) => void
-    on_swipe_end: (should_complete: boolean, target_delta: number) => void
+export type SwipeDirection = "left" | "right"
+
+export interface SwipeEndResult {
+    /** Swipe direction: "left" (dragged towards left, going next) or "right" (dragged towards right, going prev) */
+    direction: SwipeDirection
+    /** Total horizontal displacement from start position in px */
+    diff_x: number
+    /** Instantaneous swipe velocity in px/ms */
+    velocity_x: number
+    /** Recommended completion status based on combined distance and velocity */
+    should_complete: boolean
 }
 
-export function create_swipe_gesture({
-    is_allowed,
-    on_swipe_start,
-    on_swipe_move,
-    on_swipe_end,
-}: SwipeGestureParams){
+export type SwipeGestureEnabled<TEvent> = boolean | ((direction: SwipeDirection, event: TEvent) => boolean)
+
+export interface SwipeGestureParams<TEvent extends TouchEvent = TouchEvent> {
+    /** Whether the gesture is enabled. Can be boolean or predicate function. */
+    enabled?: SwipeGestureEnabled<TEvent>
+    /** Triggered when horizontal swipe locks in. Return false to cancel. */
+    on_start?: (direction: SwipeDirection, event: TEvent) => boolean | void
+    /** Triggered during swipe move with current horizontal displacement. */
+    on_move?: (diff_x: number, event: TEvent) => void
+    /** Triggered when swipe gesture ends on touch up or cancel. */
+    on_end?: (result: SwipeEndResult, event: TEvent) => void
+
+    /** Slope ratio threshold (Math.abs(dx) > Math.abs(dy) * angle_ratio). Default: 1.5 */
+    angle_ratio?: number
+    /** Minimum swipe distance in px to trigger should_complete. Default: 60 */
+    min_distance?: number
+    /** Minimum distance ratio relative to container width. Default: 0.2 */
+    distance_ratio?: number
+    /** Velocity threshold (px/ms) for quick flick detection. Default: 0.3 */
+    velocity_threshold?: number
+    /** Whether to stop event propagation when swiping. Default: false */
+    stop_propagation?: boolean | ((event: TEvent) => boolean)
+    /** Whether to prevent default scrolling when swiping. Default: true */
+    prevent_default?: boolean | ((event: TEvent) => boolean)
+}
+
+export function create_swipe_gesture<TEvent extends TouchEvent = TouchEvent>({
+    enabled,
+    on_start,
+    on_move,
+    on_end,
+    angle_ratio = 1.5,
+    min_distance = 60,
+    distance_ratio = 0.2,
+    velocity_threshold = 0.3,
+    stop_propagation = false,
+    prevent_default = true,
+}: SwipeGestureParams<TEvent>){
     let bound_element: HTMLElement | null = null
-    let touch_start_ref: { x: number; y: number } | null = null
+    let touch_start_ref: { x: number; y: number; time: number } | null = null
+    let touch_last_ref: { x: number; time: number } | null = null
+    let active_touch_id: number | null = null
     let is_swiping = false
     let has_scrolled_vertically = false
-    function on_touch_start(e: TouchEvent){
-        if (e.touches.length !== 1){
-            return
-        }
+    let current_direction: SwipeDirection = "right"
+    let last_diff_x = 0
 
-        const touch = e.touches[0]
-        if (!touch || !e.target){
-            return
-        }
-
-        touch_start_ref = {
-            x: touch.clientX,
-            y: touch.clientY
-        }
+    const reset_swipe = () => {
+        touch_start_ref = null
+        touch_last_ref = null
+        active_touch_id = null
         is_swiping = false
         has_scrolled_vertically = false
+        last_diff_x = 0
     }
 
-    function on_touch_move(e: TouchEvent){
-        if (!touch_start_ref){
+    const handle_event_options = (event: TEvent) => {
+        const should_stop = typeof stop_propagation === "function" ? stop_propagation(event) : stop_propagation
+        if (should_stop && typeof event.stopPropagation === "function"){
+            event.stopPropagation()
+        }
+        const should_prevent = typeof prevent_default === "function" ? prevent_default(event) : prevent_default
+        if (should_prevent && typeof event.preventDefault === "function" && event.cancelable !== false){
+            event.preventDefault()
+        }
+    }
+
+    const find_active_touch = (touch_list: TouchList): Touch | null => {
+        if (active_touch_id === null) return null
+
+        for (const touch of touch_list){
+            if (touch.identifier === active_touch_id){
+                return touch
+            }
+        }
+        return null
+    }
+
+    const on_touch_start = (event: TEvent) => {
+        if (event.touches && event.touches.length > 1){
             return
         }
 
-        const touch = e.touches[0]
+        const touch = event.touches ? event.touches[0] : null
         if (!touch){
+            reset_swipe()
             return
         }
 
+        const now = Date.now()
+        touch_start_ref = {
+            x: touch.clientX,
+            y: touch.clientY,
+            time: now,
+        }
+        touch_last_ref = {
+            x: touch.clientX,
+            time: now,
+        }
+        active_touch_id = touch.identifier
+        is_swiping = false
+        has_scrolled_vertically = false
+        last_diff_x = 0
+    }
+
+    const on_touch_move = (event: TEvent) => {
+        if (!touch_start_ref) return
+
+        const touch = find_active_touch(event.touches)
+        if (!touch) return
+
+        const now = Date.now()
         const diff_x = touch.clientX - touch_start_ref.x
         const diff_y = touch.clientY - touch_start_ref.y
+
+        // Track last move position sample for instantaneous velocity calculation (sample every >10ms)
+        if (!touch_last_ref || now - touch_last_ref.time >= 10){
+            touch_last_ref = {
+                x: touch.clientX,
+                time: now,
+            }
+        }
 
         if (!is_swiping){
             if (has_scrolled_vertically) return
@@ -271,75 +359,140 @@ export function create_swipe_gesture({
 
             if (abs_x <= 2 && abs_y <= 2) return
 
-            const direction = diff_x < 0 ? "left" : "right"
-            if (abs_x > abs_y * 1.5 && is_allowed(direction) && on_swipe_start(direction)){
-                touch_start_ref = {
-                    x: touch.clientX,
-                    y: touch.clientY
+            const direction: SwipeDirection = diff_x < 0 ? "left" : "right"
+            current_direction = direction
+
+            const is_enabled = typeof enabled === "function" ? enabled(direction, event) : (enabled ?? true)
+
+            if (abs_x > abs_y * angle_ratio && is_enabled){
+                const start_result = on_start?.(direction, event)
+                if (start_result === false){
+                    has_scrolled_vertically = true
+                    return
                 }
+
                 is_swiping = true
-                if (e.cancelable){
-                    e.preventDefault()
-                }
+                last_diff_x = diff_x
+                handle_event_options(event)
+                on_move?.(diff_x, event)
             }
             else {
                 has_scrolled_vertically = true
             }
         }
-        else{
-            if (e.cancelable){
-                e.preventDefault()
-            }
-            on_swipe_move(diff_x)
+        else {
+            last_diff_x = diff_x
+            handle_event_options(event)
+            on_move?.(diff_x, event)
         }
     }
 
-    function on_touch_end(e: TouchEvent){
+    const calculate_swipe_velocity = (event: TEvent): number => {
+        if (!touch_start_ref) return 0
+
+        const last_touch = find_active_touch(event.changedTouches) ?? find_active_touch(event.touches)
+        const end_x = last_touch ? last_touch.clientX : (touch_last_ref?.x ?? touch_start_ref.x)
+        const now = Date.now()
+
+        const time_since_last_move = now - (touch_last_ref ? touch_last_ref.time : touch_start_ref.time)
+        if (time_since_last_move <= 100 && touch_last_ref){
+            const last_dt = Math.max(1, now - touch_last_ref.time)
+            const last_dx = end_x - touch_last_ref.x
+            return last_dx / last_dt
+        }
+        return 0
+    }
+
+    const on_touch_end = (event: TEvent) => {
         if (!is_swiping || !touch_start_ref){
-            touch_start_ref = null
-            is_swiping = false
+            reset_swipe()
             return
         }
 
-        const last_touch = e.changedTouches[0]
-        const diff_x = last_touch ? (last_touch.clientX - touch_start_ref.x) : 0
-        const width = bound_element?.getBoundingClientRect().width || window.innerWidth
-        const threshold = Math.min(width * 0.2, 60)
+        if (event.touches && active_touch_id !== null){
+            let is_active_touch_still_down = false
+            for (const touch of event.touches){
+                if (touch.identifier === active_touch_id){
+                    is_active_touch_still_down = true
+                    break
+                }
+            }
+            if (is_active_touch_still_down){
+                return
+            }
+        }
 
-        const should_complete = Math.abs(diff_x) > threshold
-        const target_delta = should_complete
-            ? (diff_x > 0 ? width : -width)
-            : 0
+        handle_event_options(event)
 
-        on_swipe_end(should_complete, target_delta)
+        const last_touch = find_active_touch(event.changedTouches) ?? find_active_touch(event.touches)
+        const end_x = last_touch ? last_touch.clientX : (touch_last_ref?.x ?? touch_start_ref.x)
+        const diff_x = end_x - touch_start_ref.x
+        const velocity_x = calculate_swipe_velocity(event)
 
-        touch_start_ref = null
-        is_swiping = false
+        const container_width = bound_element?.getBoundingClientRect().width || window.innerWidth
+        const threshold = Math.min(container_width * distance_ratio, min_distance)
+
+        const final_direction: SwipeDirection = diff_x < 0 ? "left" : (diff_x > 0 ? "right" : current_direction)
+
+        const is_fast_flick = final_direction === "left"
+            ? velocity_x < -velocity_threshold
+            : velocity_x > velocity_threshold
+        const is_distance_enough = final_direction === "left"
+            ? diff_x < -threshold
+            : diff_x > threshold
+        const should_complete = is_fast_flick || is_distance_enough
+
+        on_end?.(
+            {
+                direction: final_direction,
+                diff_x,
+                velocity_x,
+                should_complete,
+            },
+            event
+        )
+
+        reset_swipe()
     }
 
-    function on_touch_cancel(){
+    const on_touch_cancel = (event: TEvent) => {
         if (is_swiping){
-            on_swipe_end(false, 0)
+            const velocity_x = calculate_swipe_velocity(event)
+
+            on_end?.(
+                {
+                    direction: current_direction,
+                    diff_x: last_diff_x,
+                    velocity_x,
+                    should_complete: false,
+                },
+                event
+            )
         }
-        touch_start_ref = null
-        is_swiping = false
+        reset_swipe()
     }
 
     return {
+        on_touch_start,
+        on_touch_move,
+        on_touch_end,
+        on_touch_cancel,
+        reset_swipe,
         bind: (element: HTMLElement) => {
             bound_element = element
-            element.addEventListener("touchstart", on_touch_start, { passive: false })
-            element.addEventListener("touchmove", on_touch_move, { passive: false })
-            element.addEventListener("touchend", on_touch_end, { passive: true })
-            element.addEventListener("touchcancel", on_touch_cancel, { passive: true })
+
+            element.addEventListener("touchstart", on_touch_start as EventListener, { passive: false })
+            element.addEventListener("touchmove", on_touch_move as EventListener, { passive: false })
+            element.addEventListener("touchend", on_touch_end as EventListener, { passive: true })
+            element.addEventListener("touchcancel", on_touch_cancel as EventListener, { passive: true })
 
             return () => {
-                element.removeEventListener("touchstart", on_touch_start)
-                element.removeEventListener("touchmove", on_touch_move)
-                element.removeEventListener("touchend", on_touch_end)
-                element.removeEventListener("touchcancel", on_touch_cancel)
+                element.removeEventListener("touchstart", on_touch_start as EventListener)
+                element.removeEventListener("touchmove", on_touch_move as EventListener)
+                element.removeEventListener("touchend", on_touch_end as EventListener)
+                element.removeEventListener("touchcancel", on_touch_cancel as EventListener)
                 bound_element = null
             }
-        }
+        },
     }
 }

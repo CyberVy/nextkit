@@ -108,7 +108,6 @@ interface ViewSwitcherContext<T extends string> {
     active_view_index: number
     views: View<T>[]
     transition_state: TransitionState<T>
-    handle_transition_end: (e?: TransitionEvent) => void
     is_transitioning: boolean
 }
 
@@ -116,9 +115,8 @@ interface ViewSwitcherContext<T extends string> {
  * Check if the document is currently in an iOS rubber-band overscroll phase (top or bottom).
  * Gesture interaction and toolbar click triggers are forbidden during overscroll to avoid visual jumping.
  */
-function is_in_overscroll(viewport_height: number): boolean{
-    const current_viewport_height = viewport_height || window.innerHeight
-    const max_scroll = Math.max(0, document.documentElement.scrollHeight - current_viewport_height)
+function is_in_overscroll(): boolean{
+    const max_scroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
     return window.scrollY < 0 || window.scrollY > max_scroll
 }
 
@@ -128,6 +126,28 @@ function is_in_overscroll(viewport_height: number): boolean{
 function evaluate_toolbar_visibility(rule: boolean | ((scroll_y: number) => boolean) | undefined, scroll_y: number): boolean{
     if (rule === undefined) return true
     return typeof rule === "function" ? !rule(scroll_y) : !rule
+}
+
+/**
+ * Calculates effective DOM translation X offset from raw swipe gesture displacement diff_x
+ * considering edge boundaries and view swipe permission settings.
+ */
+function calculate_effective_translation_x<T extends string>(
+    diff_x: number,
+    prev_view_id?: T,
+    next_view_id?: T,
+    active_swipe_enabled?: View<T>["swipe_enabled"]
+): number{
+    const is_left_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "right"
+    const is_right_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "left"
+
+    if (diff_x < 0 && (!next_view_id || !is_left_allowed)){
+        return 0
+    }
+    if (diff_x > 0 && (!prev_view_id || !is_right_allowed)){
+        return 0
+    }
+    return diff_x
 }
 
 /**
@@ -178,6 +198,7 @@ function compute_view_render_config<T extends string>(
             : 0
 
         style = {
+            pointerEvents: "none",
             position: "fixed",
             top: 0,
             left: 0,
@@ -255,15 +276,6 @@ export function ViewSwitcher<T extends string = string>({
     // Gesture transition state machine
     const [transition_state, set_transition_state] = useState<TransitionState<T>>({ status: "idle" })
     const is_transitioning = transition_state.status !== "idle"
-    const inner_height_ref = useRef<number>(0)
-
-    // Keep viewport height ref updated on window resize
-    useEffect(() => {
-        const handle_resize = () => { inner_height_ref.current = window.innerHeight }
-        handle_resize()
-        window.addEventListener("resize", handle_resize, { passive: true })
-        return () => window.removeEventListener("resize", handle_resize)
-    }, [])
 
     // Register with ViewSwitcherController for global toolbar visibility state
     const [is_toolbar_visible, set_is_toolbar_visible] = useState(true)
@@ -321,9 +333,9 @@ export function ViewSwitcher<T extends string = string>({
     const view_switcher_context = useMemo(() => {
         return {
             current_active_view_id, active_view_remember_scroll, active_swipe_enabled,
-            active_view_index, views, transition_state, handle_transition_end, is_transitioning
+            active_view_index, views, transition_state, is_transitioning
         }
-    }, [current_active_view_id, active_view_remember_scroll, active_swipe_enabled, active_view_index, views, transition_state, handle_transition_end, is_transitioning])
+    }, [current_active_view_id, active_view_remember_scroll, active_swipe_enabled, active_view_index, views, transition_state, is_transitioning])
 
     const view_switcher_context_ref = useRef<ViewSwitcherContext<T>>(view_switcher_context)
 
@@ -382,33 +394,16 @@ export function ViewSwitcher<T extends string = string>({
         const container_element = container_element_ref.current
         if (!container_element) return
 
-        const handle_touch_start = () => {
-            inner_height_ref.current = window.innerHeight
-        }
-
-        container_element.addEventListener("touchstart", handle_touch_start, { passive: true })
-
         const swipe_gesture = create_swipe_gesture({
-            is_allowed: (swipe_direction) => {
-                const { transition_state, handle_transition_end, active_swipe_enabled, active_view_index, views } = view_switcher_context_ref.current
+            enabled: (swipe_direction) => {
+                const { transition_state, active_swipe_enabled, active_view_index, views } = view_switcher_context_ref.current
 
                 // Forbid swipe during iOS overscroll/bounce
-                if (is_in_overscroll(inner_height_ref.current)) return false
+                if (is_in_overscroll()) return false
 
                 if (view_switcher_controller.has_any_transitioning(switcher_instance_id)) return false
 
-                if (transition_state.status === "released"){
-                    const final_scroll_y = (transition_state.is_switching_confirmed === false
-                        ? transition_state.active_view_scroll_y
-                        : transition_state.target_view_scroll_y) ?? 0
-                    const final_view_id = transition_state.is_switching_confirmed === false
-                        ? transition_state.active_view_id
-                        : transition_state.target_view_id
-
-                    handle_transition_end()
-                    if (final_view_id) restore_scroll_position(final_view_id, final_scroll_y)
-                }
-                else if (transition_state.status === "dragging"){
+                if (transition_state.status === "dragging"){
                     return false
                 }
 
@@ -422,7 +417,20 @@ export function ViewSwitcher<T extends string = string>({
 
                 return true
             },
-            on_swipe_start: () => {
+            on_start: () => {
+                const { transition_state } = view_switcher_context_ref.current
+
+                if (transition_state.status === "released"){
+                    const final_scroll_y = (transition_state.is_switching_confirmed === false
+                        ? transition_state.active_view_scroll_y
+                        : transition_state.target_view_scroll_y) ?? 0
+                    const final_view_id = transition_state.is_switching_confirmed === false
+                        ? transition_state.active_view_id
+                        : transition_state.target_view_id
+
+                    if (final_view_id) restore_scroll_position(final_view_id, final_scroll_y)
+                }
+
                 const { current_active_view_id, views, active_view_index } = view_switcher_context_ref.current
 
                 let prev_id: T | undefined
@@ -457,7 +465,7 @@ export function ViewSwitcher<T extends string = string>({
                         active_view_height: active_height,
                         active_view_scroll_y: window.scrollY,
                         active_view_top,
-                        viewport_height: inner_height_ref.current || window.innerHeight,
+                        viewport_height: window.innerHeight,
                         viewport_width: container_width,
                         prev_view_id: prev_id,
                         prev_view_scroll_y: prev_scroll_y,
@@ -468,23 +476,14 @@ export function ViewSwitcher<T extends string = string>({
                 }
                 return false
             },
-            on_swipe_move: (delta_x) => {
+            on_move: (delta_x) => {
                 const current_transition = view_switcher_context_ref.current.transition_state
                 if (current_transition.status !== "dragging") return
 
                 const { active_view_top, active_view_scroll_y, prev_view_id, prev_view_scroll_y, next_view_id, next_view_scroll_y, viewport_width } = current_transition
                 const { active_swipe_enabled } = view_switcher_context_ref.current
 
-                const is_left_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "right"
-                const is_right_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "left"
-
-                let actual_delta_x = delta_x
-                if (delta_x < 0 && (!next_view_id || !is_left_allowed)){
-                    actual_delta_x = 0
-                }
-                else if (delta_x > 0 && (!prev_view_id || !is_right_allowed)){
-                    actual_delta_x = 0
-                }
+                const effective_translation_x = calculate_effective_translation_x(delta_x, prev_view_id, next_view_id, active_swipe_enabled)
 
                 // Direct DOM transform updates during drag for high 120fps performance without React re-renders
                 const active_el = view_elements_ref.current[current_transition.active_view_id]
@@ -493,51 +492,52 @@ export function ViewSwitcher<T extends string = string>({
 
                 const active_view_top_offset = active_view_top - active_view_scroll_y
                 if (active_el){
-                    active_el.style.transform = `translate3d(${actual_delta_x}px, ${active_view_top_offset}px, 0)`
+                    active_el.style.transform = `translate3d(${effective_translation_x}px, ${active_view_top_offset}px, 0)`
                     active_el.style.setProperty("--switcher-top-offset", `${active_view_top_offset}px`)
                     active_el.style.setProperty("--switcher-bottom-offset", `${active_view_top_offset}px`)
                 }
                 if (prev_el){
                     const prev_view_top_offset = active_view_top - (prev_view_scroll_y ?? 0)
-                    prev_el.style.transform = `translate3d(${-viewport_width + actual_delta_x}px, ${prev_view_top_offset}px, 0)`
+                    prev_el.style.transform = `translate3d(${-viewport_width + effective_translation_x}px, ${prev_view_top_offset}px, 0)`
                     prev_el.style.setProperty("--switcher-top-offset", `${prev_view_top_offset}px`)
                     prev_el.style.setProperty("--switcher-bottom-offset", `${prev_view_top_offset}px`)
                 }
                 if (next_el){
                     const next_view_top_offset = active_view_top - (next_view_scroll_y ?? 0)
-                    next_el.style.transform = `translate3d(${viewport_width + actual_delta_x}px, ${next_view_top_offset}px, 0)`
+                    next_el.style.transform = `translate3d(${viewport_width + effective_translation_x}px, ${next_view_top_offset}px, 0)`
                     next_el.style.setProperty("--switcher-top-offset", `${next_view_top_offset}px`)
                     next_el.style.setProperty("--switcher-bottom-offset", `${next_view_top_offset}px`)
                 }
             },
-            on_swipe_end: (should_complete, target_delta_x) => {
+            on_end: ({ should_complete, direction, diff_x }) => {
                 const current_transition = view_switcher_context_ref.current.transition_state
                 if (current_transition.status === "idle") return
 
                 let final_should_complete = should_complete
-                const { active_view_index, prev_view_id, next_view_id } = current_transition
+                const { active_view_index, prev_view_id, next_view_id, viewport_width } = current_transition
 
                 let target_id: T | undefined
                 let target_index: number | undefined
                 let target_scroll_y: number | undefined
+                let target_translation_x = 0
 
                 if (should_complete){
-                    if (target_delta_x < 0 && next_view_id){
+                    if (direction === "left" && next_view_id){
                         target_id = next_view_id
                         target_index = active_view_index + 1
                         target_scroll_y = current_transition.next_view_scroll_y
+                        target_translation_x = -viewport_width
                     }
-                    else if (target_delta_x > 0 && prev_view_id){
+                    else if (direction === "right" && prev_view_id){
                         target_id = prev_view_id
                         target_index = active_view_index - 1
                         target_scroll_y = current_transition.prev_view_scroll_y
+                        target_translation_x = viewport_width
                     }
                     else {
                         final_should_complete = false
                     }
                 }
-
-                const actual_target_delta_x = final_should_complete ? target_delta_x : 0
 
                 if (final_should_complete && target_id){
                     if (active_view_id === undefined) set_internal_active_view_id(target_id)
@@ -548,21 +548,16 @@ export function ViewSwitcher<T extends string = string>({
                     if (active_scroll_y !== undefined) window.scrollTo(0, active_scroll_y)
                 }
 
-                // Check if current DOM transform is already within 1px of actual_target_delta_x.
-                // If so, CSS transition will not fire a transitionend event, so reset to idle immediately.
                 const active_el = view_elements_ref.current[current_transition.active_view_id]
-                let current_delta_x = 0
-                if (active_el && active_el.style.transform){
-                    const match = active_el.style.transform.match(/translate3d\(([-0-9.]+)px/)
-                    if (match && match[1]){
-                        current_delta_x = parseFloat(match[1])
-                    }
-                }
-
                 const prev_el = prev_view_id ? view_elements_ref.current[prev_view_id] : null
                 const next_el = next_view_id ? view_elements_ref.current[next_view_id] : null
 
-                if (Math.abs(current_delta_x - actual_target_delta_x) < 1){
+                const { active_swipe_enabled } = view_switcher_context_ref.current
+                const current_translation_x = calculate_effective_translation_x(diff_x, prev_view_id, next_view_id, active_swipe_enabled)
+
+                // Check if current DOM displacement is already within 1px of target_translation_x.
+                // If so, CSS transition will not fire a transitionend event, so reset to idle immediately.
+                if (Math.abs(current_translation_x - target_translation_x) < 1){
                     if (active_el){
                         active_el.style.transform = ""
                         active_el.style.removeProperty("--switcher-top-offset")
@@ -592,21 +587,21 @@ export function ViewSwitcher<T extends string = string>({
 
                 if (active_el){
                     active_el.style.transition = release_transition_css
-                    active_el.style.transform = `translate3d(${actual_target_delta_x}px, ${active_view_top_offset}px, 0)`
+                    active_el.style.transform = `translate3d(${target_translation_x}px, ${active_view_top_offset}px, 0)`
                     active_el.style.setProperty("--switcher-top-offset", `${active_view_top_offset}px`)
                     active_el.style.setProperty("--switcher-bottom-offset", `${active_view_top_offset}px`)
                 }
                 if (prev_el){
                     const prev_view_top_offset = current_transition.active_view_top - (current_transition.prev_view_scroll_y ?? 0)
                     prev_el.style.transition = release_transition_css
-                    prev_el.style.transform = `translate3d(${-current_transition.viewport_width + actual_target_delta_x}px, ${prev_view_top_offset}px, 0)`
+                    prev_el.style.transform = `translate3d(${-current_transition.viewport_width + target_translation_x}px, ${prev_view_top_offset}px, 0)`
                     prev_el.style.setProperty("--switcher-top-offset", `${prev_view_top_offset}px`)
                     prev_el.style.setProperty("--switcher-bottom-offset", `${prev_view_top_offset}px`)
                 }
                 if (next_el){
                     const next_view_top_offset = current_transition.active_view_top - (current_transition.next_view_scroll_y ?? 0)
                     next_el.style.transition = release_transition_css
-                    next_el.style.transform = `translate3d(${current_transition.viewport_width + actual_target_delta_x}px, ${next_view_top_offset}px, 0)`
+                    next_el.style.transform = `translate3d(${current_transition.viewport_width + target_translation_x}px, ${next_view_top_offset}px, 0)`
                     next_el.style.setProperty("--switcher-top-offset", `${next_view_top_offset}px`)
                     next_el.style.setProperty("--switcher-bottom-offset", `${next_view_top_offset}px`)
                 }
@@ -617,7 +612,7 @@ export function ViewSwitcher<T extends string = string>({
                     target_view_id: target_id,
                     target_view_index: target_index,
                     target_view_scroll_y: target_scroll_y,
-                    target_translation_x: actual_target_delta_x,
+                    target_translation_x,
                     is_switching_confirmed: final_should_complete,
                 })
             },
@@ -625,7 +620,6 @@ export function ViewSwitcher<T extends string = string>({
 
         const unbind_gesture = swipe_gesture.bind(container_element)
         return () => {
-            container_element.removeEventListener("touchstart", handle_touch_start)
             unbind_gesture()
         }
     }, [])
@@ -633,7 +627,7 @@ export function ViewSwitcher<T extends string = string>({
     // Toolbar navigation button click handler
     const handle_toolbar_click = (view_id: T) => {
         if (is_transitioning || view_id === current_active_view_id) return
-        if (is_in_overscroll(inner_height_ref.current)) return
+        if (is_in_overscroll()) return
         if (view_switcher_controller.has_any_transitioning(switcher_instance_id)) return
 
         if (active_view_id === undefined) set_internal_active_view_id(view_id)
