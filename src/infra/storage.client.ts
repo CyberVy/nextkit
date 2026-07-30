@@ -3,7 +3,7 @@ import localforage from "localforage"
 export class LocalForageMap<V>{
     private lf_instance: LocalForage
 
-    constructor(store_name = "keyval", db_name = "localforage"){
+    constructor(private readonly store_name = "keyval", private readonly db_name = "localforage"){
         this.lf_instance = localforage.createInstance({
             name: db_name,
             storeName: store_name

@@ -1,7 +1,6 @@
 import type { RefObject } from "react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { is_ios_device } from "@/infra/device.client"
-import { LocalStorageMap, LocalForageMap } from "@/infra/storage.client"
 
 /** root_margin: expands or shrinks the viewport area used by IntersectionObserver.
  *
@@ -116,177 +115,49 @@ export function useOptimizedRotation(){
 
     return hidden
 }
-export function useStateWithLocalStorage<T>(init_value: T, key: string, namespace = "hooks"): [T, ((value: (T) | ((prev: T) => T)) => void)]{
-    const storage = useMemo(() => new LocalStorageMap<T>(namespace), [namespace])
-    const [state, set_state] = useState<T>(init_value)
-    const is_string_type = typeof init_value === "string"
-    const last_state = useRef<T>(state)
 
-    useEffect(() => {
-        const load_value = () => {
-            const init_value_from_local_storage = storage.get(key)
-            if (init_value_from_local_storage !== undefined){
-                set_state(init_value_from_local_storage)
-            }
-        }
-        load_value()
-    }, [storage, key, is_string_type])
-
-    useEffect(() => {
-        if (state === last_state.current){
-            return
-        }
-        last_state.current = state
-
-        if (state === undefined){
-            storage.delete(key)
-        }
-        else {
-            storage.set(key, state)
-        }
-    }, [key, state, storage])
-
-    return [state, set_state]
+export interface PersistedParams<T> {
+    initial_value: T
+    on_load?: () => Promise<T | undefined> | T | undefined
+    on_save?: (value: T) => Promise<void> | void
 }
 
-export function useAutoSyncRefAndStateWithLocalStorage<T>(init_value: T, key: string, namespace = "hooks"): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
-    const storage = useMemo(() => new LocalStorageMap<T>(namespace), [namespace])
-    const [state, set_state] = useState<T>(init_value)
-    const state_ref = useRef<T>(state)
-    const is_string_type = typeof init_value === "string"
-    const last_state = useRef<T>(state)
-
-    const dispatch_func = useCallback((value: (T) | ((prev: T) => T)) => {
-        if (typeof value !== "function"){
-            set_state(value)
-            state_ref.current = value
-        } 
-        else {
-            const f = value as (prev: T) => T
-            const r = f(state_ref.current)
-            set_state(r)
-            state_ref.current = r
-        }
-    }, [])
-
-    useEffect(() => {
-        const load_value = () => {
-            const init_value_from_local_storage = storage.get(key)
-            if (init_value_from_local_storage !== undefined){
-                set_state(init_value_from_local_storage)
-                state_ref.current = init_value_from_local_storage
-            }
-        }
-        load_value()
-    }, [storage, key, is_string_type])
-
-    useEffect(() => {
-        if (state === last_state.current){
-            return
-        }
-        last_state.current = state
-
-        if (state === undefined){
-            storage.delete(key)
-        } 
-        else {
-            storage.set(key, state)
-        }
-    }, [key, state, storage])
-
-    return [state_ref, dispatch_func, state]
-}
-
-export function useStateWithLocalForage<T>(init_value: T, key: string, store_name = "keyval"): [T, ((value: (T) | ((prev: T) => T)) => void)]{
-    const [state, set_state] = useState<T>(init_value)
-    const storage = useMemo(() => new LocalForageMap<T>(store_name), [store_name])
-    const is_string_type = typeof init_value === "string"
+export function usePersistedState<T>({ initial_value, on_load, on_save }: PersistedParams<T>): [T, (value: T | ((prev: T) => T)) => void]{
+    const [state, set_state] = useState<T>(initial_value)
     const is_initialized = useRef(false)
     const user_has_set_state = useRef(false)
 
-    useEffect(() => {
-        let active = true
-        is_initialized.current = false
-        user_has_set_state.current = false
-
-        const load_value = async () => {
-            const init_value_from_storage = await storage.get(key)
-
-            if (!active) return
-
-            if (!user_has_set_state.current){
-                if (init_value_from_storage !== undefined){
-                    set_state(init_value_from_storage)
-                }
-                is_initialized.current = true
-            }
-        }
-        load_value()
-
-        return () => {
-            active = false
-        }
-    }, [key, storage, is_string_type])
-
-    const set_state_wrapped = useCallback((value: (T) | ((prev: T) => T)) => {
+    const set_state_wrapped = useCallback((value: T | ((prev: T) => T)) => {
         user_has_set_state.current = true
         is_initialized.current = true
         set_state(value)
     }, [])
 
     useEffect(() => {
-        if (!is_initialized.current) return
-
-        if (state === undefined){
-            storage.delete(key)
-        }
-        else {
-            storage.set(key, state)
-        }
-    }, [key, state, storage])
-
-    return [state, set_state_wrapped]
-}
-
-export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: string, store_name = "keyval"): [RefObject<T>, (value: (T) | ((prev: T) => T)) => void, T]{
-    const [state, set_state] = useState<T>(init_value)
-    const state_ref = useRef<T>(init_value)
-    const storage = useMemo(() => new LocalForageMap<T>(store_name), [store_name])
-    const is_string_type = typeof init_value === "string"
-    const is_initialized = useRef(false)
-    const user_has_set_state = useRef(false)
-
-    const dispatch_func = useCallback((value: (T) | ((prev: T) => T)) => {
-        user_has_set_state.current = true
-        is_initialized.current = true
-        if (typeof value !== "function"){
-            set_state(value)
-            state_ref.current = value
-        } 
-        else {
-            const f = value as (prev: T) => T
-            const r = f(state_ref.current)
-            set_state(r)
-            state_ref.current = r
-        }
-    }, [])
-
-    useEffect(() => {
         let active = true
+        if (!on_load){
+            is_initialized.current = true
+            return
+        }
+
         is_initialized.current = false
         user_has_set_state.current = false
 
         const load_value = async () => {
-            const init_value_from_storage = await storage.get(key)
-
-            if (!active) return
-
-            if (!user_has_set_state.current){
-                if (init_value_from_storage !== undefined){
-                    set_state(init_value_from_storage)
-                    state_ref.current = init_value_from_storage
+            try {
+                const loaded_val = await on_load()
+                if (!active) return
+                if (!user_has_set_state.current && loaded_val !== undefined){
+                    set_state(loaded_val)
                 }
-                is_initialized.current = true
+            }
+            catch (err){
+                console.error("Failed to load persisted state:", err)
+            }
+            finally {
+                if (active){
+                    is_initialized.current = true
+                }
             }
         }
         load_value()
@@ -294,29 +165,27 @@ export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: str
         return () => {
             active = false
         }
-    }, [key, storage, is_string_type])
+    }, [on_load])
 
     useEffect(() => {
-        if (!is_initialized.current) return
-
-        if (state === undefined){
-            storage.delete(key)
-        } 
-        else {
-            storage.set(key, state)
+        if (!is_initialized.current || !on_save) return
+        try {
+            const res = on_save(state)
+            if (res && typeof res.catch === "function"){
+                res.catch(err => console.error("Failed to save persisted state:", err))
+            }
         }
-    }, [key, state, storage])
+        catch (err){
+            console.error("Failed to save persisted state:", err)
+        }
+    }, [state, on_save])
 
-    return [state_ref, dispatch_func, state]
+    return [state, set_state_wrapped]
 }
 
-export function useAutoSyncRepositoryState<T>(
-    init_value: T,
-    load_fn: () => Promise<T>,
-    save_fn: (value: T) => Promise<void>
-): [RefObject<T>, (value: T | ((prev: T) => T)) => void, T]{
-    const [state, set_state] = useState<T>(init_value)
-    const state_ref = useRef<T>(init_value)
+export function usePersistedRefAndState<T>({ initial_value, on_load, on_save } : PersistedParams<T>): [RefObject<T>, (value: T | ((prev: T) => T)) => void, T]{
+    const [state, set_state] = useState<T>(initial_value)
+    const state_ref = useRef<T>(initial_value)
     const is_initialized = useRef(false)
     const user_has_set_state = useRef(false)
 
@@ -337,23 +206,30 @@ export function useAutoSyncRepositoryState<T>(
 
     useEffect(() => {
         let active = true
+        if (!on_load){
+            is_initialized.current = true
+            return
+        }
+
         is_initialized.current = false
         user_has_set_state.current = false
 
         const load_value = async () => {
             try {
-                const init_value_from_repo = await load_fn()
+                const loaded_val = await on_load()
                 if (!active) return
-                if (!user_has_set_state.current){
-                    if (init_value_from_repo !== undefined){
-                        set_state(init_value_from_repo)
-                        state_ref.current = init_value_from_repo
-                    }
-                    is_initialized.current = true
+                if (!user_has_set_state.current && loaded_val !== undefined){
+                    set_state(loaded_val)
+                    state_ref.current = loaded_val
                 }
             }
             catch (err){
-                console.error("Failed to load value from repository:", err)
+                console.error("Failed to load persisted state:", err)
+            }
+            finally {
+                if (active){
+                    is_initialized.current = true
+                }
             }
         }
         load_value()
@@ -361,14 +237,20 @@ export function useAutoSyncRepositoryState<T>(
         return () => {
             active = false
         }
-    }, [load_fn])
+    }, [on_load])
 
     useEffect(() => {
-        if (!is_initialized.current) return
-        save_fn(state).catch(err => {
-            console.error("Failed to save value to repository:", err)
-        })
-    }, [state, save_fn])
+        if (!is_initialized.current || !on_save) return
+        try {
+            const res = on_save(state)
+            if (res && typeof res.catch === "function"){
+                res.catch(err => console.error("Failed to save persisted state:", err))
+            }
+        }
+        catch (err){
+            console.error("Failed to save persisted state:", err)
+        }
+    }, [state, on_save])
 
     return [state_ref, dispatch_func, state]
 }

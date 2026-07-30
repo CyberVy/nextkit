@@ -56,11 +56,8 @@ export {
     useInViewport,
     useAutoSyncRefAndState,
     useOptimizedRotation,
-    useStateWithLocalStorage,
-    useAutoSyncRefAndStateWithLocalStorage,
-    useStateWithLocalForage,
-    useAutoSyncRefAndStateWithLocalForage,
-    useAutoSyncRepositoryState
+    usePersistedState,
+    usePersistedRefAndState
 } from "./hooks"
 
 // icons.tsx
