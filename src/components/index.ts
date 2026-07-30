@@ -59,7 +59,8 @@ export {
     useStateWithLocalStorage,
     useAutoSyncRefAndStateWithLocalStorage,
     useStateWithLocalForage,
-    useAutoSyncRefAndStateWithLocalForage
+    useAutoSyncRefAndStateWithLocalForage,
+    useAutoSyncRepositoryState
 } from "./hooks"
 
 // icons.tsx

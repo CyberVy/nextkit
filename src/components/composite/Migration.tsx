@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { NaiveButton } from "../base/Buttons"
 import { MigrationService } from "@/infra"
+import type { TargetDatabasesConfig } from "@/infra/migration.client"
 import { BodyPortal } from "@/components/base/Portal"
 import { FloatingModalContainer } from "@/components/composite/ModalContainer"
 import { AnimationContainer } from "@/components/animation/AnimationContainer"
@@ -105,7 +106,7 @@ function useMigrationAlert(){
 export type MigrationExportProps = {
     app_id: string
     app_version: string
-    local_keys?: string[]
+    target_databases: TargetDatabasesConfig
     width?: string
     height?: string
     icon?: React.ReactNode
@@ -115,7 +116,7 @@ export type MigrationExportProps = {
 export function MigrationExport({
     app_id,
     app_version,
-    local_keys,
+    target_databases,
     width = "112px",
     height = "30px",
     icon = <span className="text-xs font-medium">Export Backup</span>,
@@ -123,7 +124,7 @@ export function MigrationExport({
 }: MigrationExportProps){
 
     const handle_export = async () => {
-        await MigrationService.export_file(app_id, app_version, local_keys)
+        await MigrationService.export_file(app_id, app_version, target_databases)
     }
 
     return (

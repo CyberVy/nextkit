@@ -1,13 +1,16 @@
 import { is_ios_device, is_android_device } from "./device.client"
 import localforage from "localforage"
 
+export type TargetDatabasesConfig = Record<string, string[]>
+
 export interface BackupPackage {
     metadata: {
         app: string
         version: string
         exported_at: string
     }
-    payload: Record<string, any>
+    // db_name -> store_name -> { [key: string]: any }
+    databases: Record<string, Record<string, Record<string, any>>>
 }
 
 export interface ImportOptions {
@@ -20,28 +23,28 @@ export class MigrationService{
     public static async generate_backup_data(
         app_id: string,
         app_version: string,
-        local_keys?: string[],
-        db_name = "localforage",
-        store_name = "keyval"
+        target_databases: TargetDatabasesConfig
     ): Promise<string>{
-        const payload: Record<string, any> = {}
+        const databases: Record<string, Record<string, Record<string, any>>> = {}
 
         if (typeof window !== "undefined"){
-            const lf = localforage.createInstance({
-                name: db_name,
-                storeName: store_name
-            })
-            const keys = local_keys || await lf.keys()
-            for (const key of keys){
-                const val = await lf.getItem<string>(key)
-                if (val !== null){
-                    try {
-                        payload[key] = JSON.parse(val)
-                    }
-                    catch {
-                        payload[key] = val
-                    }
+            for (const db_name of Object.keys(target_databases)){
+                const store_names = target_databases[db_name] || []
+                const db_stores_data: Record<string, Record<string, any>> = {}
+
+                for (const store_name of store_names){
+                    const lf = localforage.createInstance({
+                        name: db_name,
+                        storeName: store_name
+                    })
+                    const store_data: Record<string, any> = {}
+                    await lf.iterate((val, key) => {
+                        store_data[key] = val
+                    })
+                    db_stores_data[store_name] = store_data
                 }
+
+                databases[db_name] = db_stores_data
             }
         }
 
@@ -51,21 +54,19 @@ export class MigrationService{
                 version: app_version,
                 exported_at: new Date().toISOString()
             },
-            payload
+            databases
         }
 
         return JSON.stringify(backup_package, null, 2)
     }
 
     /**
-     * Parse package and automatically perform deduplicated merge or overwrite onto localStorage
+     * Parse package and automatically write or merge databases & stores
      */
     public static async restore_from_backup_data(
         json_str: string,
         expected_app_id: string,
-        options: ImportOptions,
-        db_name = "localforage",
-        store_name = "keyval"
+        options: ImportOptions
     ): Promise<{ success: boolean; error?: string }>{
         try {
             const backup_package = JSON.parse(json_str) as BackupPackage
@@ -75,63 +76,66 @@ export class MigrationService{
                 return { success: false, error: "Invalid backup file: Application identifier mismatch" }
             }
 
-            const payload = backup_package.payload
-            if (!payload || typeof payload !== "object"){
-                return { success: false, error: "Invalid backup file: Missing payload" }
+            const databases = backup_package.databases
+            if (!databases || typeof databases !== "object"){
+                return { success: false, error: "Invalid backup file: Missing databases payload" }
             }
 
             const { mode, merge_rules = {} } = options
-            const lf = localforage.createInstance({
-                name: db_name,
-                storeName: store_name
-            })
 
-            // 2. Write or Merge keys
-            for (const key of Object.keys(payload)){
-                const val = payload[key]
+            // 2. Iterate through each database and store
+            for (const db_name of Object.keys(databases)){
+                const db_stores = databases[db_name]
+                if (!db_stores || typeof db_stores !== "object") continue
 
-                // 2.1 Merge list mode
-                if (mode === "merge" && merge_rules[key] && Array.isArray(val)){
-                    const rule = merge_rules[key]
-                    const current_val = await lf.getItem<any[]>(key)
-                    const current = Array.isArray(current_val) ? current_val : []
+                for (const store_name of Object.keys(db_stores)){
+                    const lf = localforage.createInstance({
+                        name: db_name,
+                        storeName: store_name
+                    })
 
-                    const merged = [...current]
-
-                    for (const item of val){
-                        const is_duplicate = merged.some(x => {
-                            if (Array.isArray(rule.identity_key)){
-                                return rule.identity_key.every(k => x[k] === item[k])
-                            } 
-                            else {
-                                if (typeof item !== "object" || item === null){
-                                    return x === item
-                                }
-                                const item_k = item[rule.identity_key]
-                                const x_k = x[rule.identity_key]
-                                if (item_k !== undefined){
-                                    return x_k === item_k
-                                }
-                                const item_id = item.id || item.video_id
-                                const x_id = x.id || x.video_id
-                                if (item_id !== undefined){
-                                    return x_id === item_id
-                                }
-                                return false
-                            }
-                        })
-
-                        if (!is_duplicate){
-                            merged.push(item)
-                        }
+                    if (mode === "overwrite"){
+                        await lf.clear()
                     }
 
-                    await lf.setItem(key, merged)
-                    continue
-                }
+                    const store_payload = db_stores[store_name]
+                    if (!store_payload || typeof store_payload !== "object") continue
 
-                // 2.2 Overwrite mode (or non-list keys)
-                await lf.setItem(key, val)
+                    for (const key of Object.keys(store_payload)){
+                        const val = store_payload[key]
+
+                        // Merge mode for array values with identity_key rule
+                        if (mode === "merge" && merge_rules[store_name] && Array.isArray(val)){
+                            const rule = merge_rules[store_name]
+                            const current_val = await lf.getItem<any[]>(key)
+                            const current = Array.isArray(current_val) ? current_val : []
+
+                            const merged = [...current]
+                            for (const item of val){
+                                const is_duplicate = merged.some(x => {
+                                    if (typeof item === "object" && item !== null && typeof x === "object" && x !== null){
+                                        if (Array.isArray(rule.identity_key)){
+                                            return rule.identity_key.every(k => x[k] === item[k])
+                                        }
+                                        const item_k = item[rule.identity_key]
+                                        const x_k = x[rule.identity_key]
+                                        return item_k !== undefined && x_k === item_k
+                                    }
+                                    return x === item
+                                })
+                                if (!is_duplicate){
+                                    merged.push(item)
+                                }
+                            }
+
+                            await lf.setItem(key, merged)
+                            continue
+                        }
+
+                        // Standard write
+                        await lf.setItem(key, val)
+                    }
+                }
             }
 
             return { success: true }
@@ -145,18 +149,15 @@ export class MigrationService{
     public static async export_file(
         app_id: string,
         app_version: string,
-        local_keys?: string[],
-        db_name = "localforage",
-        store_name = "keyval"
+        target_databases: TargetDatabasesConfig
     ): Promise<{ success: boolean, method?: "picker" | "share" | "download", error?: string }>{
         try {
-            const backup_json = await this.generate_backup_data(app_id, app_version, local_keys, db_name, store_name)
+            const backup_json = await this.generate_backup_data(app_id, app_version, target_databases)
             const filename = `${app_id}_backup_${new Date().toISOString().slice(0, 10)}.json`
 
             const is_mobile = is_ios_device() || is_android_device()
 
             if (is_mobile){
-                // Mobile route: Web Share API (native share sheet)
                 const blob = new Blob([backup_json], { type: "application/json" })
                 if (navigator.share){
                     try {
@@ -172,12 +173,11 @@ export class MigrationService{
                         if (share_err instanceof Error && share_err.name === "AbortError"){
                             return { success: false }
                         }
-                        console.warn("navigator.share failed, trying clipboard/download fallbacks:", share_err)
+                        console.warn("navigator.share failed, trying download fallback:", share_err)
                     }
                 }
             }
             else {
-                // Desktop route: File System Access API (showSaveFilePicker)
                 if (window.showSaveFilePicker){
                     try {
                         const handle = await window.showSaveFilePicker({
@@ -198,14 +198,12 @@ export class MigrationService{
                         if (picker_err instanceof Error && picker_err.name === "AbortError"){
                             return { success: false }
                         }
-                        console.warn("showSaveFilePicker failed, trying clipboard/download fallbacks:", picker_err)
+                        console.warn("showSaveFilePicker failed, trying download fallback:", picker_err)
                     }
                 }
             }
 
             const blob = new Blob([backup_json], { type: "application/json" })
-
-            // Anchor download fallback
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url
