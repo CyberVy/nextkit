@@ -309,3 +309,67 @@ export function useAutoSyncRefAndStateWithLocalForage<T>(init_value: T, key: str
 
     return [state_ref, dispatch_func, state]
 }
+
+export function useAutoSyncRepositoryState<T>(
+    init_value: T,
+    load_fn: () => Promise<T>,
+    save_fn: (value: T) => Promise<void>
+): [RefObject<T>, (value: T | ((prev: T) => T)) => void, T]{
+    const [state, set_state] = useState<T>(init_value)
+    const state_ref = useRef<T>(init_value)
+    const is_initialized = useRef(false)
+    const user_has_set_state = useRef(false)
+
+    const dispatch_func = useCallback((value: T | ((prev: T) => T)) => {
+        user_has_set_state.current = true
+        is_initialized.current = true
+        let next_val: T
+        if (typeof value !== "function"){
+            next_val = value
+        }
+        else {
+            const f = value as (prev: T) => T
+            next_val = f(state_ref.current)
+        }
+        set_state(next_val)
+        state_ref.current = next_val
+    }, [])
+
+    useEffect(() => {
+        let active = true
+        is_initialized.current = false
+        user_has_set_state.current = false
+
+        const load_value = async () => {
+            try {
+                const init_value_from_repo = await load_fn()
+                if (!active) return
+                if (!user_has_set_state.current){
+                    if (init_value_from_repo !== undefined){
+                        set_state(init_value_from_repo)
+                        state_ref.current = init_value_from_repo
+                    }
+                    is_initialized.current = true
+                }
+            }
+            catch (err){
+                console.error("Failed to load value from repository:", err)
+            }
+        }
+        load_value()
+
+        return () => {
+            active = false
+        }
+    }, [load_fn])
+
+    useEffect(() => {
+        if (!is_initialized.current) return
+        save_fn(state).catch(err => {
+            console.error("Failed to save value to repository:", err)
+        })
+    }, [state, save_fn])
+
+    return [state_ref, dispatch_func, state]
+}
+
