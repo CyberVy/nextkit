@@ -46,7 +46,7 @@ export class LocalForageMap<V>{
         return await this.lf_instance.keys()
     }
 
-    public async get_many(keys: string[]): Promise<Map<string, V>>{
+    public async get_batch(keys: string[]): Promise<Map<string, V>>{
         const result = new Map<string, V>()
         await Promise.all(
             keys.map(async (key) => {
