@@ -198,7 +198,6 @@ function compute_view_render_config<T extends string>(
             : 0
 
         style = {
-            pointerEvents: "none",
             position: "fixed",
             top: 0,
             left: 0,
@@ -404,6 +403,9 @@ export function ViewSwitcher<T extends string = string>({
                 if (view_switcher_controller.has_any_transitioning(switcher_instance_id)) return false
 
                 if (transition_state.status === "dragging"){
+                    // warning: iOS Webkit may lose events when the main thread is busy
+                    // this recover the views from getting stuck
+                    set_transition_state({ status: "idle" })
                     return false
                 }
 
@@ -572,10 +574,6 @@ export function ViewSwitcher<T extends string = string>({
                         next_el.style.transform = ""
                         next_el.style.removeProperty("--switcher-top-offset")
                         next_el.style.removeProperty("--switcher-bottom-offset")
-                    }
-
-                    if (final_should_complete && target_id && target_scroll_y !== undefined){
-                        restore_scroll_position(target_id, target_scroll_y)
                     }
 
                     set_transition_state({ status: "idle" })
