@@ -42,7 +42,7 @@ const LazyContainer: FC<LazyContainerProps> = ({
     // Track visibility of the element in the viewport
     const [is_visible, set_is_visible] = useState<boolean>(false)
     // Track if the element has been rendered at least once
-    const [has_loaded_once, set_has_loadedOnce] = useState<boolean>(false)
+    const [has_loaded_once, set_has_loaded_once] = useState<boolean>(false)
     // Store the exact dimensions before the element unmounts
     const [dimensions, set_dimensions] = useState<{ width: number; height: number } | null>(null)
   
@@ -76,7 +76,7 @@ const LazyContainer: FC<LazyContainerProps> = ({
                 if (entry.isIntersecting){
                     // The element enters the viewport
                     set_is_visible(true)
-                    set_has_loadedOnce(true)
+                    set_has_loaded_once(true)
                     hasLoaded_ref.current = true
                 }
                 else {

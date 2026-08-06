@@ -75,19 +75,19 @@ function useMigrationAlert(){
     const [open, set_open] = useState(false)
     const [title, set_title] = useState("")
     const [message, set_message] = useState("")
-    const [on_close_callback, set_on_close_callback] = useState<(() => void) | null>(null)
+    const [on_close, set_on_close] = useState<(() => void) | null>(null)
 
     const trigger_alert = (new_title: string, new_message: string, on_close?: () => void) => {
         set_title(new_title)
         set_message(new_message)
-        set_on_close_callback(() => on_close || null)
+        set_on_close(() => on_close || null)
         set_open(true)
     }
 
     const handle_close = () => {
         set_open(false)
-        if (on_close_callback){
-            on_close_callback()
+        if (on_close){
+            on_close()
         }
     }
 
