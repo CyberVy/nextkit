@@ -494,20 +494,14 @@ export function ViewSwitcher<T extends string = string>({
                 const active_view_top_offset = active_view_top - active_view_scroll_y
                 if (active_el){
                     active_el.style.transform = `translate3d(${effective_translation_x}px, ${active_view_top_offset}px, 0)`
-                    active_el.style.setProperty("--switcher-top-offset", `${active_view_top_offset}px`)
-                    active_el.style.setProperty("--switcher-bottom-offset", `${active_view_top_offset}px`)
                 }
                 if (prev_el){
                     const prev_view_top_offset = active_view_top - (prev_view_scroll_y ?? 0)
                     prev_el.style.transform = `translate3d(${-viewport_width + effective_translation_x}px, ${prev_view_top_offset}px, 0)`
-                    prev_el.style.setProperty("--switcher-top-offset", `${prev_view_top_offset}px`)
-                    prev_el.style.setProperty("--switcher-bottom-offset", `${prev_view_top_offset}px`)
                 }
                 if (next_el){
                     const next_view_top_offset = active_view_top - (next_view_scroll_y ?? 0)
                     next_el.style.transform = `translate3d(${viewport_width + effective_translation_x}px, ${next_view_top_offset}px, 0)`
-                    next_el.style.setProperty("--switcher-top-offset", `${next_view_top_offset}px`)
-                    next_el.style.setProperty("--switcher-bottom-offset", `${next_view_top_offset}px`)
                 }
             },
             on_end: ({ should_complete, direction, diff_x }) => {
@@ -559,21 +553,9 @@ export function ViewSwitcher<T extends string = string>({
                 // Check if current DOM displacement is already within 1px of target_translation_x.
                 // If so, CSS transition will not fire a transitionend event, so reset to idle immediately.
                 if (Math.abs(current_translation_x - target_translation_x) < 1){
-                    if (active_el){
-                        active_el.style.transform = ""
-                        active_el.style.removeProperty("--switcher-top-offset")
-                        active_el.style.removeProperty("--switcher-bottom-offset")
-                    }
-                    if (prev_el){
-                        prev_el.style.transform = ""
-                        prev_el.style.removeProperty("--switcher-top-offset")
-                        prev_el.style.removeProperty("--switcher-bottom-offset")
-                    }
-                    if (next_el){
-                        next_el.style.transform = ""
-                        next_el.style.removeProperty("--switcher-top-offset")
-                        next_el.style.removeProperty("--switcher-bottom-offset")
-                    }
+                    if (active_el) active_el.style.transform = ""
+                    if (prev_el) prev_el.style.transform = ""
+                    if (next_el) next_el.style.transform = ""
 
                     set_transition_state({ status: "idle" })
                     return
@@ -585,22 +567,16 @@ export function ViewSwitcher<T extends string = string>({
                 if (active_el){
                     active_el.style.transition = release_transition_css
                     active_el.style.transform = `translate3d(${target_translation_x}px, ${active_view_top_offset}px, 0)`
-                    active_el.style.setProperty("--switcher-top-offset", `${active_view_top_offset}px`)
-                    active_el.style.setProperty("--switcher-bottom-offset", `${active_view_top_offset}px`)
                 }
                 if (prev_el){
                     const prev_view_top_offset = current_transition.active_view_top - (current_transition.prev_view_scroll_y ?? 0)
                     prev_el.style.transition = release_transition_css
                     prev_el.style.transform = `translate3d(${-current_transition.viewport_width + target_translation_x}px, ${prev_view_top_offset}px, 0)`
-                    prev_el.style.setProperty("--switcher-top-offset", `${prev_view_top_offset}px`)
-                    prev_el.style.setProperty("--switcher-bottom-offset", `${prev_view_top_offset}px`)
                 }
                 if (next_el){
                     const next_view_top_offset = current_transition.active_view_top - (current_transition.next_view_scroll_y ?? 0)
                     next_el.style.transition = release_transition_css
                     next_el.style.transform = `translate3d(${current_transition.viewport_width + target_translation_x}px, ${next_view_top_offset}px, 0)`
-                    next_el.style.setProperty("--switcher-top-offset", `${next_view_top_offset}px`)
-                    next_el.style.setProperty("--switcher-bottom-offset", `${next_view_top_offset}px`)
                 }
 
                 set_transition_state((prev) => prev.status === "idle" ? prev : {
