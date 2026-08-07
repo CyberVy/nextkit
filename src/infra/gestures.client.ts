@@ -252,6 +252,8 @@ export interface SwipeGestureParams<TEvent extends TouchEvent = TouchEvent> {
     stop_propagation?: boolean | ((event: TEvent) => boolean)
     /** Whether to prevent default scrolling when swiping. Default: true */
     prevent_default?: boolean | ((event: TEvent) => boolean)
+    /** Whether to reset the X displacement reference point to 0 when swipe gesture is activated. Default: true */
+    reset_offset_on_start?: boolean
 }
 
 export function create_swipe_gesture<TEvent extends TouchEvent = TouchEvent>({
@@ -265,10 +267,12 @@ export function create_swipe_gesture<TEvent extends TouchEvent = TouchEvent>({
     velocity_threshold = 0.3,
     stop_propagation = false,
     prevent_default = true,
+    reset_offset_on_start = true,
 }: SwipeGestureParams<TEvent>){
     let bound_element: HTMLElement | null = null
     let touch_start_ref: { x: number; y: number; time: number } | null = null
     let touch_last_ref: { x: number; time: number } | null = null
+    let swipe_start_x: number | null = null
     let active_touch_id: number | null = null
     let is_swiping = false
     let has_scrolled_vertically = false
@@ -278,6 +282,7 @@ export function create_swipe_gesture<TEvent extends TouchEvent = TouchEvent>({
     const reset_swipe = () => {
         touch_start_ref = null
         touch_last_ref = null
+        swipe_start_x = null
         active_touch_id = null
         is_swiping = false
         has_scrolled_vertically = false
@@ -372,18 +377,23 @@ export function create_swipe_gesture<TEvent extends TouchEvent = TouchEvent>({
                 }
 
                 is_swiping = true
-                last_diff_x = diff_x
+                if (reset_offset_on_start){
+                    swipe_start_x = touch.clientX
+                }
+                const active_diff_x = swipe_start_x !== null ? touch.clientX - swipe_start_x : diff_x
+                last_diff_x = active_diff_x
                 handle_event_options(event)
-                on_move?.(diff_x, event)
+                on_move?.(active_diff_x, event)
             }
             else {
                 has_scrolled_vertically = true
             }
         }
         else {
-            last_diff_x = diff_x
+            const active_diff_x = swipe_start_x !== null ? touch.clientX - swipe_start_x : diff_x
+            last_diff_x = active_diff_x
             handle_event_options(event)
-            on_move?.(diff_x, event)
+            on_move?.(active_diff_x, event)
         }
     }
 
@@ -426,7 +436,7 @@ export function create_swipe_gesture<TEvent extends TouchEvent = TouchEvent>({
 
         const last_touch = find_active_touch(event.changedTouches) ?? find_active_touch(event.touches)
         const end_x = last_touch ? last_touch.clientX : (touch_last_ref?.x ?? touch_start_ref.x)
-        const diff_x = end_x - touch_start_ref.x
+        const diff_x = swipe_start_x !== null ? end_x - swipe_start_x : end_x - touch_start_ref.x
         const velocity_x = calculate_swipe_velocity(event)
 
         const container_width = bound_element?.getBoundingClientRect().width || window.innerWidth
