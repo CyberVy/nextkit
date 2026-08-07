@@ -421,6 +421,9 @@ export function ViewSwitcher<T extends string = string>({
             on_start: () => {
                 const { transition_state } = view_switcher_context_ref.current
 
+                let active_id = view_switcher_context_ref.current.current_active_view_id
+                let active_scroll_y = scroll_positions_ref.current[active_id] ?? window.scrollY
+
                 if (transition_state.status === "released"){
                     const final_scroll_y = (transition_state.is_switching_confirmed === false
                         ? transition_state.active_view_scroll_y
@@ -429,10 +432,16 @@ export function ViewSwitcher<T extends string = string>({
                         ? transition_state.active_view_id
                         : transition_state.target_view_id
 
-                    if (final_view_id) restore_scroll_position(final_view_id, final_scroll_y)
+                    if (final_view_id){
+                        active_id = final_view_id
+                        active_scroll_y = final_scroll_y
+                    }
                 }
 
-                const { current_active_view_id, views, active_view_index } = view_switcher_context_ref.current
+                const views = view_switcher_context_ref.current.views
+                const active_view_index = views.findIndex((v) => v.id === active_id)
+
+                if (active_view_index === -1) return false
 
                 let prev_id: T | undefined
                 let prev_scroll_y = 0
@@ -451,20 +460,23 @@ export function ViewSwitcher<T extends string = string>({
                 if (prev_id || next_id){
                     let active_height = 0
                     let active_view_top = 0
-                    const active_child = view_elements_ref.current[current_active_view_id]
+                    const active_child = view_elements_ref.current[active_id]
                     if (active_child){
                         active_height = active_child.offsetHeight
-                        active_view_top = active_child.getBoundingClientRect().top + window.scrollY
+                        const rect = active_child.getBoundingClientRect()
+                        active_view_top = transition_state.status !== "idle"
+                            ? (transition_state.active_view_top ?? 0)
+                            : rect.top + active_scroll_y
                     }
 
                     const container_width = container_element.clientWidth || window.innerWidth
 
                     set_transition_state({
                         status: "dragging",
-                        active_view_id: current_active_view_id,
+                        active_view_id: active_id,
                         active_view_index,
                         active_view_height: active_height,
-                        active_view_scroll_y: window.scrollY,
+                        active_view_scroll_y: active_scroll_y,
                         active_view_top,
                         viewport_height: window.innerHeight,
                         viewport_width: container_width,
@@ -537,10 +549,6 @@ export function ViewSwitcher<T extends string = string>({
                 if (final_should_complete && target_id){
                     if (active_view_id === undefined) set_internal_active_view_id(target_id)
                     on_view_change?.(target_id)
-                }
-                else {
-                    const active_scroll_y = current_transition.active_view_scroll_y
-                    if (active_scroll_y !== undefined) window.scrollTo(0, active_scroll_y)
                 }
 
                 const active_el = view_elements_ref.current[current_transition.active_view_id]
