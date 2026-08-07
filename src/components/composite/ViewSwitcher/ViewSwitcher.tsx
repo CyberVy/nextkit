@@ -203,7 +203,6 @@ function compute_view_render_config<T extends string>(
             left: 0,
             width: "100%",
             height: `${container_base_height + scroll_y}px`,
-            overflow: "hidden",
             transform: `translate3d(${view_base_x + released_target_x}px, ${view_top_offset}px, 0)`,
             transition: transition_state.status === "released" ? "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)" : "none",
             zIndex: 10,
