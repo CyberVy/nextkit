@@ -105,7 +105,7 @@ function StringInput({
                     type="button"
                     onClick={handle_clear}
                     className={`absolute flex items-center justify-center w-5 h-5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-black/40 dark:text-white/40 transition-colors cursor-pointer z-10 ${
-                        is_submit_visible ? "right-9" : "right-3"
+                        is_submit_visible ? "right-12" : "right-3"
                     }`}
                 >
                     ✕
@@ -117,7 +117,7 @@ function StringInput({
                     onClick={handle_submit}
                     className="absolute right-2.5 flex items-center justify-center p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-black/60 dark:text-white/60 transition-colors cursor-pointer z-10"
                 >
-                    {typeof submit_button === "boolean" ? <SearchIcon width={16} height={16} /> : submit_button}
+                    {typeof submit_button === "boolean" ? <SearchIcon width={24} height={24} /> : submit_button}
                 </button>
             )}
         </div>
