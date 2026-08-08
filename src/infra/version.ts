@@ -6,7 +6,7 @@ export default version
 export const static_resource_cache_name = "static-resource-cache"
 export async function update(static_resource_cache: CacheStorageMap){
 
-    const latest_index_html_response = await fetch("/")
+    const latest_index_html_response = await fetch("/", { cache: "no-store" })
     if (!latest_index_html_response.ok) return
 
     const latest_index_html_text = await latest_index_html_response.clone().text()
@@ -67,7 +67,6 @@ export async function update(static_resource_cache: CacheStorageMap){
                     })
                 }, 5000)
             }
-            break
         }
     }
 }
