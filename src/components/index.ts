@@ -35,8 +35,8 @@ export { FullscreenModalContainer, FloatingModalContainer } from "./composite/Mo
 // String.tsx
 export { AnimatedGlowText } from "./base/String"
 
-// StringInputs.tsx
-export { StringInput, SearchWordInput } from "./composite/StringInputs"
+// StringInput.tsx
+export { StringInput } from "./composite/StringInput"
 
 // Version.tsx
 export { Version } from "./base/Version"
