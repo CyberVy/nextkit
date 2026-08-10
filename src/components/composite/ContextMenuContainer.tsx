@@ -180,14 +180,18 @@ function ContextMenu({
                         <FullscreenModalContainer
                             onContextMenu={event => {
                                 event.preventDefault()
+                                event.stopPropagation()
                             }}
-                            onPointerDown={() => {
+                            onPointerDown={event => {
+                                event.stopPropagation()
                                 backdrop_press_active_ref.current = true
                             }}
-                            onTouchStart={() => {
+                            onTouchStart={event => {
+                                event.stopPropagation()
                                 backdrop_press_active_ref.current = true
                             }}
-                            onClick={() => {
+                            onClick={event => {
+                                event.stopPropagation()
                                 if (!backdrop_press_active_ref.current) return
                                 close_context_menu()
                             }}
