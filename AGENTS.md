@@ -11,6 +11,7 @@
   - Put framework-level or reusable primitives here.
   - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
 - `src/core/`: core domain logic, algorithms, and pure app logic.
+  - `controllers/`: centralized reactive state and data controllers.
 - `src/infra/`: infrastructure, platform adapters, Web IPC client, and utilities.
   - `*.client.ts`: browser/webview-only client integrations.
   - `web_ipc.client.ts`: frontend-side Tauri IPC adapter.
@@ -38,6 +39,102 @@
   - `icons/`: app icons for desktop/mobile targets.
   - `gen/`: generated native project artifacts.
   - `target/`: Rust build outputs (generated).
+
+## Data Architecture (Event-Driven Producer-Consumer)
+
+The application adheres to a strict **Event-Driven Producer-Consumer Architecture** separated into three distinct tiers:
+
+```
+┌────────────────────────────────────────────────────────┐
+│               Data Generator (No Events)               │
+│  - Pure asynchronous/synchronous data producers        │
+│  - API clients, parsers, transformers & algorithms     │
+└───────────────────────────┬────────────────────────────┘
+                            │ Raw data / Domain entities
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│               Data Controller (With Events)            │
+│  - Single source of truth (SSOT) & state orchestrator  │
+│  - Caching, deduplication, persistence & lifecycles    │
+│  - Implements `IController` snapshot & event dispatch  │
+└───────────────────────────┬────────────────────────────┘
+                            │ Reactive snapshots & events
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│               Data Consumer (UIs, Tests, APIs)         │
+│  - Reactive UI bindings (`useSyncExternalStore`)       │
+│  - Test runners, debug bridges & CLI utilities         │
+│  - External IPC handlers & platform adapters           │
+└────────────────────────────────────────────────────────┘
+```
+
+### 1. Data Generator (No Events)
+- **Definition**: Pure data-producing modules responsible for fetching raw inputs, parsing, algorithmic transformation, and low-level data extraction.
+- **Constraints**:
+  - **Zero Event Side-Effects**: Must NOT dispatch UI events, maintain external subscription registries, or couple with reactive view lifecycles.
+  - **Stateless & Deterministic**: Inputs produce direct outputs (via return values or Promises). Does not hold long-lived application state.
+
+### 2. Data Controller (With Events)
+- **Definition**: Centralized domain state coordinators and reactive event dispatchers (located under `src/core/controllers/`).
+- **Responsibilities**:
+  - Serves as the **Single Source of Truth (SSOT)** for domain state.
+  - Coordinates Data Generators, performs caching, indexing, deduplication, and persistence.
+  - Implements the standard reactive contract (`IController` / `IKeyedController`): providing `subscribe`, `get_snapshot`, and `get_server_snapshot`.
+  - Dispatches granular domain events (via `EventTarget`) when internal state mutates.
+- **Constraints**:
+  - Controllers own mutation logic and state lifetimes; all state transitions must occur through explicit controller methods.
+
+### 3. Data Consumer (UIs, Tests, External APIs)
+- **Definition**: Observers and consumers that react to controller state changes or invoke controller commands.
+- **Roles**:
+  - **UI Blocks & Components**: Subscribe to controller snapshots via `useSyncExternalStore` or event listeners for tearing-free rendering.
+  - **Tests & Debug Bridges**: Automated verification scripts and CLI evaluators querying snapshots or observing dispatched events.
+  - **Platform & IPC Adapters**: External message handlers dispatching payloads directly into controller actions.
+- **Constraints**:
+  - **Unidirectional Flow & Anti-Bypass**: Consumers must NEVER bypass a Data Controller to interact directly with a Data Generator when a Controller exists for that domain.
+  - **No Manual Sync**: UI consumers must avoid manual state synchronization inside effects; state must be derived from controller snapshots.
+
+## Storage Architecture (Normalized Index-Data Separation)
+
+The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a strict **Index-Data Separation and Normalized Storage Pattern**:
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   Index / Order Store                  │
+│  - Dedicated sequence and index registries ('orders')  │
+│  - Key: <collection_key> -> Value: string[] (ID list)  │
+└───────────────────────────┬────────────────────────────┘
+                            │ Sequence of Entity IDs
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                   Entity Data Stores                   │
+│  - Pure, strongly-typed domain records & caches        │
+│  - Key: <entity_id> -> Value: TEntity                  │
+└───────────────────────────┬────────────────────────────┘
+                            │ Batched hydration
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│               Data Controller & Snapshot               │
+│  - Assembles hydrated view entities into memory        │
+│  - Dispatches tearing-free reactive snapshots to UI    │
+└────────────────────────────────────────────────────────┘
+```
+
+### 1. Pure Entity Stores (No Magic/Index Keys)
+- **Primary Key Constraint**: Every entity store must use the entity's unique identifier (`id` or `<entity>_id`) as its key, and store exclusively pure entity records (`TEntity`).
+- **Zero Key Pollution**: Entity stores must NEVER mix metadata, index arrays, or magic keys (e.g., `"order"`) into the entity key-space.
+- **Single Type Integrity**: Store instances must be strongly typed without union types (e.g., `LocalForageMap<TRecord>`, strictly avoiding `LocalForageMap<TRecord | string[]>`).
+
+### 2. Dedicated Index & Sequence Stores
+- **Index Isolation**: Display sequences, custom orderings, and bounded ID queues must be isolated in dedicated index stores (e.g., `"orders"` store).
+- **Zero Write Amplification**: Reordering, promoting items to front, or re-indexing operations mutate ONLY the index store (`string[]`), eliminating cascading write overhead on individual entity records.
+
+### 3. Separation of Domain Entity vs User State
+- **Entity Purity**: Base domain entities must strictly represent objective, stateless domain metadata.
+- **Relational / Event Data**: User interactions, access logs, and custom associations must be decoupled into distinct relational records or dedicated domain controllers rather than injected directly into base entity models.
+
+### 4. Normalized Hydration Flow
+- **Hydration Responsibility**: Controllers read ordered ID lists from index stores, batch-hydrate entities from corresponding entity caches, and maintain immutable snapshots in memory for consumers.
 
 ## Naming Conventions (Statically enforced by ESLint)
 
