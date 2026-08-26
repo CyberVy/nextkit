@@ -30,6 +30,20 @@ export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:st
     return r
 }
 
+const BROWSER_FORBIDDEN_HEADERS = new Set([
+    "user-agent",
+    "referer",
+    "origin",
+    "cookie",
+    "cookie2",
+    "date",
+    "dnt",
+    "host",
+    "sec-fetch-dest",
+    "sec-fetch-mode",
+    "sec-fetch-site",
+])
+
 export async function smart_fetch(input : string | URL | Request, init?: RequestInit, cors_proxy = ""){
 
     let url: string = ""
@@ -78,14 +92,27 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
         })
     }
     else {
-        if (typeof window !== "undefined"){
-            if (init){
-                init.credentials = "include"
+        const fetch_headers = new Headers()
+        headers.forEach((v, k) => {
+            const lower_k = k.toLowerCase()
+            if (cors_proxy && BROWSER_FORBIDDEN_HEADERS.has(lower_k)){
+                fetch_headers.set(`x-proxy-${lower_k}`, v)
             }
             else {
-                init = new Request(url, { credentials: "include" })
+                fetch_headers.set(k, v)
             }
+        })
+
+        const fetch_init: RequestInit = {
+            ...init,
+            method: request_method,
+            headers: fetch_headers,
+            body: request_body,
         }
-        return await fetch(`${cors_proxy}${url}`, init)
+
+        if (typeof window !== "undefined"){
+            fetch_init.credentials = "include"
+        }
+        return await fetch(`${cors_proxy}${url}`, fetch_init)
     }
 }
