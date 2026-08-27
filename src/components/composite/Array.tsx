@@ -104,17 +104,15 @@ function ListToButtons({ list, on_select, className = "", ref, ...props }: ListT
             className={["select-none", className].filter(Boolean).join(" ")}
         >
             <NaiveButton
-                icon={
-                    <span className={`${selected_item ? highlight : ""} text-2xl`}>
-                        {string_icons.menu} {is_collapsed ? string_icons.down_triangle : string_icons.up_triangle} {list.length}
-                    </span>
-                }
+                className="w-27 h-9 border border-black/10 dark:border-white/10 rounded-2xl bg-black/5 dark:bg-white/5"
                 on_click={() => {
                     set_is_collapsed(!is_collapsed)
                 }}
-                width={"108px"}
-                height={"36px"}
-            />
+            >
+                <span className={`${selected_item ? highlight : ""} text-2xl`}>
+                    {string_icons.menu} {is_collapsed ? string_icons.down_triangle : string_icons.up_triangle} {list.length}
+                </span>
+            </NaiveButton>
 
             {<div className={`flex flex-wrap text-xs gap-1 py-2 pl-2 pr-2 max-h-25 overflow-auto ${is_collapsed ? 'hidden' : 'block'}`}>
                 {list.map((item, index) => (

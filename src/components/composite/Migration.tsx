@@ -43,12 +43,11 @@ function MigrationAlertModal({
                                 </span>
                             </div>
                             <NaiveButton
-                                className="backdrop-blur-none! bg-white/0! dark:bg-black/0!"
-                                width="28px"
-                                height="28px"
-                                icon={string_icons.close}
+                                className="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-xs"
                                 on_click={on_close}
-                            />
+                            >
+                                {string_icons.close}
+                            </NaiveButton>
                         </div>
                         {/* Content */}
                         <div className="text-xs text-black/70 dark:text-white/70 leading-relaxed mb-4 whitespace-pre-wrap grow flex items-center justify-center text-center px-2">
@@ -57,12 +56,11 @@ function MigrationAlertModal({
                         {/* Action */}
                         <div className="flex justify-end pt-2 border-t border-black/5 dark:border-white/5">
                             <NaiveButton
-                                className="backdrop-blur-none! bg-white/0! dark:bg-black/0!"
-                                width="64px"
-                                height="30px"
-                                icon={<span className="text-xs font-semibold">OK</span>}
+                                className="w-16 h-7.5 text-xs font-semibold border border-black/10 dark:border-white/10 rounded-xl bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
                                 on_click={on_close}
-                            />
+                            >
+                                OK
+                            </NaiveButton>
                         </div>
                     </div>
                 </FloatingModalContainer>
@@ -107,20 +105,16 @@ export type MigrationExportProps = {
     app_id: string
     app_version: string
     target_databases: TargetDatabasesConfig
-    width?: string
-    height?: string
-    icon?: React.ReactNode
     className?: string
+    children?: ReactNode
 }
 
 export function MigrationExport({
     app_id,
     app_version,
     target_databases,
-    width = "112px",
-    height = "30px",
-    icon = <span className="text-xs font-medium">Export Backup</span>,
-    className = ""
+    className = "w-28 h-7.5 border border-black/10 dark:border-white/10 rounded-xl bg-transparent hover:bg-black/5 dark:hover:bg-white/5",
+    children = <span className="text-xs font-medium">Export Backup</span>
 }: MigrationExportProps){
 
     const handle_export = async () => {
@@ -128,34 +122,27 @@ export function MigrationExport({
     }
 
     return (
-        <>
-            <NaiveButton
-                width={width}
-                height={height}
-                icon={icon}
-                on_click={handle_export}
-                className={className}
-            />
-        </>
+        <NaiveButton
+            className={className}
+            on_click={handle_export}
+        >
+            {children}
+        </NaiveButton>
     )
 }
 
 export type MigrationMergeProps = {
     app_id: string
     merge_rules?: Record<string, { identity_key: string | string[] }>
-    width?: string
-    height?: string
-    icon?: React.ReactNode
     className?: string
+    children?: ReactNode
 }
 
 export function MigrationMerge({
     app_id,
     merge_rules,
-    width = "64px",
-    height = "30px",
-    icon = <span className="text-xs font-medium">Merge</span>,
-    className = ""
+    className = "w-16 h-7.5 border border-black/10 dark:border-white/10 rounded-xl bg-transparent hover:bg-black/5 dark:hover:bg-white/5",
+    children = <span className="text-xs font-medium">Merge</span>
 }: MigrationMergeProps){
     const { trigger_alert, alert_element } = useMigrationAlert()
 
@@ -189,12 +176,11 @@ export function MigrationMerge({
     return (
         <>
             <NaiveButton
-                width={width}
-                height={height}
-                icon={icon}
-                on_click={handle_import}
                 className={className}
-            />
+                on_click={handle_import}
+            >
+                {children}
+            </NaiveButton>
             {alert_element}
         </>
     )
@@ -202,26 +188,14 @@ export function MigrationMerge({
 
 export type MigrationOverwriteProps = {
     app_id: string
-    width?: string
-    height?: string
-    icon?: React.ReactNode
-    background_color?: string
-    background_color_dark?: string
-    border_color?: string
-    border_color_dark?: string
     className?: string
+    children?: ReactNode
 }
 
 export function MigrationOverwrite({
     app_id,
-    width = "80px",
-    height = "30px",
-    icon = <span className="text-xs font-medium text-red-600 dark:text-red-400">Overwrite</span>,
-    background_color = "rgba(239, 68, 68, 0.1)",
-    background_color_dark = "rgba(239, 68, 68, 0.15)",
-    border_color = "rgba(239, 68, 68, 0.2)",
-    border_color_dark = "rgba(239, 68, 68, 0.25)",
-    className = ""
+    className = "w-20 h-7.5 border border-red-500/20 rounded-xl bg-transparent hover:bg-red-500/10",
+    children = <span className="text-xs font-medium text-red-600 dark:text-red-400">Overwrite</span>
 }: MigrationOverwriteProps){
     const { trigger_alert, alert_element } = useMigrationAlert()
 
@@ -254,16 +228,11 @@ export function MigrationOverwrite({
     return (
         <>
             <NaiveButton
-                width={width}
-                height={height}
-                icon={icon}
-                on_click={handle_import}
-                background_color={background_color}
-                background_color_dark={background_color_dark}
-                border_color={border_color}
-                border_color_dark={border_color_dark}
                 className={className}
-            />
+                on_click={handle_import}
+            >
+                {children}
+            </NaiveButton>
             {alert_element}
         </>
     )
