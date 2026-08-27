@@ -1,22 +1,26 @@
 "use client"
 
-import { is_ios_device } from "@/infra"
+import { is_ios_device, vibrate } from "@/infra"
 import { useEffect, useState } from "react"
 import type { ReactNode } from "react"
 
-export type IOSHapticsContainerProps = {
+export type HapticContainerProps = {
     children: ReactNode
+    disabled?: boolean
 }
 
-function IOSHapticsContainer({ children }: IOSHapticsContainerProps){
-    const [is_in_ios_device, set_is_in_ios_deivce] = useState(false)
+function HapticContainer({ children, disabled }: HapticContainerProps){
+    const [is_in_ios_device, set_is_in_ios_device] = useState(false)
+
     useEffect(() => {
-        set_is_in_ios_deivce(is_ios_device())
+        set_is_in_ios_device(is_ios_device())
     }, [])
+
     if (is_in_ios_device){
         return (
-            <label>
+            <label className="contents">
                 <input
+                    disabled={disabled}
                     onClick={event => event.stopPropagation()}
                     onTouchStart={event => event.stopPropagation()}
                     onTouchMove={event => event.stopPropagation()}
@@ -51,9 +55,18 @@ function IOSHapticsContainer({ children }: IOSHapticsContainerProps){
             </label>
         )
     }
-    else{
-        return children
-    }
+
+    return (
+        <label
+            className="contents"
+            onClickCapture={() => {
+                if (disabled) return
+                vibrate()
+            }}
+        >
+            {children}
+        </label>
+    )
 }
 
-export { IOSHapticsContainer }
+export { HapticContainer }

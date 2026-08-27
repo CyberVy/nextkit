@@ -4,6 +4,7 @@ export type { StringArrayProps } from "./composite/Array"
 
 // Buttons.tsx
 export { NaiveButton, ButtonGroup } from "./base/Buttons"
+export type { NaiveButtonProps, ButtonGroupProps, ButtonGroupItem } from "./base/Buttons"
 
 // Checkbox.tsx
 export { Checkbox } from "./base/Checkbox"

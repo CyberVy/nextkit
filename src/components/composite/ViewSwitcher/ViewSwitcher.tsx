@@ -3,7 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useId, useMemo } from "react"
 import type { ComponentPropsWithRef, ReactNode, TransitionEvent } from "react"
 import { create_swipe_gesture } from "@/infra"
-import { IOSHapticsContainer } from "@/components/base/IOSHapticContainer"
+import { HapticContainer } from "@/components/base/HapticContainer"
 import { join_classes } from "@/components/utils"
 import { view_switcher_controller } from "./ViewSwitcherController"
 import styles from "./ViewSwitcher.module.css"
@@ -681,7 +681,7 @@ export function ViewSwitcher<T extends string = string>({
                                     disabled={is_transitioning || is_active || has_other_transitioning}
                                     onClick={() => handle_toolbar_click(view.id)}
                                 >
-                                    <IOSHapticsContainer>
+                                    <HapticContainer>
                                         <span
                                             className={join_classes(
                                                 "relative align-middle inline-block px-4 overflow-hidden rounded-[18px]",
@@ -716,7 +716,7 @@ export function ViewSwitcher<T extends string = string>({
                                                 </span>
                                             </span>
                                         </span>
-                                    </IOSHapticsContainer>
+                                    </HapticContainer>
                                 </button>
                             )
                         })}
