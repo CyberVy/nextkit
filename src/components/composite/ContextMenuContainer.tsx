@@ -185,6 +185,7 @@ function ContextMenu({
                             onPointerDown={event => {
                                 event.stopPropagation()
                                 backdrop_press_active_ref.current = true
+                                close_context_menu()
                             }}
                             onTouchStart={event => {
                                 event.stopPropagation()
@@ -197,7 +198,7 @@ function ContextMenu({
                             }}
                         >
                             <VerticalMenuBar
-                                className={"overscroll-none overflow-auto fixed w-[min(280px,calc(100vw-24px))]"}
+                                className={"overscroll-none overflow-auto fixed w-[min(208px,calc(100vw-24px))]"}
                                 style={{
                                     left: context_menu_render_point[0],
                                     top: context_menu_render_point[1],
