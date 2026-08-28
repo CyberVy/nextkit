@@ -662,15 +662,26 @@ export function ViewSwitcher<T extends string = string>({
                         : styles["viewswitcher-toolbar-bottom"],
                     "fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5",
                     "bg-white/40 dark:bg-black/40 backdrop-blur-md",
-                    "p-1 rounded-full",
+                    "rounded-full",
+                    toolbar_layout === "top-floating" ? "p-0.5" : "p-1",
                     "border border-black/10 dark:border-white/10 shadow-lg",
                     styles["viewswitcher-toolbar"],
                     !is_toolbar_visible && styles["toolbar-hidden"],
                     toolbar_className
                 )}
             >
-                <div className="rounded-full border border-black/10 dark:border-white/10 p-1">
-                    <div className="inline-flex flex-row items-center p-1 bg-background/0! backdrop-blur-none!">
+                <div
+                    className={join_classes(
+                        "rounded-full border border-black/10 dark:border-white/10",
+                        toolbar_layout === "top-floating" ? "p-0.5" : "p-1"
+                    )}
+                >
+                    <div
+                        className={join_classes(
+                            "inline-flex flex-row items-center bg-background/0! backdrop-blur-none!",
+                            toolbar_layout === "top-floating" ? "p-0.5 gap-0.5" : "p-1"
+                        )}
+                    >
                         {views.map((view) => {
                             const is_active = view.id === current_active_view_id
                             return (
@@ -684,9 +695,10 @@ export function ViewSwitcher<T extends string = string>({
                                     <HapticContainer>
                                         <span
                                             className={join_classes(
-                                                "relative align-middle inline-block px-4 overflow-hidden rounded-[18px]",
+                                                "relative align-middle inline-block px-4 overflow-hidden",
+                                                toolbar_layout === "top-floating" ? "rounded-[14px]" : "rounded-[18px]",
                                                 "transition duration-300 ease-in-out hover:cursor-pointer",
-                                                toolbar_item_className ?? "w-16 h-10"
+                                                toolbar_item_className ?? (toolbar_layout === "top-floating" ? "w-16 h-7" : "w-16 h-10")
                                             )}
                                         >
                                             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">

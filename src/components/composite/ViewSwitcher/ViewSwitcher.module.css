@@ -16,7 +16,7 @@
 }
 
 .viewswitcher-toolbar-top {
-    top: calc(max(env(safe-area-inset-top), 12px) - var(--switcher-top-offset, 0px));
+    top: calc(12px + env(safe-area-inset-top, 0px) + clamp(0px, env(safe-area-inset-top, 0px) * 999, 12px) - var(--switcher-top-offset, 0px));
 }
 
 .viewswitcher-toolbar-bottom {
