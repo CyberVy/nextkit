@@ -104,7 +104,7 @@ function ListToButtons({ list, on_select, className = "", ref, ...props }: ListT
             className={["select-none", className].filter(Boolean).join(" ")}
         >
             <NaiveButton
-                className="w-27 h-9 border border-black/10 dark:border-white/10 rounded-2xl bg-black/5 dark:bg-white/5"
+                className="w-27 h-9 border border-black/10 dark:border-white/10 rounded-2xl"
                 on_click={() => {
                     set_is_collapsed(!is_collapsed)
                 }}
