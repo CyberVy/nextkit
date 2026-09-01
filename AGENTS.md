@@ -6,9 +6,9 @@
   - `native_entry/page.tsx`: native/Tauri entry route.
   - `globals.css`: global styles and Tailwind setup.
 - `src/blocks/`: business-facing React UI blocks composed from base components.
-  - Put app-specific composite UI here, such as search, playlist, player, history, settings, and auth blocks.
+  - Put app-specific composite UI here. Directly bind to domain controllers, do not drill domain callbacks or duplicate controller state in props.
 - `src/components/`: base reusable UI components and UI infrastructure.
-  - Put framework-level or reusable primitives here.
+  - Put framework-level or reusable primitives here, make it domain-agnostic.
   - Commonly categorized into `base/` (atomic UI), `composite/` (generic composite components), and `animation/` (transitions/animations).
 - `src/core/`: core domain logic, algorithms, and pure app logic.
   - `controllers/`: centralized reactive state and data controllers.
@@ -93,6 +93,8 @@ The application adheres to a strict **Event-Driven Producer-Consumer Architectur
 - **Constraints**:
   - **Unidirectional Flow & Anti-Bypass**: Consumers must NEVER bypass a Data Controller to interact directly with a Data Generator when a Controller exists for that domain.
   - **No Manual Sync**: UI consumers must avoid manual state synchronization inside effects; state must be derived from controller snapshots.
+  - **Zero Cross-Block Callback Drilling**: Do NOT pass domain action callbacks across multiple layers of UI blocks (middleman forwarding). Direct callbacks between an immediate parent and its child block are permitted only when the callback is directly handled and digested by the parent without being forwarded further down.
+  - **Minimal Block Props**: Props for domain blocks (`src/blocks/`) must NEVER duplicate, proxy, or shadow state and action logic that can be directly managed or derived by a domain Controller. Reserve props only for instance-specific context (e.g., item records in list renderers, slot composition) or local configuration that the Controller does not own.
 
 ## Storage Architecture (Normalized Index-Data Separation)
 
