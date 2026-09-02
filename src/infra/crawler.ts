@@ -30,20 +30,6 @@ export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:st
     return r
 }
 
-const BROWSER_FORBIDDEN_HEADERS = new Set([
-    "user-agent",
-    "referer",
-    "origin",
-    "cookie",
-    "cookie2",
-    "date",
-    "dnt",
-    "host",
-    "sec-fetch-dest",
-    "sec-fetch-mode",
-    "sec-fetch-site",
-])
-
 export async function smart_fetch(input : string | URL | Request, init?: RequestInit, cors_proxy = ""){
 
     let url: string = ""
@@ -65,14 +51,14 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
         request_method = input.method
     }
 
-    if (!headers.get("user-agent")){
-        headers.set("user-agent", navigator.userAgent)
+    if (typeof navigator !== "undefined" && navigator.userAgent){
+        if (cors_proxy && !headers.get("x-proxy-user-agent") && !headers.get("user-agent")){
+            headers.set("x-proxy-user-agent", navigator.userAgent)
+        }
+        else if (!cors_proxy && !headers.get("user-agent") && !headers.get("x-proxy-user-agent")){
+            headers.set("user-agent", navigator.userAgent)
+        }
     }
-
-    const headers_record: Record<string, string | number> = {}
-    headers.forEach((v, k) => {
-        headers_record[k] = v
-    })
 
     let request_body: string | undefined = undefined
     if (init && init.body){
@@ -85,7 +71,18 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
     }
 
     if (is_in_native() && !cors_proxy && window.__TAURI__?.core?.invoke){
-        const native_response = await window.__TAURI__.core.invoke("fetch", { req: { url: url, headers: headers_record, method: request_method, body: request_body } }) as {body:string, headers:HeadersInit, status:number}
+        const native_headers: Record<string, string | number> = {}
+        headers.forEach((v, k) => {
+            const lower_k = k.toLowerCase()
+            if (lower_k.startsWith("x-proxy-")){
+                native_headers[k.slice(8)] = v
+            }
+            else {
+                native_headers[k] = v
+            }
+        })
+
+        const native_response = await window.__TAURI__.core.invoke("fetch", { req: { url: url, headers: native_headers, method: request_method, body: request_body } }) as {body:string, headers:HeadersInit, status:number}
         return new Response(native_response.body, {
             status: native_response.status,
             headers: native_response.headers
@@ -95,8 +92,8 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
         const fetch_headers = new Headers()
         headers.forEach((v, k) => {
             const lower_k = k.toLowerCase()
-            if (cors_proxy && BROWSER_FORBIDDEN_HEADERS.has(lower_k)){
-                fetch_headers.set(`x-proxy-${lower_k}`, v)
+            if (!cors_proxy && lower_k.startsWith("x-proxy-")){
+                fetch_headers.set(k.slice(8), v)
             }
             else {
                 fetch_headers.set(k, v)
