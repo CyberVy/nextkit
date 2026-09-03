@@ -55,7 +55,7 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
         if (cors_proxy && !headers.get("x-proxy-user-agent") && !headers.get("user-agent")){
             headers.set("x-proxy-user-agent", navigator.userAgent)
         }
-        else if (!cors_proxy && !headers.get("user-agent") && !headers.get("x-proxy-user-agent")){
+        else if (is_in_native() && !cors_proxy && !headers.get("user-agent") && !headers.get("x-proxy-user-agent")){
             headers.set("user-agent", navigator.userAgent)
         }
     }
