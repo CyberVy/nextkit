@@ -3,12 +3,16 @@
 
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
+import type { ReactNode } from "react"
 
+type BodyPortalProps = {
+    children: ReactNode
+}
 /**
 * Render children into document.body。
 * Useful for overlays that must escape parent layout, scroll, and stacking contexts.
 */
-function BodyPortal({ children }: { children: React.ReactNode }){
+function BodyPortal({ children }: BodyPortalProps){
     const [mounted, set_mounted] = useState(false)
 
     useEffect(() => {
@@ -21,3 +25,5 @@ function BodyPortal({ children }: { children: React.ReactNode }){
 }
 
 export { BodyPortal }
+export type { BodyPortalProps }
+
