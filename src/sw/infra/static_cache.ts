@@ -1,5 +1,5 @@
 import { static_resource_cache_name, is_dev } from "@/infra/version"
-import { CacheStorageMap } from "@/infra/storage.client"
+import { CacheStorageMap } from "@/infra/storage/cache.client"
 import { update } from "@/infra/version"
 
 const static_resource_cache = new CacheStorageMap(static_resource_cache_name)

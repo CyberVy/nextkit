@@ -1,6 +1,6 @@
 export const is_dev = process.env.NODE_ENV === "development"
 import { version as package_version } from "../../package.json"
-import type { CacheStorageMap } from "./storage.client"
+import type { CacheStorageMap } from "./storage/cache.client"
 const version = `${package_version}${is_dev ? "dev" : ""}`
 export default version
 export const static_resource_cache_name = "static-resource-cache"
