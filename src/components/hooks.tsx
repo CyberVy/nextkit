@@ -1,6 +1,24 @@
 import type { RefObject } from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { is_ios_device } from "@/infra/device.client"
+
+export function useMediaQuery(query: string, initial_value = false): boolean{
+    const subscribe = useCallback((callback: () => void) => {
+        if (typeof window === "undefined") return () => {}
+        const media = window.matchMedia(query)
+        media.addEventListener("change", callback)
+        return () => media.removeEventListener("change", callback)
+    }, [query])
+
+    const get_snapshot = useCallback(() => {
+        if (typeof window === "undefined") return initial_value
+        return window.matchMedia(query).matches
+    }, [query, initial_value])
+
+    const get_server_snapshot = useCallback(() => initial_value, [initial_value])
+
+    return useSyncExternalStore(subscribe, get_snapshot, get_server_snapshot)
+}
 
 /** root_margin: expands or shrinks the viewport area used by IntersectionObserver.
  *
