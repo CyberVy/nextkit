@@ -1,4 +1,4 @@
-import { is_in_dark } from "@/infra/device.client"
+import { is_in_dark, is_service_worker_available } from "@/infra/device.client"
 
 type PendingHtmlIcon = "search" | "loading" | "clipboard" | "chat" | "external_link" | "none"
 
@@ -53,33 +53,22 @@ export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000){
     return "data:audio/wav;base64," + buffer.toString("base64")
 }
 
-function wrap_text(ctx: CanvasRenderingContext2D, text: string, max_width: number): string[]{
-    const words = text.split(" ")
+function wrap_text_by_width(text: string, max_width: number, font_size: number): string[]{
     const lines: string[] = []
     let current_line = ""
+    let current_width = 0
 
-    for (const word of words){
-        if (ctx.measureText(word).width > max_width){
-            for (const char of word){
-                const test_line = current_line + char
-                if (ctx.measureText(test_line).width > max_width && current_line !== ""){
-                    lines.push(current_line)
-                    current_line = char
-                }
-                else {
-                    current_line = test_line
-                }
-            }
-            continue
-        }
-
-        const test_line = current_line ? `${current_line} ${word}` : word
-        if (ctx.measureText(test_line).width > max_width && current_line !== ""){
+    for (const char of text){
+        // CJK/full-width characters are ~1.0 em, ASCII/half-width characters are ~0.55 em
+        const char_width = char.charCodeAt(0) > 255 ? font_size : font_size * 0.55
+        if (current_width + char_width > max_width && current_line !== ""){
             lines.push(current_line)
-            current_line = word
+            current_line = char
+            current_width = char_width
         }
         else {
-            current_line = test_line
+            current_line += char
+            current_width += char_width
         }
     }
     if (current_line){
@@ -88,55 +77,65 @@ function wrap_text(ctx: CanvasRenderingContext2D, text: string, max_width: numbe
     return lines
 }
 
-export function generate_cover_image(title: string, options:CoverImageOptions){
+export function generate_cover_svg(title: string, options: CoverImageOptions = {}): string{
     const {
         width = 1024,
         height = 720,
-        background = "#333",
-        color = "#fff",
+        background = "#222222",
+        color = "#ffffff",
         fontSize = 48,
         fontFamily = "sans-serif",
     } = options
 
-    const canvas = document.createElement("canvas")
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext("2d")
-    if (ctx){
-        ctx.fillStyle = background
-        ctx.fillRect(0, 0, width, height)
+    const max_width = width * 0.85
+    const lines = wrap_text_by_width(title, max_width, fontSize)
+    const line_height = fontSize * 1.3
+    const total_text_height = (lines.length - 1) * line_height
+    const start_y = height / 2 - total_text_height / 2
 
-        // Add a black border
-        ctx.strokeStyle = "#000"
-        ctx.lineWidth = 1
-        ctx.strokeRect(0, 0, width, height)
+    const tspans = lines.map((line, index) => {
+        const y = start_y + index * line_height
+        const safe_line = line
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&apos;")
+        return `<tspan x="50%" y="${y}">${safe_line}</tspan>`
+    }).join("")
 
-        ctx.fillStyle = color
-        ctx.font = `${fontSize}px ${fontFamily}`
-        ctx.textAlign = "center"
-        ctx.textBaseline = "middle"
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${background}"/><rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" fill="none" stroke="#000000" stroke-width="1"/><text text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="${fontSize}" font-family="${fontFamily}">${tspans}</text></svg>`
+}
 
-        const max_width = width * 0.85
-        const lines = wrap_text(ctx, title, max_width)
-        const line_height = fontSize * 1.3
-        const total_height = (lines.length - 1) * line_height + fontSize
-        const start_y = (height - total_height) / 2 + fontSize / 2
-
-        lines.forEach((line, index) => {
-            ctx.fillText(line, width / 2, start_y + index * line_height)
-        })
+export function get_image_url_with_fallback(
+    src: string | undefined,
+    fallback_title?: string,
+    options?: CoverImageOptions
+): string{
+    if (src){
+        if (!fallback_title) return src
+        const separator = src.includes("?") ? "&" : "?"
+        return `${src}${separator}__fallback_title=${encodeURIComponent(fallback_title)}`
     }
 
-    return new Promise<string>(resolve => {
-        canvas.toBlob(blob => {
-            if (blob){
-                resolve(URL.createObjectURL(blob))
-            }
-            else {
-                resolve("")
-            }
-        }, "image/png")
-    })
+    const safe_title = fallback_title || ""
+    if (is_service_worker_available()){
+        const params = new URLSearchParams()
+        if (safe_title) params.set("title", safe_title)
+        if (options?.width) params.set("width", String(options.width))
+        if (options?.height) params.set("height", String(options.height))
+        if (options?.background) params.set("bg", options.background)
+        if (options?.color) params.set("color", options.color)
+        if (options?.fontSize) params.set("fontSize", String(options.fontSize))
+        const query = params.toString()
+        return `/_sw/cover${query ? `?${query}` : ""}`
+    }
+
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(generate_cover_svg(safe_title, options))}`
+}
+
+export function generate_cover_image(title: string, options: CoverImageOptions = {}): Promise<string>{
+    return Promise.resolve(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(generate_cover_svg(title, options))}`)
 }
 
 function escape_html(text: string){

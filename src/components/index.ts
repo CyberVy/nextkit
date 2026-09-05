@@ -58,7 +58,8 @@ export {
     useAutoSyncRefAndState,
     useOptimizedRotation,
     usePersistedState,
-    usePersistedRefAndState
+    usePersistedRefAndState,
+    useMediaQuery
 } from "./hooks"
 
 // icons.tsx

@@ -1,10 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { generate_cover_image } from "@/infra/data_generation_lib"
-import type { CoverImageOptions } from "@/infra/data_generation_lib"
+import { is_ios_device, get_image_url_with_fallback } from "@/infra"
+import type { CoverImageOptions } from "@/infra"
 
-import { is_ios_device } from "@/infra"
 import { ContextMenu } from "@/components/composite/ContextMenuContainer"
 import type { ContextMenuProps } from "@/components/composite/ContextMenuContainer"
 import type { ComponentPropsWithRef, ComponentPropsWithoutRef, ReactNode } from "react"
@@ -52,49 +51,13 @@ function LabeledImage({
 }: LabeledImageProps){
     const [is_ios, set_is_ios] = useState(false)
     const [is_loaded, set_is_loaded] = useState(false)
-    const [fallback_blob_url, set_fallback_blob_url] = useState("")
 
-    const requested_src = src ? `${image_proxy_api || ""}${src}` : ""
-    const resolved_src = fallback_blob_url || requested_src || undefined
+    const requested_src = src ? `${image_proxy_api || ""}${src}` : undefined
+    const resolved_src = get_image_url_with_fallback(requested_src, alt, generated_cover_options)
 
     useEffect(() => {
         set_is_ios(is_ios_device())
     }, [])
-
-    useEffect(() => {
-        if (!fallback_blob_url) return
-
-        return () => {
-            URL.revokeObjectURL(fallback_blob_url)
-        }
-    }, [fallback_blob_url])
-
-    const [prev_src, set_prev_src] = useState(src)
-
-    if (src !== prev_src){
-        set_prev_src(src)
-        if (src){
-            set_fallback_blob_url("")
-        }
-    }
-
-    useEffect(() => {
-        if (src) return
-
-        let ignore = false
-
-        generate_cover_image(alt || "", generated_cover_options || {}).then(url => {
-            if (ignore){
-                URL.revokeObjectURL(url)
-                return
-            }
-            set_fallback_blob_url(url)
-        })
-
-        return () => {
-            ignore = true
-        }
-    }, [alt, src, generated_cover_options])
 
     return (
         <ContextMenu
@@ -117,11 +80,8 @@ function LabeledImage({
                             set_is_loaded(true)
                             image_props?.onLoad?.(event)
                         }}
-                        onError={async event => {
+                        onError={event => {
                             image_props?.onError?.(event)
-                            if (src && alt && !fallback_blob_url){
-                                await generate_cover_image(alt, generated_cover_options || {}).then(set_fallback_blob_url)
-                            }
                             set_is_loaded(true)
                         }}
                         onClick={() => {
