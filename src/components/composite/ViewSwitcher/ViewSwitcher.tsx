@@ -279,6 +279,21 @@ export function ViewSwitcher<T extends string = string>({
     const [is_toolbar_visible, set_is_toolbar_visible] = useState(true)
     const [has_other_transitioning, set_has_other_transitioning] = useState(false)
 
+    const switch_view = useCallback((target_view_id: string) => {
+        const target = views.find((v) => v.id === target_view_id)
+        if (!target) return
+        if (transition_state.status !== "idle"){
+            set_transition_state({ status: "idle" })
+        }
+        if (active_view_id === undefined) set_internal_active_view_id(target_view_id as T)
+        on_view_change?.(target_view_id as T)
+    }, [views, transition_state.status, active_view_id, on_view_change])
+
+    const switch_view_ref = useRef(switch_view)
+    useLayoutEffect(() => {
+        switch_view_ref.current = switch_view
+    })
+
     useEffect(() => {
         return view_switcher_controller.register(
             switcher_instance_id,
@@ -292,6 +307,11 @@ export function ViewSwitcher<T extends string = string>({
             (updated_state) => {
                 set_is_toolbar_visible((prev) => prev === updated_state.is_toolbar_visible ? prev : updated_state.is_toolbar_visible)
                 set_has_other_transitioning(view_switcher_controller.has_any_transitioning(switcher_instance_id))
+            },
+            {
+                switch_view: (target_id: string) => {
+                    switch_view_ref.current(target_id)
+                }
             }
         )
     }, [switcher_instance_id])
