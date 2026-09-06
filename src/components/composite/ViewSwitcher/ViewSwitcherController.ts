@@ -8,6 +8,10 @@ export interface ViewSwitcherState {
 
 export type ViewSwitcherListener = (state: ViewSwitcherState) => void
 
+export interface ViewSwitcherHandlers {
+    switch_view: (view_id: string) => void
+}
+
 export interface SetToolbarVisibleOptions {
     wait_until_stable?: boolean
 }
@@ -15,10 +19,16 @@ export interface SetToolbarVisibleOptions {
 export class ViewSwitcherController{
     private states = new Map<string, ViewSwitcherState>()
     private listeners = new Map<string, Set<ViewSwitcherListener>>()
+    private switch_handlers = new Map<string, (view_id: string) => void>()
     private global_hide_count = 0
     private pending_visibilities = new Map<string, boolean>()
 
-    public register(id: string, initial_state: ViewSwitcherState, listener: ViewSwitcherListener): () => void{
+    public register(
+        id: string,
+        initial_state: ViewSwitcherState,
+        listener: ViewSwitcherListener,
+        handlers?: ViewSwitcherHandlers
+    ): () => void{
         const existing = this.states.get(id)
         if (existing){
             this.states.set(id, {
@@ -30,6 +40,10 @@ export class ViewSwitcherController{
             this.states.set(id, initial_state)
         }
 
+        if (handlers?.switch_view){
+            this.switch_handlers.set(id, handlers.switch_view)
+        }
+
         if (!this.listeners.has(id)){
             this.listeners.set(id, new Set())
         }
@@ -38,6 +52,9 @@ export class ViewSwitcherController{
         listener(this.get_effective_state(id)!)
 
         return () => {
+            if (handlers?.switch_view){
+                this.switch_handlers.delete(id)
+            }
             const list = this.listeners.get(id)
             if (list){
                 list.delete(listener)
@@ -152,6 +169,28 @@ export class ViewSwitcherController{
         }
     }
 
+    public switch_view(view_id: string, switcher_id?: string): boolean{
+        const id = switcher_id ?? this.get_default_switcher_id()
+        if (!id) return false
+        const handler = this.switch_handlers.get(id)
+        if (!handler) return false
+        handler(view_id)
+        return true
+    }
+
+    public get_default_switcher_id(): string | undefined{
+        if (this.switch_handlers.has("main_switcher")){
+            return "main_switcher"
+        }
+        return this.switch_handlers.keys().next().value
+    }
+
+    public get_active_view_id(switcher_id?: string): string | undefined{
+        const id = switcher_id ?? this.get_default_switcher_id()
+        if (!id) return undefined
+        return this.states.get(id)?.active_view_id
+    }
+
     get_state(id: string): ViewSwitcherState | undefined{
         return this.states.get(id)
     }
@@ -202,3 +241,7 @@ export class ViewSwitcherController{
 }
 
 export const view_switcher_controller = new ViewSwitcherController()
+
+if (typeof window !== "undefined"){
+    (window as unknown as { view_switcher_controller?: ViewSwitcherController }).view_switcher_controller = view_switcher_controller
+}
