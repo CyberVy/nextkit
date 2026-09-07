@@ -1,5 +1,4 @@
-import { defineConfig } from "eslint/config";
-import next_core_web_vitals from "eslint-config-next/core-web-vitals";
+/* eslint-disable */
 import path from "path";
 
 const jsxTextIndentRule = {
@@ -84,6 +83,8 @@ const jsxTextIndentRule = {
     }
 };
 
+const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F000}-\u{1F0FF}\u{1F1E6}-\u{1F1FF}]/u;
+
 const noEmojisRule = {
     meta: {
         type: "suggestion",
@@ -95,10 +96,11 @@ const noEmojisRule = {
         }
     },
     create(context) {
-        // Range targeting common modern colorful emoji blocks (skips standard UI symbols like ✓, ✗, ✕)
-        const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F000}-\u{1F0FF}\u{1F1E6}-\u{1F1FF}]/u;
+        function check_text(node, text) {
+            if (!text || typeof text !== "string") return;
+            // Fast-path: Skip pure ASCII strings as emojis are in unicode high-plane
+            if (/^[\x00-\x7F]*$/.test(text)) return;
 
-        function checkText(node, text) {
             const match = text.match(emojiRegex);
             if (match) {
                 context.report({
@@ -113,16 +115,16 @@ const noEmojisRule = {
 
         return {
             JSXText(node) {
-                checkText(node, node.value);
+                check_text(node, node.value);
             },
             Literal(node) {
                 if (typeof node.value === "string") {
-                    checkText(node, node.value);
+                    check_text(node, node.value);
                 }
             },
             TemplateElement(node) {
                 if (node.value && typeof node.value.cooked === "string") {
-                    checkText(node, node.value.cooked);
+                    check_text(node, node.value.cooked);
                 }
             }
         };
@@ -140,12 +142,13 @@ const noInlineSvgsRule = {
         }
     },
     create(context) {
-        const filename = context.filename || context.getFilename();
+        const filename = context.filename || (context.getFilename && context.getFilename()) || "";
         const isIconFile = filename.endsWith("icons.tsx") || filename.endsWith("icons.ts");
+        if (isIconFile) return {};
 
         return {
             JSXOpeningElement(node) {
-                if (node.name.name === "svg" && !isIconFile) {
+                if (node.name && node.name.name === "svg") {
                     context.report({
                         node,
                         messageId: "noInlineSvg"
@@ -169,13 +172,13 @@ const layeringRestrictionsRule = {
         }
     },
     create(context) {
-        const filename = context.filename || context.getFilename();
+        const filename = context.filename || (context.getFilename && context.getFilename()) || "";
         const relativeFile = path.relative(process.cwd(), filename).replace(/\\/g, "/");
 
         const UI_DIRS = ["src/app/", "src/blocks/", "src/components/"];
         const isUiFile = UI_DIRS.some(dir => relativeFile.startsWith(dir));
 
-        function getResolvedImport(importPath) {
+        function get_resolved_import(importPath) {
             if (importPath.startsWith("@/")) {
                 return importPath.replace("@/", "src/");
             }
@@ -187,8 +190,14 @@ const layeringRestrictionsRule = {
             return importPath;
         }
 
-        function checkImport(node, importSource) {
-            const resolved = getResolvedImport(importSource);
+        function check_import(node, importSource) {
+            if (!importSource || typeof importSource !== "string") return;
+            // Skip 3rd party libraries directly
+            if (!importSource.startsWith(".") && !importSource.startsWith("/") && !importSource.startsWith("@/")) {
+                return;
+            }
+
+            const resolved = get_resolved_import(importSource);
 
             // 1. Non-UI files must NEVER import modules from UI-related directories
             if (!isUiFile) {
@@ -228,16 +237,23 @@ const layeringRestrictionsRule = {
 
         return {
             ImportDeclaration(node) {
-                checkImport(node, node.source.value);
+                if (node.source) {
+                    check_import(node, node.source.value);
+                }
             },
             ImportExpression(node) {
                 if (node.source && node.source.type === "Literal" && typeof node.source.value === "string") {
-                    checkImport(node, node.source.value);
+                    check_import(node, node.source.value);
                 }
             }
         };
     }
 };
+
+const is_pascal_case = str => /^[A-Z][a-zA-Z0-9]*$/.test(str);
+const is_camel_case = str => /^[a-z][a-zA-Z0-9]*$/.test(str);
+const is_snake_case = str => /^_?[a-z0-9]+(_[a-z0-9]+)*_?$/.test(str);
+const IGNORED_NAMES = new Set(["default", "React", "JSX", "HTML", "URL", "JSON", "UI"]);
 
 const namingConventionsRule = {
     meta: {
@@ -253,36 +269,33 @@ const namingConventionsRule = {
         }
     },
     create(context) {
-        const isPascalCase = str => /^[A-Z][a-zA-Z0-9]*$/.test(str);
-        const isCamelCase = str => /^[a-z][a-zA-Z0-9]*$/.test(str);
-        const isSnakeCase = str => /^_?[a-z0-9]+(_[a-z0-9]+)*_?$/.test(str);
-
-        const IGNORED_NAMES = new Set(["default", "React", "JSX", "HTML", "URL", "JSON", "UI"]);
-
         return {
             TSTypeAliasDeclaration(node) {
+                if (!node.id || !node.id.name) return;
                 const name = node.id.name;
-                if (!isPascalCase(name)) {
+                if (!is_pascal_case(name)) {
                     context.report({ node: node.id, messageId: "invalidType", data: { name } });
                 }
             },
             TSInterfaceDeclaration(node) {
+                if (!node.id || !node.id.name) return;
                 const name = node.id.name;
-                if (!isPascalCase(name)) {
+                if (!is_pascal_case(name)) {
                     context.report({ node: node.id, messageId: "invalidType", data: { name } });
                 }
             },
             ClassDeclaration(node) {
                 if (node.id && node.id.name) {
                     const name = node.id.name;
-                    if (!isPascalCase(name)) {
+                    if (!is_pascal_case(name)) {
                         context.report({ node: node.id, messageId: "invalidType", data: { name } });
                     }
                 }
             },
             TSEnumDeclaration(node) {
+                if (!node.id || !node.id.name) return;
                 const name = node.id.name;
-                if (!isPascalCase(name)) {
+                if (!is_pascal_case(name)) {
                     context.report({ node: node.id, messageId: "invalidType", data: { name } });
                 }
             },
@@ -292,13 +305,13 @@ const namingConventionsRule = {
                 if (IGNORED_NAMES.has(name)) return;
 
                 if (/^use[A-Z]/.test(name)) {
-                    if (!isCamelCase(name)) {
+                    if (!is_camel_case(name)) {
                         context.report({ node: node.id, messageId: "invalidHook", data: { name } });
                     }
-                } else if (isPascalCase(name)) {
+                } else if (is_pascal_case(name)) {
                     // React Component, allowed
                 } else {
-                    if (!isSnakeCase(name)) {
+                    if (!is_snake_case(name)) {
                         context.report({ node: node.id, messageId: "invalidFunc", data: { name } });
                     }
                 }
@@ -309,13 +322,13 @@ const namingConventionsRule = {
                 if (IGNORED_NAMES.has(name)) return;
 
                 if (/^use[A-Z]/.test(name)) {
-                    if (!isCamelCase(name)) {
+                    if (!is_camel_case(name)) {
                         context.report({ node: node.id, messageId: "invalidHook", data: { name } });
                     }
                 } else if (node.init && (node.init.type === "ArrowFunctionExpression" || node.init.type === "FunctionExpression")) {
-                    if (isPascalCase(name)) {
+                    if (is_pascal_case(name)) {
                         // React Component, allowed
-                    } else if (!isSnakeCase(name)) {
+                    } else if (!is_snake_case(name)) {
                         context.report({ node: node.id, messageId: "invalidFunc", data: { name } });
                     }
                 }
@@ -337,12 +350,12 @@ const noSyncSetStateInEffectRule = {
     create(context) {
         return {
             CallExpression(node) {
-                if (node.callee.type !== "Identifier" || node.callee.name !== "useEffect") {
+                if (!node.callee || node.callee.type !== "Identifier" || node.callee.name !== "useEffect") {
                     return;
                 }
 
-                const deps = node.arguments[1];
-                if (!deps || deps.type !== "ArrayExpression" || deps.elements.length === 0) {
+                const deps = node.arguments && node.arguments[1];
+                if (!deps || deps.type !== "ArrayExpression" || !deps.elements || deps.elements.length === 0) {
                     return;
                 }
 
@@ -351,36 +364,41 @@ const noSyncSetStateInEffectRule = {
                     return;
                 }
 
-                function checkBlock(blockNode) {
+                function check_block(blockNode) {
                     if (!blockNode) return;
-                    
                     const statements = blockNode.type === "BlockStatement" ? blockNode.body : [blockNode];
-                    
+                    if (!statements) return;
+
                     for (const stmt of statements) {
+                        if (!stmt) continue;
                         if (stmt.type === "ExpressionStatement") {
                             const expr = stmt.expression;
-                            if (expr.type === "CallExpression") {
-                                checkCall(expr);
+                            if (expr && expr.type === "CallExpression") {
+                                check_call(expr);
                             }
                         } else if (stmt.type === "IfStatement") {
-                            checkBlock(stmt.consequent);
-                            checkBlock(stmt.alternate);
+                            check_block(stmt.consequent);
+                            check_block(stmt.alternate);
                         } else if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement" || stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
-                            checkBlock(stmt.body);
+                            check_block(stmt.body);
                         } else if (stmt.type === "SwitchStatement") {
-                            for (const caseNode of stmt.cases) {
-                                for (const subStmt of caseNode.consequent) {
-                                    checkBlock(subStmt);
+                            if (stmt.cases) {
+                                for (const caseNode of stmt.cases) {
+                                    if (caseNode.consequent) {
+                                        for (const subStmt of caseNode.consequent) {
+                                            check_block(subStmt);
+                                        }
+                                    }
                                 }
                             }
                         } else if (stmt.type === "BlockStatement") {
-                            checkBlock(stmt);
+                            check_block(stmt);
                         }
                     }
                 }
 
-                function checkCall(callNode) {
-                    if (callNode.callee.type === "Identifier") {
+                function check_call(callNode) {
+                    if (callNode.callee && callNode.callee.type === "Identifier") {
                         const name = callNode.callee.name;
                         if (/^set[A-Z_]/u.test(name)) {
                             context.report({
@@ -392,68 +410,30 @@ const noSyncSetStateInEffectRule = {
                     }
                 }
 
-                if (effectCallback.body.type === "BlockStatement") {
-                    checkBlock(effectCallback.body);
-                } else if (effectCallback.body.type === "CallExpression") {
-                    checkCall(effectCallback.body);
+                if (effectCallback.body) {
+                    if (effectCallback.body.type === "BlockStatement") {
+                        check_block(effectCallback.body);
+                    } else if (effectCallback.body.type === "CallExpression") {
+                        check_call(effectCallback.body);
+                    }
                 }
             }
         };
     }
 };
 
-export default defineConfig([
-    ...next_core_web_vitals,
-    {
-        files: ["{src,cli}/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-        plugins: {
-            local: {
-                rules: {
-                    "jsx-text-indent": jsxTextIndentRule,
-                    "no-emojis": noEmojisRule,
-                    "no-inline-svgs": noInlineSvgsRule,
-                    "layering-restrictions": layeringRestrictionsRule,
-                    "naming-conventions": namingConventionsRule,
-                    "no-sync-set-state-in-effect": noSyncSetStateInEffectRule
-                }
-            }
-        },
-        rules: {
-            indent: ["warn", 4],
-            "no-alert": "warn",
-            "@next/next/no-img-element": "off",
-            "react-hooks/exhaustive-deps": "off",
-            "react-hooks/set-state-in-effect": "off",
-            "react-hooks/immutability": "warn",
-            "react-hooks/refs": "warn",
-            "react/jsx-closing-bracket-location": ["warn", "line-aligned"],
-            "react/jsx-curly-newline": ["warn", {
-                multiline: "consistent",
-                singleline: "forbid"
-            }],
-            "local/jsx-text-indent": ["warn", 4],
-            "local/no-emojis": "warn",
-            "local/no-inline-svgs": "warn",
-            "local/layering-restrictions": "warn",
-            "local/naming-conventions": "warn",
-            "local/no-sync-set-state-in-effect": "warn",
-            semi: ["warn", "never"],
-            "object-curly-spacing": ["warn", "always"],
-            "key-spacing": ["warn", {
-                afterColon: true
-            }],
-            "comma-spacing": ["warn", {
-                before: false,
-                after: true
-            }],
-            "space-before-blocks": ["warn", "never"],
-            "brace-style": ["warn", "stroustrup", {
-                allowSingleLine: true
-            }],
-            "arrow-spacing": ["warn", {
-                before: true,
-                after: true
-            }]
-        }
+const plugin = {
+    meta: {
+        name: "local"
+    },
+    rules: {
+        "jsx-text-indent": jsxTextIndentRule,
+        "no-emojis": noEmojisRule,
+        "no-inline-svgs": noInlineSvgsRule,
+        "layering-restrictions": layeringRestrictionsRule,
+        "naming-conventions": namingConventionsRule,
+        "no-sync-set-state-in-effect": noSyncSetStateInEffectRule
     }
-]);
+};
+
+export default plugin;

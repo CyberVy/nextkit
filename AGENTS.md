@@ -138,7 +138,7 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 ### 4. Normalized Hydration Flow
 - **Hydration Responsibility**: Controllers read ordered ID lists from index stores, batch-hydrate entities from corresponding entity caches, and maintain immutable snapshots in memory for consumers.
 
-## Naming Conventions (Statically enforced by ESLint)
+## Naming Conventions (Statically enforced by Oxlint)
 
 - Types, interfaces, classes, enums, and type aliases: `PascalCase` (e.g. `PlayerState`).
 - React components: `PascalCase` filenames and exports (e.g. `GlobalSettingButton`).
@@ -156,15 +156,15 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 
 ## UI & Dialog Rules
 
-- **Emoji Prohibition (Statically enforced by ESLint)**: Do not use emojis in any UI text or icons.
+- **Emoji Prohibition (Statically enforced by Oxlint)**: Do not use emojis in any UI text or icons.
 - **Color Restrictions (AI Only)**: Do not use a large number of colors when designing the UI. Only black, white, gray, and colors controlled by transparency/opacity are allowed. (Humans are exempt, but AI must strictly follow this to avoid flashy layout designs).
-- **Icons & SVGs (Statically enforced by ESLint)**: Write SVG components in the corresponding `icons.tsx` based on the UI position (e.g., `src/components/icons.tsx` for generic component-level icons, `src/blocks/icons.tsx` for block-level business icons). Do not use inline SVGs or external icon library imports.
+- **Icons & SVGs (Statically enforced by Oxlint)**: Write SVG components in the corresponding `icons.tsx` based on the UI position (e.g., `src/components/icons.tsx` for generic component-level icons, `src/blocks/icons.tsx` for block-level business icons). Do not use inline SVGs or external icon library imports.
 - **Modals & Dialogs**:
-  - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`). (Statically enforced by ESLint).
+  - Do not use native window dialogs (`window.alert`, `window.confirm`, `window.prompt`). (Statically enforced by Oxlint).
   - Use [ModalContainer.tsx](src/components/composite/ModalContainer.tsx) to build modals and dialog components.
   - If a modal requires animations, cooperate with [AnimationContainer.tsx](src/components/animation/AnimationContainer.tsx).
 
-## Layering Rules (Statically enforced by ESLint)
+## Layering Rules (Statically enforced by Oxlint)
 
 - **UI vs Non-UI Directories**: Only `src/app/`, `src/blocks/`, and `src/components/` are allowed to contain UI code. All other directories under `src/` (such as `src/core/`, `src/infra/`, `src/inject/`, `src/sw/`) are Non-UI environments.
 - **UI Isolation**: Non-UI environments must NEVER import modules from UI-related directories (`src/app/`, `src/blocks/`, or `src/components/`).
@@ -179,7 +179,7 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 - **Refactor Before Feature**: If a new feature depends on existing mechanisms, first review if they can support the new design. Do not force new mechanisms into a design that cannot accommodate them. Propose a local refactoring plan for the existing code first, then **stop and seek developer approval** before making any changes.
 - **Style Consistency**: Match existing naming, formatting, and import styles in every file.
 - **Interface Reuse & Dependencies**: Prioritize importing from the module's `index.ts` (or the module directory) first. Only design new interfaces if none exist. Do not add new dependencies or design complex public interfaces without developer approval.
-- **Local Verification**: After editing any files, run verification tools (e.g. `tsc`, `eslint`, `cargo`) to ensure changes are valid and compile correctly.
+- **Local Verification**: After editing any files, run verification tools (e.g. `tsc`, `oxlint`, `cargo`) to ensure changes are valid and compile correctly.
 
 ## AI Debugging & Communication (Frontend Debug Bridge)
 
