@@ -81,9 +81,11 @@ const fixBackdropFilter = () => {
 };
 fixBackdropFilter.postcss = true;
 
+import tailwindcss from '@tailwindcss/postcss';
+
 const config = {
   plugins: [
-    '@tailwindcss/postcss',
+    tailwindcss(),
     fixBackdropFilter(),
   ],
 };

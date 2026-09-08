@@ -1,14 +1,12 @@
-"use client"
-
 import { useLayoutEffect, useState, useEffect } from "react"
 import { is_in_native } from "@/infra/device.client"
 import { AnimatedGlowText } from "@/components"
 
 // The WEB_URL with an "https" prefix is for native app to simulate a website environment 
 // for some 3rd-party services and service worker which require it.
-const WEB_URL = process.env.NODE_ENV === "development" ? "/" : (process.env.NEXT_PUBLIC_NATIVE_ENTRY_URL || "/")
+const WEB_URL = import.meta.env.DEV ? "/" : (import.meta.env.VITE_NATIVE_ENTRY_URL || "/")
 
-export default function Page(){
+export default function App(){
     const [in_native, set_in_native] = useState(true)
 
     useLayoutEffect(() => {

@@ -1,10 +1,14 @@
 ## Project Structure
 
-- `src/app/`: Next.js App Router entry points.
-  - `layout.tsx`: app shell and global metadata.
-  - `page.tsx`: main page (client component).
-  - `native_entry/page.tsx`: native/Tauri entry route.
-  - `globals.css`: global styles and Tailwind setup.
+- `src/app/`: Application UI entry points and shells.
+  - `index.html`: SPA HTML shell entry.
+  - `main.tsx`: SPA entry mount point.
+  - `App.tsx`: main application root component.
+  - `native_entry/`:
+    - `index.html`: native/Tauri HTML shell entry.
+    - `main.tsx`: native/Tauri entry mount point.
+    - `App.tsx`: native/Tauri entry route component.
+  - `globals.css`: global styles, font imports, and Tailwind setup.
 - `src/blocks/`: business-facing React UI blocks composed from base components.
   - Put app-specific composite UI here. Directly bind to domain controllers, do not drill domain callbacks or duplicate controller state in props.
 - `src/components/`: base reusable UI components and UI infrastructure.
@@ -170,7 +174,7 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 - **UI Isolation**: Non-UI environments must NEVER import modules from UI-related directories (`src/app/`, `src/blocks/`, or `src/components/`).
 - **Unidirectional UI Dependency**: `src/components/` (atomic reusable components) must NEVER depend on `src/blocks/` (composite UI blocks) or `src/app/` (route entry points). Keep business UI out of `src/components/`, place it in `src/blocks/`.
 - **Web IPC Communications**:
-  - All communication between frontend Next.js and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](src/infra/web_ipc.client.ts)).
+  - All communication between frontend web app and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](src/infra/web_ipc.client.ts)).
   - Shared data types used across the IPC boundary should follow the general type rules and be defined close to their usage/IPC client implementation.
 
 ## Base Rules
@@ -183,7 +187,7 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 
 ## AI Debugging & Communication (Frontend Debug Bridge)
 
-When running the Next.js dev server via `npm run dev`, a debug bridge is automatically launched via [launch.ts](cli/debug/launch.ts) that allows direct, silent bidirectional communication with the browser/Tauri webview context. Before starting the dev server, check if the dev server is already running to avoid duplicate/repeated runs.
+When running the development server via `npm run dev`, a debug bridge is automatically launched via [launch.ts](cli/debug/launch.ts) that allows direct, silent bidirectional communication with the browser/Tauri webview context. Before starting the dev server, check if the dev server is already running to avoid duplicate/repeated runs.
 - **Frontend Logs**: Read [logs.jsonl](.debug/logs.jsonl) (in JSON Lines format) to inspect console output and errors in real-time.
 - **Execute Commands**: Synchronously execute JavaScript code in the browser/Tauri webview context using [eval.js](cli/debug/eval.js):
   ```bash
