@@ -6,7 +6,7 @@ To facilitate bidirectional communication between the **Frontend Browser Context
 
 ## 1. How the Mechanism Works
 
-The communication runs purely on standard web protocols (Server-Sent Events & HTTP POST) and is handled by a Node.js development sidecar. It keeps the core React frontend codebase (`src/core`, `src/infra`, `src/app/page.tsx`, etc.) 100% clean and untouched.
+The communication runs purely on standard web protocols (Server-Sent Events & HTTP POST) and is handled by a Node.js development sidecar. It keeps the core React frontend codebase (`src/core`, `src/infra`, `src/app/App.tsx`, etc.) 100% clean and untouched.
 
 ```
                   ┌─────────────────────────────────────┐
@@ -32,11 +32,15 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
 * **`cli/debug/debug_bridge_template.js`** (Browser Script Template): The JavaScript client template that runs inside the browser, intercepting logs and evaluating incoming commands.
 * **`cli/debug/launch.ts`** (Active Server): A long-running HTTP server that reads the port configuration from `.debug/config.json`, manages the SSE stream, bridges evaluation requests synchronously, and appends logs to local history files.
 * **`cli/debug/eval.js`** (CLI Helper): A lightweight evaluation utility that allows developers or agents to synchronously execute code in the browser.
-* **`src/app/layout.tsx`** (JSX Anchor): Anchors the script dynamically in development:
-  ```tsx
-  {process.env.NODE_ENV === "development" && (
-      <script src="/debug_bridge.js" strategy="afterInteractive" />
-  )}
+* **`src/app/index.html`** (Script Anchor): Anchors the script dynamically in development:
+  ```html
+  <script type="module">
+    if (import.meta.env.DEV) {
+      const script = document.createElement("script");
+      script.src = "/debug_bridge.js";
+      document.body.appendChild(script);
+    }
+  </script>
   ```
 * **`.debug/`** (Ignored Data Directory): Contains the runtime configuration and persistent session log files:
   - `config.json`: The port configuration parameter for the debug bridge.

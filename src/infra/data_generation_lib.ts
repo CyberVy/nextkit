@@ -18,39 +18,55 @@ export type CoverImageOptions = {
     fontFamily?: string
 }
 
-export function generate_silent_wav_base64(durationSec = 5, sampleRate = 8000){
+export function generate_silent_wav_base64(duration_sec = 5, sample_rate = 8000){
 
-    const numChannels = 1
-    const bitsPerSample = 16
-    const byteRate = (sampleRate * numChannels * bitsPerSample) / 8
-    const blockAlign = (numChannels * bitsPerSample) / 8
-    const numSamples = durationSec * sampleRate
-    const dataSize = numSamples * blockAlign
-    const buffer = Buffer.alloc(44 + dataSize)
+    const num_channels = 1
+    const bits_per_sample = 16
+    const byte_rate = (sample_rate * num_channels * bits_per_sample) / 8
+    const block_align = (num_channels * bits_per_sample) / 8
+    const num_samples = duration_sec * sample_rate
+    const data_size = num_samples * block_align
+    const total_size = 44 + data_size
+
+    const array_buffer = new ArrayBuffer(total_size)
+    const view = new DataView(array_buffer)
+
+    const write_string = (offset: number, str: string) => {
+        for (let i = 0; i < str.length; i++){
+            view.setUint8(offset + i, str.charCodeAt(i))
+        }
+    }
 
     // RIFF header
-    buffer.write("RIFF", 0)
-    buffer.writeUInt32LE(36 + dataSize, 4)
-    buffer.write("WAVE", 8)
+    write_string(0, "RIFF")
+    view.setUint32(4, 36 + data_size, true)
+    write_string(8, "WAVE")
 
     // fmt subchunk
-    buffer.write("fmt ", 12)
-    buffer.writeUInt32LE(16, 16)
-    buffer.writeUInt16LE(1, 20) // PCM
-    buffer.writeUInt16LE(numChannels, 22)
-    buffer.writeUInt32LE(sampleRate, 24)
-    buffer.writeUInt32LE(byteRate, 28)
-    buffer.writeUInt16LE(blockAlign, 32)
-    buffer.writeUInt16LE(bitsPerSample, 34)
+    write_string(12, "fmt ")
+    view.setUint32(16, 16, true)
+    view.setUint16(20, 1, true) // PCM
+    view.setUint16(22, num_channels, true)
+    view.setUint32(24, sample_rate, true)
+    view.setUint32(28, byte_rate, true)
+    view.setUint16(32, block_align, true)
+    view.setUint16(34, bits_per_sample, true)
 
     // data subchunk
-    buffer.write("data", 36)
-    buffer.writeUInt32LE(dataSize, 40)
+    write_string(36, "data")
+    view.setUint32(40, data_size, true)
 
     // samples are all zero (silence)
-    // Buffer is already zero-filled
+    // ArrayBuffer is already zero-filled by default
 
-    return "data:audio/wav;base64," + buffer.toString("base64")
+    const bytes = new Uint8Array(array_buffer)
+    let binary = ""
+    const chunk_size = 0x8000
+    for (let i = 0; i < bytes.length; i += chunk_size){
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk_size))
+    }
+
+    return "data:audio/wav;base64," + btoa(binary)
 }
 
 function wrap_text_by_width(text: string, max_width: number, font_size: number): string[]{

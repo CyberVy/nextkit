@@ -47,8 +47,8 @@ jobs:
       - name: Package DMG bundle (aarch64-apple-darwin)
         run: zip -r macos-arm64-dmg.zip src-tauri/target/aarch64-apple-darwin/release/bundle/dmg
 
-      - name: Package frontend (Next.js out)
-        run: zip -r frontend-macos-arm64.zip out
+      - name: Package frontend (dist)
+        run: zip -r frontend-macos-arm64.zip dist
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v3

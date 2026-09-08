@@ -12,7 +12,7 @@
 
 ## Tech Stack
 
-- **Frontend**: [Next.js](https://nextjs.org/) (React 19)
+- **Frontend**: [React 19](https://react.dev/) + [Vite](https://vite.dev/)
 - **Native Bridge**: [Tauri](https://tauri.app/) (Rust)
 - **Service Worker**: [esbuild](https://esbuild.github.io/) for SW bundling
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
@@ -46,9 +46,9 @@ Development scripts are managed via `package.json`.
 
 | Command               | Description                                                                   |
 |:----------------------|:------------------------------------------------------------------------------|
-| `npm run dev`         | Starts the Next.js dev server and the Service Worker watcher.     |
+| `npm run dev`         | Starts the Vite dev server (port 4000), Service Worker watcher, and Debug Bridge. |
 | `npm run build`       | Builds the static export of the site and minifies the Service Worker.         |
-| `npm run start`       | Serves the production build locally (from the `out` directory).               |
+| `npm run start`       | Serves the production build locally (from the `dist` directory).              |
 | `npm run tauri <cmd>` | Executes Tauri commands (e.g., `npm run tauri dev` or `npm run tauri build`). |
 
 ### Running Native App
@@ -77,24 +77,20 @@ npm run tauri android build
 
 ## Project Structure
 
-- `src/app/`: Next.js App Router pages and layouts.
-- `src/components/`: Reusable React components.
-- `src/infra/`: Core TypeScript infrastructure, types, and utility libraries.
+- `src/app/`: Application UI entry points, HTML shells, and root App components.
+- `src/blocks/`: Business-facing React UI blocks composed from base components.
+- `src/components/`: Base reusable React components and UI infrastructure.
+- `src/core/`: Core domain logic and app-specific pure logic.
+- `src/infra/`: Infrastructure, platform adapters, shared types, and utility libraries.
 - `src/sw/`: Service Worker source code.
 - `src-tauri/`: Rust backend and native configuration.
 - `public/`: Static assets, including icons and the bundled `sw.js`.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Learn Tauri](https://tauri.app/learn/) - a framework for building tiny, fast binaries for all major desktop and mobile platforms.
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [Vite Documentation](https://vite.dev/guide/) - Next generation frontend tooling.
+- [React Documentation](https://react.dev/) - The library for web and native user interfaces.
+- [Tauri Documentation](https://tauri.app/learn/) - Framework for building tiny, fast binaries for desktop and mobile.
 
 ## License
 

@@ -1,10 +1,9 @@
-"use client"
 import { useEffect, useState } from "react"
 import { LaunchAnimation } from "@/blocks/LaunchAnimation"
 import { Device } from "@/components"
 import { Version } from "@/components"
 
-export default function Page(){
+export default function App(){
     const [show_launch_animation, set_show_launch_animation] = useState(true)
 
 

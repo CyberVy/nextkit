@@ -34,7 +34,7 @@ const Version = function Version({ className = "", ref, ...props }: VersionProps
             >
                 {clear_cache_icon}
             </button>
-            <p className="text-xs">{`Built at: ${process.env.NEXT_PUBLIC_BUILD_TIME}`}</p>
+            <p className="text-xs">{`Built at: ${import.meta.env.VITE_BUILD_TIME}`}</p>
         </div>
     )
 }

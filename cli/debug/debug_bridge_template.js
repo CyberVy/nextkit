@@ -15,6 +15,9 @@
     function send_log(level, args){
         const message = args
             .map((arg) => {
+                if (arg instanceof Error || (arg && typeof arg === "object" && ("message" in arg || "name" in arg))){
+                    return `${arg.name || "Error"}: ${arg.message || ""}${arg.stack ? `\n${arg.stack}` : ""}`
+                }
                 if (typeof arg === "object"){
                     try {
                         return JSON.stringify(arg)
