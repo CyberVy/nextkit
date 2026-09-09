@@ -1,12 +1,36 @@
-import { defineConfig } from "vite"
+import { defineConfig, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import path from "node:path"
 import fs from "node:fs"
+
+function debug_bridge_plugin(): Plugin{
+    return {
+        name: "debug-bridge",
+        configureServer(server){
+            const config_path = path.resolve(import.meta.dirname, ".debug/config.json")
+            const template_path = path.resolve(import.meta.dirname, "cli/debug/debug_bridge_template.js")
+            server.middlewares.use((req, res, next) => {
+                if (req.url !== "/debug_bridge.js") return next()
+                try {
+                    const { port } = JSON.parse(fs.readFileSync(config_path, "utf8"))
+                    const content = fs.readFileSync(template_path, "utf8").replace("{{PORT}}", String(port))
+                    res.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8" })
+                    res.end(content)
+                }
+                catch {
+                    res.writeHead(404)
+                    res.end()
+                }
+            })
+        }
+    }
+}
 
 export default defineConfig({
     root: path.resolve(import.meta.dirname, "src/app"),
     publicDir: path.resolve(import.meta.dirname, "public"),
     plugins: [
+        debug_bridge_plugin(),
         react({
             compiler: true
         }),

@@ -6,14 +6,11 @@ import { fileURLToPath } from "node:url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEBUG_DIR = path.resolve(__dirname, "../../.debug")
 const CONFIG_FILE = path.join(DEBUG_DIR, "config.json")
-const TEMPLATE_PATH = path.join(__dirname, "debug_bridge_template.js")
-const PUBLIC_BRIDGE_PATH = path.resolve(__dirname, "../../public/debug_bridge.js")
 
 // Ensure .debug exists
 if (!fs.existsSync(DEBUG_DIR)){
     fs.mkdirSync(DEBUG_DIR, { recursive: true })
 }
-
 
 function get_debug_port(): number{
     const arg = process.argv.find((a) => a.startsWith("--debug-port="))
@@ -28,7 +25,6 @@ function get_debug_port(): number{
     return 9999
 }
 
-// Function to find a free port starting from the given port
 function find_free_port(start_port: number, host: string): Promise<number>{
     return new Promise((resolve) => {
         const server = net.createServer()
@@ -52,15 +48,8 @@ async function main(){
         const start_port = get_debug_port()
         const port = await find_free_port(start_port, host)
 
-        // Write port configuration to config.json
         fs.writeFileSync(CONFIG_FILE, JSON.stringify({ port }, null, 2), "utf8")
-
-        // Generate public/debug_bridge.js
-        const template = fs.readFileSync(TEMPLATE_PATH, "utf8")
-        const generated = template.replace("{{PORT}}", String(port))
-        fs.writeFileSync(PUBLIC_BRIDGE_PATH, generated, "utf8")
-
-        console.log(`[Debug Bridge Init] Generated public/debug_bridge.js pointing to port ${port}`)
+        console.log(`[Debug Bridge Init] Reserved debug bridge port ${port}, written to .debug/config.json`)
     }
     catch (err){
         console.error("[Debug Bridge Init] Initialization failed:", err)
