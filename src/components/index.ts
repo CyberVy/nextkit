@@ -15,8 +15,9 @@ export { Device } from "./base/Device"
 // FixedScrollButtons.tsx
 export { ScrollToTopButton, ScrollToBottomButton, ScrollButtonGroup } from "./composite/FixedScrollButtons"
 
-// LabeledImage.tsx
-export { LabeledImage } from "./composite/LabeledImage"
+// Image.tsx
+export { Image } from "./composite/Image"
+export type { ImageProps } from "./composite/Image"
 
 // LabeledRow.tsx
 export { LabeledRow } from "./composite/LabeledRow"
@@ -76,4 +77,3 @@ export type { MigrationExportProps, MigrationMergeProps, MigrationOverwriteProps
 // ScrollSentry.tsx
 export { ScrollSentry } from "./composite/ScrollSentry"
 export type { ScrollSentryProps } from "./composite/ScrollSentry"
-

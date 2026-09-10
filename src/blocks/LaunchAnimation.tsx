@@ -1,8 +1,8 @@
 "use client"
 
-import { AnimatedGlowText } from "@/components"
+import { AnimatedGlowText } from "@/components/base/String"
 import { useEffect, useState } from "react"
-import { LabeledImage } from "@/components"
+import { Image } from "@/components/composite/Image"
 import { AnimationContainer } from "@/components"
 import { join_classes } from "@/components/utils"
 
@@ -41,9 +41,9 @@ function LaunchAnimation({ className, on_finish }: LaunchAnimationProps){
                 className="left-0 top-3/7 absolute"
                 style={{ transform: "translate(-100%, -100%)" }}
             >
-                <div className={"w-12 h-12"}>
-                    <LabeledImage
-                        image_class_name={"rounded-xl"}
+                <div className={"w-12 h-12 rounded-xl"}>
+                    <Image
+                        className={"w-full h-full object-cover rounded-xl"}
                         src={"/icons/192x192.png"}
                     />
                 </div>

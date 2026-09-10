@@ -1,7 +1,7 @@
 import type { RefObject } from "react"
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { is_ios_device } from "@/infra/device.client"
-
+ 
 export function useMediaQuery(query: string, initial_value = false): boolean{
     const subscribe = useCallback((callback: () => void) => {
         if (typeof window === "undefined") return () => {}
@@ -272,4 +272,3 @@ export function usePersistedRefAndState<T>({ initial_value, on_load, on_save } :
 
     return [state_ref, dispatch_func, state]
 }
-
