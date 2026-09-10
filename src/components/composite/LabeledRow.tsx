@@ -1,16 +1,15 @@
 "use client"
 
 import React from "react"
-import { LabeledImage } from "./LabeledImage"
+import { Image } from "./Image"
 import { ContextMenu } from "./ContextMenuContainer"
 import type { ComponentPropsWithRef, ReactNode } from "react"
 import type { ContextMenuProps } from "./ContextMenuContainer"
 
 export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children" | "title"> & {
-    // Cover image properties passed to the internal LabeledImage
+    // Cover image properties passed to the internal FallbackImage
     src?: string
     alt?: string
-    image_class_name?: string
     image_proxy_api?: string
     on_click_image?: () => void
 
@@ -30,7 +29,6 @@ export type LabeledRowProps = Omit<ComponentPropsWithRef<"div">, "children" | "t
 const LabeledRow = React.memo(function LabeledRow({
     src,
     alt,
-    image_class_name,
     image_proxy_api,
     left_indicator,
     title,
@@ -66,14 +64,13 @@ const LabeledRow = React.memo(function LabeledRow({
                         </div>
                     )}
 
-                    {/* Thumbnail/Cover image (reuses LabeledImage for lazy-loading and offline generation) */}
+                    {/* Thumbnail/Cover image with offline fallback generation */}
                     <div className="w-20 sm:w-24 aspect-video shrink-0 rounded-lg overflow-hidden relative shadow-sm bg-black/10 dark:bg-white/5">
-                        <LabeledImage
+                        <Image
                             src={src}
                             alt={alt}
-                            image_class_name={image_class_name}
                             image_proxy_api={image_proxy_api}
-                            on_click_image={on_click_image}
+                            onClick={on_click_image}
                             className="w-full h-full object-cover"
                         />
                     </div>
