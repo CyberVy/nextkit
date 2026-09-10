@@ -6,7 +6,7 @@ To facilitate bidirectional communication between the **Frontend Browser Context
 
 ## 1. How the Mechanism Works
 
-The communication runs purely on standard web protocols (Server-Sent Events & HTTP POST) and is handled by a Node.js development sidecar. It keeps the core React frontend codebase (`src/core`, `src/infra`, `src/app/App.tsx`, etc.) 100% clean and untouched.
+The communication runs purely on standard web protocols (Server-Sent Events & HTTP POST) and is handled by a Node.js development sidecar. During development, Vite serves `/debug_bridge.js` dynamically from the client template after injecting the selected debug port. It keeps the core React frontend codebase (`src/core`, `src/infra`, `src/app/App.tsx`, etc.) 100% clean and untouched.
 
 ```
                   ┌─────────────────────────────────────┐
@@ -28,8 +28,9 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
 ```
 
 ### Components List
-* **`cli/debug/generate_debug_bridge.ts`** (Generator task): Finds an available TCP port (starting from `9999`), saves the port parameter to `.debug/config.json`, and generates `public/debug_bridge.js` from the template.
+* **`cli/debug/generate_debug_bridge.ts`** (Configuration task): Finds an available TCP port (starting from `9999`) and saves the port parameter to `.debug/config.json`. It does not generate a JavaScript file.
 * **`cli/debug/debug_bridge_template.js`** (Browser Script Template): The JavaScript client template that runs inside the browser, intercepting logs and evaluating incoming commands.
+* **`debug_bridge_plugin` in `vite.config.ts`** (Development Script Server): Handles `/debug_bridge.js` during development, reads `.debug/config.json`, injects the selected port into the template, and returns the resulting JavaScript directly without writing it to `public/`.
 * **`cli/debug/launch.ts`** (Active Server): A long-running HTTP server that reads the port configuration from `.debug/config.json`, manages the SSE stream, bridges evaluation requests synchronously, and appends logs to local history files.
 * **`cli/debug/eval.js`** (CLI Helper): A lightweight evaluation utility that allows developers or agents to synchronously execute code in the browser.
 * **`src/app/index.html`** (Script Anchor): Anchors the script dynamically in development:
@@ -97,9 +98,8 @@ If the execution fails (e.g. invalid syntax or runtime error in the browser), `s
 ---
 
 ## 3. Git Hygiene
-The generated files and logs are completely ignored by git using the following `.gitignore` rules:
+The runtime configuration and logs are ignored by git using the following `.gitignore` rule:
 ```gitignore
 /.debug
-/public/debug_bridge.js
 ```
-The codebase remains pristine, and no runtime data will ever pollute the commit logs.
+Runtime data therefore does not pollute the commit history.
