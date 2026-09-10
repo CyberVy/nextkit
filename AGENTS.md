@@ -60,7 +60,7 @@ The application adheres to a strict **Event-Driven Producer-Consumer Architectur
 │               Data Controller (With Events)            │
 │  - Single source of truth (SSOT) & state orchestrator  │
 │  - Caching, deduplication, persistence & lifecycles    │
-│  - Implements `IController` snapshot & event dispatch  │
+│  - Framework-agnostic state & event dispatch           │
 └───────────────────────────┬────────────────────────────┘
                             │ Reactive snapshots & events
                             ▼
@@ -83,15 +83,15 @@ The application adheres to a strict **Event-Driven Producer-Consumer Architectur
 - **Responsibilities**:
   - Serves as the **Single Source of Truth (SSOT)** for domain state.
   - Coordinates Data Generators, performs caching, indexing, deduplication, and persistence.
-  - Implements the standard reactive contract (`IController` / `IKeyedController`): providing `subscribe`, `get_snapshot`, and `get_server_snapshot`.
-  - Dispatches granular domain events (via `EventTarget`) when internal state mutates.
+  - Exposes framework-agnostic, read-only state snapshots and dispatches granular domain events via `EventTarget` when internal state mutates.
+  - Must remain independent of React and other UI frameworks; consumer-side adapters are responsible for translating controller state and events into framework-specific reactive contracts.
 - **Constraints**:
   - Controllers own mutation logic and state lifetimes; all state transitions must occur through explicit controller methods.
 
 ### 3. Data Consumer (UIs, Tests, External APIs)
 - **Definition**: Observers and consumers that react to controller state changes or invoke controller commands.
 - **Roles**:
-  - **UI Blocks & Components**: Subscribe to controller snapshots via `useSyncExternalStore` or event listeners for tearing-free rendering.
+  - **UI Blocks & Components**: Adapt controller state and events to React through consumer-side hooks using `useSyncExternalStore`, or observe domain events directly when appropriate.
   - **Tests & Debug Bridges**: Automated verification scripts and CLI evaluators querying snapshots or observing dispatched events.
   - **Platform & IPC Adapters**: External message handlers dispatching payloads directly into controller actions.
 - **Constraints**:
@@ -172,6 +172,7 @@ The client-side persistence layer (`LocalForage` / IndexedDB) adheres to a stric
 
 - **UI vs Non-UI Directories**: Only `src/app/`, `src/blocks/`, and `src/components/` are allowed to contain UI code. All other directories under `src/` (such as `src/core/`, `src/infra/`, `src/inject/`, `src/sw/`) are Non-UI environments.
 - **UI Isolation**: Non-UI environments must NEVER import modules from UI-related directories (`src/app/`, `src/blocks/`, or `src/components/`).
+- **Foundational Layer Isolation**: `src/components/` and `src/infra/` must NEVER depend on business modules from `src/core/` or `src/blocks/`. This restriction includes runtime imports, type-only imports, dynamic imports, and re-exports.
 - **Unidirectional UI Dependency**: `src/components/` (atomic reusable components) must NEVER depend on `src/blocks/` (composite UI blocks) or `src/app/` (route entry points). Keep business UI out of `src/components/`, place it in `src/blocks/`.
 - **Web IPC Communications**:
   - All communication between frontend web app and backend Rust must utilize the Web IPC layer (e.g., [web_ipc.client.ts](src/infra/web_ipc.client.ts)).
