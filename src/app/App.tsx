@@ -1,21 +1,10 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { LaunchAnimation } from "@/blocks/LaunchAnimation"
 import { Device } from "@/components"
 import { Version } from "@/components"
 
 export default function App(){
     const [show_launch_animation, set_show_launch_animation] = useState(true)
-
-
-
-    // register service worker
-    useEffect(() => {
-        if ('serviceWorker' in navigator){
-            navigator.serviceWorker.register('/sw.js').then(() => {
-                console.log('Service worker is registered successfully.')
-            }).catch(err => {console.error('Failed to register Service worker.', err)})
-        }
-    }, [])
 
     return (
         <>
