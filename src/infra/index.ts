@@ -43,3 +43,5 @@ export { MigrationService } from "./migration.client"
 export { create_child_webview, destroy_child_webview, set_window_layout } from "./webview.client"
 export type { LayoutItem } from "./webview.client"
 
+// base_controller.ts
+export { BaseController, BaseKeyedController } from "./base_controller"

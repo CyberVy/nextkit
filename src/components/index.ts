@@ -60,15 +60,27 @@ export {
     useOptimizedRotation,
     usePersistedState,
     usePersistedRefAndState,
-    useMediaQuery
+    useMediaQuery,
+    useController,
+    useKeyedController
 } from "./hooks"
+export type { UseControllerOptions } from "./hooks"
+
 
 // icons.tsx
 export { SearchIcon } from "./icons"
 
 // ViewSwitcher.tsx
-export { ViewSwitcher, view_switcher_controller, ViewSwitcherController } from "./composite/ViewSwitcher"
-export type { View, ViewSwitcherProps, ViewSwitcherState, ViewSwitcherListener, SetToolbarVisibleOptions } from "./composite/ViewSwitcher"
+export { ViewSwitcher, view_switcher_controller, ViewSwitcherController, useViewSwitcher, useViewSwitcherRegistry } from "./composite/ViewSwitcher"
+export type {
+    View,
+    ViewSwitcherProps,
+    ViewSwitcherState,
+    ViewSwitcherInitState,
+    ViewSwitcherListener,
+    SetToolbarVisibleOptions,
+    ViewSwitcherRegistryState
+} from "./composite/ViewSwitcher"
 
 // Migration.tsx
 export { MigrationExport, MigrationMerge, MigrationOverwrite } from "./composite/Migration"

@@ -1,247 +1,315 @@
+import { BaseController } from "@/infra"
+
 export interface ViewSwitcherState {
     id: string
     is_toolbar_visible: boolean
     is_transitioning: boolean
+    has_other_transitioning: boolean
     active_view_id: string
     target_view_id: string | null
 }
 
-export type ViewSwitcherListener = (state: ViewSwitcherState) => void
+export type ViewSwitcherInitState = Omit<ViewSwitcherState, "has_other_transitioning">
 
-export interface ViewSwitcherHandlers {
-    switch_view: (view_id: string) => void
-}
+export type ViewSwitcherListener = (state: ViewSwitcherState) => void
 
 export interface SetToolbarVisibleOptions {
     wait_until_stable?: boolean
 }
 
-export class ViewSwitcherController{
-    private states = new Map<string, ViewSwitcherState>()
-    private listeners = new Map<string, Set<ViewSwitcherListener>>()
-    private switch_handlers = new Map<string, (view_id: string) => void>()
-    private global_hide_count = 0
-    private pending_visibilities = new Map<string, boolean>()
+export interface SwitchViewEventDetail {
+    switcher_id: string
+    view_id: string
+}
+
+export interface ViewSwitcherRegistryState {
+    instances: Record<string, ViewSwitcherState>
+    has_any_transitioning: boolean
+    global_hide_count: number
+}
+
+export const STATIC_EMPTY_VIEW_SWITCHER_STATE: ViewSwitcherState = {
+    id: "",
+    is_toolbar_visible: true,
+    is_transitioning: false,
+    has_other_transitioning: false,
+    active_view_id: "",
+    target_view_id: null
+}
+
+export const INITIAL_VIEW_SWITCHER_REGISTRY_STATE: ViewSwitcherRegistryState = {
+    instances: {},
+    has_any_transitioning: false,
+    global_hide_count: 0
+}
+
+export const INITIAL_VIEW_SWITCHER_STATE = INITIAL_VIEW_SWITCHER_REGISTRY_STATE
+
+export class ViewSwitcherController extends BaseController<ViewSwitcherRegistryState, "change" | "switch_view"> {
+    protected override _state: ViewSwitcherRegistryState = INITIAL_VIEW_SWITCHER_REGISTRY_STATE
+
+    private raw_instances: Record<string, ViewSwitcherInitState> = {}
+    private instance_counts: Record<string, number> = {}
+    private pending_visibilities: Record<string, boolean> = {}
+    private fallback_states: Record<string, ViewSwitcherState> = {}
 
     public register(
         id: string,
-        initial_state: ViewSwitcherState,
-        listener: ViewSwitcherListener,
-        handlers?: ViewSwitcherHandlers
-    ): () => void{
-        const existing = this.states.get(id)
-        if (existing){
-            this.states.set(id, {
-                ...initial_state,
-                is_toolbar_visible: existing.is_toolbar_visible
-            })
-        }
-        else {
-            this.states.set(id, initial_state)
-        }
+        initial_state: ViewSwitcherInitState | ViewSwitcherState
+    ): () => void {
+        this.instance_counts[id] = (this.instance_counts[id] ?? 0) + 1
 
-        if (handlers?.switch_view){
-            this.switch_handlers.set(id, handlers.switch_view)
-        }
+        const existing_raw = this.raw_instances[id]
+        const raw_state: ViewSwitcherInitState = existing_raw
+            ? {
+                id: initial_state.id,
+                is_transitioning: initial_state.is_transitioning,
+                active_view_id: initial_state.active_view_id,
+                target_view_id: initial_state.target_view_id,
+                is_toolbar_visible: existing_raw.is_toolbar_visible,
+            }
+            : {
+                id: initial_state.id,
+                is_toolbar_visible: initial_state.is_toolbar_visible,
+                is_transitioning: initial_state.is_transitioning,
+                active_view_id: initial_state.active_view_id,
+                target_view_id: initial_state.target_view_id,
+            }
 
-        if (!this.listeners.has(id)){
-            this.listeners.set(id, new Set())
-        }
-        this.listeners.get(id)!.add(listener)
-
-        listener(this.get_effective_state(id)!)
+        this.raw_instances[id] = raw_state
+        this.recompute_state()
 
         return () => {
-            if (handlers?.switch_view){
-                this.switch_handlers.delete(id)
+            const count = (this.instance_counts[id] ?? 1) - 1
+            if (count <= 0) {
+                delete this.instance_counts[id]
+                delete this.raw_instances[id]
+                delete this.pending_visibilities[id]
+                delete this.fallback_states[id]
+            } else {
+                this.instance_counts[id] = count
             }
-            const list = this.listeners.get(id)
-            if (list){
-                list.delete(listener)
-                if (list.size === 0){
-                    this.listeners.delete(id)
-                    this.states.delete(id)
-                }
-            }
+            this.recompute_state()
         }
     }
 
-    private get_effective_state(id: string): ViewSwitcherState | undefined{
-        const state = this.states.get(id)
-        if (!state) return undefined
-        return {
-            ...state,
-            is_toolbar_visible: this.global_hide_count > 0 ? false : state.is_toolbar_visible
-        }
-    }
-
-    public update_state(id: string, updates: Partial<Omit<ViewSwitcherState, "id" | "is_toolbar_visible">>){
-        const current = this.states.get(id)
-        if (!current) return
+    public update_instance(
+        id: string,
+        updates: Partial<Omit<ViewSwitcherInitState, "id" | "is_toolbar_visible">>
+    ): void {
+        const current_raw = this.raw_instances[id]
+        if (!current_raw) return
 
         let changed = false
-        let is_transitioning_changed = false
-        const updated: ViewSwitcherState = { ...current }
+        const next_raw: ViewSwitcherInitState = { ...current_raw }
 
-        if (updates.is_transitioning !== undefined && updates.is_transitioning !== current.is_transitioning){
-            updated.is_transitioning = updates.is_transitioning
-            is_transitioning_changed = true
+        if (updates.is_transitioning !== undefined && updates.is_transitioning !== current_raw.is_transitioning) {
+            next_raw.is_transitioning = updates.is_transitioning
             changed = true
         }
 
-        if (updates.active_view_id !== undefined && updates.active_view_id !== current.active_view_id){
-            updated.active_view_id = updates.active_view_id
+        if (updates.active_view_id !== undefined && updates.active_view_id !== current_raw.active_view_id) {
+            next_raw.active_view_id = updates.active_view_id
             changed = true
         }
 
-        if (updates.target_view_id !== undefined && updates.target_view_id !== current.target_view_id){
-            updated.target_view_id = updates.target_view_id
+        if (updates.target_view_id !== undefined && updates.target_view_id !== current_raw.target_view_id) {
+            next_raw.target_view_id = updates.target_view_id
             changed = true
         }
 
-        if (changed){
-            if (updates.is_transitioning === false && this.pending_visibilities.has(id)){
-                const pending_visible = this.pending_visibilities.get(id)!
-                this.pending_visibilities.delete(id)
-                if (updated.is_toolbar_visible !== pending_visible){
-                    updated.is_toolbar_visible = pending_visible
-                }
-            }
+        if (!changed) return
 
-            this.states.set(id, updated)
-            if (is_transitioning_changed){
-                this.notify_all()
-            }
-            else {
-                this.notify(id)
+        if (updates.is_transitioning === false && id in this.pending_visibilities) {
+            const pending = this.pending_visibilities[id]
+            delete this.pending_visibilities[id]
+            if (pending !== undefined && next_raw.is_toolbar_visible !== pending) {
+                next_raw.is_toolbar_visible = pending
             }
         }
+
+        this.raw_instances[id] = next_raw
+        this.recompute_state()
     }
 
-    public set_toolbar_visible(id: string, visible: boolean, options?: SetToolbarVisibleOptions){
-        const current = this.states.get(id)
-        
+
+    public set_toolbar_visible(id: string, visible: boolean, options?: SetToolbarVisibleOptions): void {
+        const current_raw = this.raw_instances[id]
         const wait_until_stable = options?.wait_until_stable ?? false
-        
-        if (wait_until_stable && current?.is_transitioning){
-            this.pending_visibilities.set(id, visible)
+
+        if (wait_until_stable && current_raw?.is_transitioning) {
+            this.pending_visibilities[id] = visible
             return
         }
 
-        this.pending_visibilities.delete(id)
+        delete this.pending_visibilities[id]
 
-        if (current){
-            if (current.is_toolbar_visible !== visible){
-                current.is_toolbar_visible = visible
-                this.notify(id)
+        if (current_raw) {
+            if (current_raw.is_toolbar_visible !== visible) {
+                this.raw_instances[id] = {
+                    ...current_raw,
+                    is_toolbar_visible: visible
+                }
+                this.recompute_state()
             }
-        }
-        else {
-            this.states.set(id, {
+        } else {
+            this.raw_instances[id] = {
                 id,
                 is_toolbar_visible: visible,
                 is_transitioning: false,
                 active_view_id: "",
                 target_view_id: null
-            })
+            }
+            this.recompute_state()
         }
     }
 
-    public show_toolbar(id: string, options?: SetToolbarVisibleOptions){
+    public show_toolbar(id: string, options?: SetToolbarVisibleOptions): void {
         this.set_toolbar_visible(id, true, options)
     }
 
-    public hide_toolbar(id: string, options?: SetToolbarVisibleOptions){
+    public hide_toolbar(id: string, options?: SetToolbarVisibleOptions): void {
         this.set_toolbar_visible(id, false, options)
     }
 
-    public hide_all_toolbars(){
-        this.global_hide_count++
-        if (this.global_hide_count === 1){
-            this.notify_all()
-        }
+    public hide_all_toolbars(): void {
+        const next_hide_count = this.state.global_hide_count + 1
+        this.recompute_state(next_hide_count)
     }
 
-    public show_all_toolbars(){
-        this.global_hide_count = Math.max(0, this.global_hide_count - 1)
-        if (this.global_hide_count === 0){
-            this.notify_all()
-        }
+    public show_all_toolbars(): void {
+        const next_hide_count = Math.max(0, this.state.global_hide_count - 1)
+        this.recompute_state(next_hide_count)
     }
 
-    public switch_view(view_id: string, switcher_id?: string): boolean{
+    public switch_view(view_id: string, switcher_id?: string): boolean {
         const id = switcher_id ?? this.get_default_switcher_id()
-        if (!id) return false
-        const handler = this.switch_handlers.get(id)
-        if (!handler) return false
-        handler(view_id)
+        if (!id || !(id in this.state.instances)) return false
+
+        this.dispatchEvent(new CustomEvent<SwitchViewEventDetail>("switch_view", {
+            detail: { switcher_id: id, view_id }
+        }))
         return true
     }
 
-    public get_default_switcher_id(): string | undefined{
-        if (this.switch_handlers.has("main_switcher")){
+    public get_default_switcher_id(): string | undefined {
+        if ("main_switcher" in this.state.instances) {
             return "main_switcher"
         }
-        return this.switch_handlers.keys().next().value
+        return Object.keys(this.state.instances)[0]
     }
 
-    public get_active_view_id(switcher_id?: string): string | undefined{
+    public get_active_view_id(switcher_id?: string): string | undefined {
         const id = switcher_id ?? this.get_default_switcher_id()
         if (!id) return undefined
-        return this.states.get(id)?.active_view_id
+        return this.state.instances[id]?.active_view_id
     }
 
-    get_state(id: string): ViewSwitcherState | undefined{
-        return this.states.get(id)
+    public get_state(id: string): ViewSwitcherState {
+        const found = this.state.instances[id]
+        if (found) return found
+
+        const is_toolbar_visible = this.state.global_hide_count === 0
+        const has_other_transitioning = this.state.has_any_transitioning
+        const cached_fallback = this.fallback_states[id]
+        if (
+            cached_fallback &&
+            cached_fallback.is_toolbar_visible === is_toolbar_visible &&
+            cached_fallback.has_other_transitioning === has_other_transitioning
+        ) {
+            return cached_fallback
+        }
+
+        const new_fallback: ViewSwitcherState = {
+            id,
+            is_toolbar_visible,
+            is_transitioning: false,
+            has_other_transitioning,
+            active_view_id: "",
+            target_view_id: null
+        }
+        this.fallback_states[id] = new_fallback
+        return new_fallback
     }
 
-    /**
-     * Checks if any registered ViewSwitcher instance (excluding optional exclude_id) is currently transitioning.
-     *
-     * CSS CONTAINING BLOCK ARCHITECTURAL NOTE:
-     * When a ViewSwitcher undergoes horizontal swipe transitions, its active/target view container
-     * is set to `position: fixed` with a `transform: translate3d(...)` property. According to CSS Specs,
-     * any element with a non-none `transform` becomes the Containing Block for its nested `position: fixed` descendants.
-     *
-     * If a nested/child ViewSwitcher initiates a transition while a parent/ancestor ViewSwitcher is still transitioning,
-     * the child's `fixed` positioning target shifts from the Viewport to the parent's container, causing vertical
-     * position offset calculation errors and visual flickering.
-     *
-     * This method acts as a cross-instance transition lock to prevent overlapping transition animations.
-     */
-    public has_any_transitioning(exclude_id?: string): boolean{
-        for (const [id, state] of this.states.entries()){
-            if (id !== exclude_id && state.is_transitioning){
+    public has_any_transitioning(exclude_id?: string): boolean {
+        if (!exclude_id) {
+            return this.state.has_any_transitioning
+        }
+        const instance = this.state.instances[exclude_id]
+        if (instance) {
+            return instance.has_other_transitioning
+        }
+        for (const inst of Object.values(this.state.instances)) {
+            if (inst.id !== exclude_id && inst.is_transitioning) {
                 return true
             }
         }
         return false
     }
 
-    private notify(id: string){
-        const effective = this.get_effective_state(id)
-        const list = this.listeners.get(id)
-        if (effective && list){
-            list.forEach((listener) => {
-                try {
-                    listener(effective)
-                }
-                catch (e){
-                    console.error("Error in ViewSwitcher listener:", e)
-                }
-            })
-        }
-    }
+    private recompute_state(next_global_hide_count: number = this.state.global_hide_count): void {
+        const is_globally_hidden = next_global_hide_count > 0
+        const current_instances = this.state.instances
+        let any_instance_changed = false
+        const next_instances: Record<string, ViewSwitcherState> = {}
 
-    private notify_all(){
-        for (const id of this.states.keys()){
-            this.notify(id)
+        const raw_keys = Object.keys(this.raw_instances)
+        const current_keys = Object.keys(current_instances)
+        if (raw_keys.length !== current_keys.length) {
+            any_instance_changed = true
+        }
+
+        let transitioning_count = 0
+        for (const raw of Object.values(this.raw_instances)) {
+            if (raw.is_transitioning) {
+                transitioning_count++
+            }
+        }
+        const has_any_trans = transitioning_count > 0
+
+        for (const [id, raw] of Object.entries(this.raw_instances)) {
+            const effective_toolbar = is_globally_hidden ? false : raw.is_toolbar_visible
+            const has_other_trans = raw.is_transitioning
+                ? transitioning_count > 1
+                : transitioning_count > 0
+
+            const prev = current_instances[id]
+            if (
+                prev &&
+                prev.id === raw.id &&
+                prev.is_toolbar_visible === effective_toolbar &&
+                prev.is_transitioning === raw.is_transitioning &&
+                prev.has_other_transitioning === has_other_trans &&
+                prev.active_view_id === raw.active_view_id &&
+                prev.target_view_id === raw.target_view_id
+            ) {
+                next_instances[id] = prev
+            } else {
+                next_instances[id] = {
+                    id: raw.id,
+                    is_toolbar_visible: effective_toolbar,
+                    is_transitioning: raw.is_transitioning,
+                    has_other_transitioning: has_other_trans,
+                    active_view_id: raw.active_view_id,
+                    target_view_id: raw.target_view_id
+                }
+                any_instance_changed = true
+            }
+        }
+
+        const count_changed = next_global_hide_count !== this.state.global_hide_count
+        const transitioning_changed = has_any_trans !== this.state.has_any_transitioning
+
+        if (any_instance_changed || count_changed || transitioning_changed) {
+            this._state = {
+                instances: next_instances,
+                has_any_transitioning: has_any_trans,
+                global_hide_count: next_global_hide_count
+            }
+            this.dispatchEvent(new Event("change"))
         }
     }
 }
 
 export const view_switcher_controller = new ViewSwitcherController()
-
-if (typeof window !== "undefined"){
-    (window as unknown as { view_switcher_controller?: ViewSwitcherController }).view_switcher_controller = view_switcher_controller
-}
