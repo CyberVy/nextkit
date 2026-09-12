@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react"
-import type { CSSProperties, MutableRefObject, RefObject, TransitionEvent } from "react"
+import type { CSSProperties, RefObject, TransitionEvent } from "react"
 import { create_swipe_gesture } from "@/infra"
 import type { SwipeEndResult } from "@/infra/gestures.client"
 import type { View } from "./ViewSwitcher"
@@ -211,7 +211,7 @@ export interface UseViewSwipeGestureResult<T extends string> {
     transition_state: TransitionState<T>
     is_transitioning: boolean
     target_view_id: T | null
-    view_elements_ref: MutableRefObject<Record<string, HTMLDivElement | null>>
+    view_elements_ref: RefObject<Record<string, HTMLDivElement | null>>
     handle_transition_end: (e?: TransitionEvent) => void
     reset_transition: () => void
 }
