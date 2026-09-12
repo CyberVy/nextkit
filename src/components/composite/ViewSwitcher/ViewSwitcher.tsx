@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useId, useMemo } from "react"
-import type { ComponentPropsWithRef, ReactNode, TransitionEvent } from "react"
-import { create_swipe_gesture } from "@/infra"
-import { HapticContainer } from "@/components/base/HapticContainer"
+import { useState, useEffect, useLayoutEffect, useCallback, useId, useRef } from "react"
+import type { ComponentPropsWithRef, ReactNode } from "react"
 import { join_classes } from "@/components/utils"
 import { view_switcher_controller } from "./ViewSwitcherController"
-import styles from "./ViewSwitcher.module.css"
+import { useViewSwitcher } from "./useViewSwitcher"
+import { ViewSwitcherToolbar } from "./ViewSwitcherToolbar"
+import { useViewSwipeGesture, compute_view_render_config, is_in_overscroll, evaluate_toolbar_visibility } from "./useViewSwipeGesture"
 
 export interface View<T extends string = string> {
     /** Unique identifier for the view */
@@ -49,173 +49,7 @@ export type ViewSwitcherProps<T extends string = string> = Omit<ComponentPropsWi
     /** Custom class for individual view buttons */
     toolbar_item_className?: string
     /** Layout positioning: bottom floating (default) or top floating */
-    toolbar_layout?: 'bottom-floating' | 'top-floating'
-}
-
-/**
- * State machine for view transition animations during touch gestures or automated switches.
- */
-type TransitionState<T extends string> =
-    | { status: "idle" }
-    | {
-          /** Active gesture dragging or release animation phase */
-          status: "dragging" | "released"
-          /** ID of the view from which transition starts */
-          active_view_id: T
-          /** Index of current active view in views array */
-          active_view_index: number
-          /** Measured pixel height of current active view container */
-          active_view_height: number
-          /** Captured window.scrollY of active view prior to gesture start */
-          active_view_scroll_y: number
-          /** Top offset of active view relative to document top */
-          active_view_top: number
-          /** Viewport height at gesture initiation time */
-          viewport_height: number
-          /** Container or viewport width at gesture initiation time */
-          viewport_width: number
-
-          /** ID of left neighbor view if available */
-          prev_view_id?: T
-          /** Cached window.scrollY for prev view */
-          prev_view_scroll_y?: number
-          /** ID of right neighbor view if available */
-          next_view_id?: T
-          /** Cached window.scrollY for next view */
-          next_view_scroll_y?: number
-
-          /** ID of the target view being swiped into (determined during released phase) */
-          target_view_id?: T
-          /** Index of target view in views array */
-          target_view_index?: number
-          /** Cached window.scrollY for target view */
-          target_view_scroll_y?: number
-
-          /** Final horizontal offset target during released animation phase */
-          target_translation_x?: number
-          /** True if swipe distance exceeded threshold confirming view change */
-          is_switching_confirmed?: boolean
-      }
-
-/**
- * Context wrapper passed into stale-closure bypass refs (e.g., gesture listeners and scroll event handlers)
- * to access the latest reactive states without triggering duplicate listener bindings.
- */
-interface ViewSwitcherContext<T extends string> {
-    current_active_view_id: T
-    active_view_remember_scroll: boolean
-    active_swipe_enabled: View<T>["swipe_enabled"]
-    active_view_index: number
-    views: View<T>[]
-    transition_state: TransitionState<T>
-    is_transitioning: boolean
-}
-
-/**
- * Check if the document is currently in an iOS rubber-band overscroll phase (top or bottom).
- * Gesture interaction and toolbar click triggers are forbidden during overscroll to avoid visual jumping.
- */
-function is_in_overscroll(): boolean{
-    const max_scroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
-    return window.scrollY < 0 || window.scrollY > max_scroll
-}
-
-/**
- * Evaluates whether the floating toolbar should be hidden based on a boolean or function rule and current scroll position.
- */
-function evaluate_toolbar_visibility(rule: boolean | ((scroll_y: number) => boolean) | undefined, scroll_y: number): boolean{
-    if (rule === undefined) return true
-    return typeof rule === "function" ? !rule(scroll_y) : !rule
-}
-
-/**
- * Calculates effective DOM translation X offset from raw swipe gesture displacement diff_x
- * considering edge boundaries and view swipe permission settings.
- */
-function calculate_effective_translation_x<T extends string>(
-    diff_x: number,
-    prev_view_id?: T,
-    next_view_id?: T,
-    active_swipe_enabled?: View<T>["swipe_enabled"]
-): number{
-    const is_left_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "right"
-    const is_right_allowed = active_swipe_enabled !== false && active_swipe_enabled !== "none" && active_swipe_enabled !== "left"
-
-    if (diff_x < 0 && (!next_view_id || !is_left_allowed)){
-        return 0
-    }
-    if (diff_x > 0 && (!prev_view_id || !is_right_allowed)){
-        return 0
-    }
-    return diff_x
-}
-
-/**
- * Computes visibility, layout styles, and CSS classes for a given view during transition or idle states.
- *
- * Transiting views are set to `position: fixed; top: 0; left: 0` to pull them out of document flow.
- * Their horizontal positioning (side-by-side) and vertical scroll alignment are fully controlled by `transform: translate3d`.
- */
-function compute_view_render_config<T extends string>(
-    view: View<T>,
-    current_active_view_id: T,
-    keep_alive_default: boolean,
-    transition_state: TransitionState<T>
-){
-    const is_active = view.id === current_active_view_id
-    const is_keep_alive = view.keep_alive ?? keep_alive_default
-
-    const is_view_active_in_transition = transition_state.status !== "idle" && transition_state.active_view_id === view.id
-    const is_view_prev_in_transition = transition_state.status !== "idle" && transition_state.prev_view_id === view.id
-    const is_view_next_in_transition = transition_state.status !== "idle" && transition_state.next_view_id === view.id
-
-    const is_transiting = is_view_active_in_transition || is_view_prev_in_transition || is_view_next_in_transition
-
-    const should_render = is_active || is_keep_alive || is_transiting
-    if (!should_render) return null
-
-    let style: React.CSSProperties = {}
-    let view_class = ""
-
-    if (transition_state.status !== "idle" && is_transiting){
-        const container_width = transition_state.viewport_width
-        const container_base_height = transition_state.viewport_height - transition_state.active_view_top
-        let view_base_x = 0
-        let scroll_y = transition_state.active_view_scroll_y
-
-        if (is_view_prev_in_transition){
-            view_base_x = -container_width
-            scroll_y = transition_state.prev_view_scroll_y ?? 0
-        }
-        else if (is_view_next_in_transition){
-            view_base_x = container_width
-            scroll_y = transition_state.next_view_scroll_y ?? 0
-        }
-
-        const view_top_offset = transition_state.active_view_top - scroll_y
-        const released_target_x = transition_state.status === "released" && transition_state.target_translation_x !== undefined
-            ? transition_state.target_translation_x
-            : 0
-
-        style = {
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: `${container_base_height + scroll_y}px`,
-            transform: `translate3d(${view_base_x + released_target_x}px, ${view_top_offset}px, 0)`,
-            transition: transition_state.status === "released" ? "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-            zIndex: 10,
-            ["--switcher-top-offset" as string]: `${view_top_offset}px`,
-            ["--switcher-bottom-offset" as string]: `${view_top_offset}px`,
-        } as React.CSSProperties
-        view_class = "block"
-    }
-    else {
-        view_class = is_active ? "block w-full min-h-screen" : "hidden"
-    }
-
-    return { view_class, style, is_view_active_in_transition }
+    toolbar_layout?: "bottom-floating" | "top-floating"
 }
 
 /**
@@ -258,7 +92,7 @@ export function ViewSwitcher<T extends string = string>({
     const [internal_active_view_id, set_internal_active_view_id] = useState<T>(default_active_view_id ?? views[0]?.id)
     const current_active_view_id = active_view_id !== undefined ? active_view_id : internal_active_view_id
 
-    // Component container Ref callback forwarding
+    // Container DOM ref forwarding
     const container_element_ref = useRef<HTMLDivElement | null>(null)
     const set_container_element_ref = useCallback((element: HTMLDivElement | null) => {
         container_element_ref.current = element
@@ -266,63 +100,9 @@ export function ViewSwitcher<T extends string = string>({
         else if (ref) ref.current = element
     }, [ref])
 
-    // Refs to cache scroll positions and DOM elements per view ID
+    // Scroll positions and switching lock refs
     const scroll_positions_ref = useRef<Record<string, number>>({})
-    const view_elements_ref = useRef<Record<string, HTMLDivElement | null>>({})
     const is_switching_view_ref = useRef<boolean>(false)
-
-    // Gesture transition state machine
-    const [transition_state, set_transition_state] = useState<TransitionState<T>>({ status: "idle" })
-    const is_transitioning = transition_state.status !== "idle"
-
-    // Register with ViewSwitcherController for global toolbar visibility state
-    const [is_toolbar_visible, set_is_toolbar_visible] = useState(true)
-    const [has_other_transitioning, set_has_other_transitioning] = useState(false)
-
-    const switch_view = useCallback((target_view_id: string) => {
-        const target = views.find((v) => v.id === target_view_id)
-        if (!target) return
-        if (transition_state.status !== "idle"){
-            set_transition_state({ status: "idle" })
-        }
-        if (active_view_id === undefined) set_internal_active_view_id(target_view_id as T)
-        on_view_change?.(target_view_id as T)
-    }, [views, transition_state.status, active_view_id, on_view_change])
-
-    const switch_view_ref = useRef(switch_view)
-    useLayoutEffect(() => {
-        switch_view_ref.current = switch_view
-    })
-
-    useEffect(() => {
-        return view_switcher_controller.register(
-            switcher_instance_id,
-            {
-                id: switcher_instance_id,
-                is_toolbar_visible: true,
-                is_transitioning,
-                active_view_id: current_active_view_id,
-                target_view_id: transition_state.status !== "idle" ? (transition_state.target_view_id ?? null) : null,
-            },
-            (updated_state) => {
-                set_is_toolbar_visible((prev) => prev === updated_state.is_toolbar_visible ? prev : updated_state.is_toolbar_visible)
-                set_has_other_transitioning(view_switcher_controller.has_any_transitioning(switcher_instance_id))
-            },
-            {
-                switch_view: (target_id: string) => {
-                    switch_view_ref.current(target_id)
-                }
-            }
-        )
-    }, [switcher_instance_id])
-
-    useEffect(() => {
-        view_switcher_controller.update_state(switcher_instance_id, {
-            is_transitioning,
-            active_view_id: current_active_view_id,
-            target_view_id: transition_state.status !== "idle" ? (transition_state.target_view_id ?? null) : null,
-        })
-    }, [switcher_instance_id, transition_state, current_active_view_id, is_transitioning])
 
     // Derive active view configuration flags
     const active_view_index = views.findIndex((v) => v.id === current_active_view_id)
@@ -332,307 +112,122 @@ export function ViewSwitcher<T extends string = string>({
     const active_swipe_enabled = active_view?.swipe_enabled
     const should_hide_toolbar = active_view?.should_hide_toolbar
 
-    // Reusable scroll restoration helper locking window.scrollTo
-    const restore_scroll_position = useCallback((view_id: T, scroll_y?: number) => {
-        const target_scroll_y = scroll_y !== undefined ? scroll_y : (scroll_positions_ref.current[view_id] ?? 0)
-        window.scrollTo(0, target_scroll_y)
-        scroll_positions_ref.current[view_id] = target_scroll_y
-    }, [])
+    const commit_view_change = useCallback((view_id: T) => {
+        if (active_view_id === undefined) set_internal_active_view_id(view_id)
+        on_view_change?.(view_id)
+    }, [active_view_id, on_view_change])
 
-    // Reset transition state machine to idle upon CSS transitionend event
-    const handle_transition_end = useCallback((e?: TransitionEvent) => {
-        if (e && e.target !== e.currentTarget) return
-        if (transition_state.status === "idle") return
-
-        set_transition_state({ status: "idle" })
-    }, [transition_state])
-
-    // Stale-closure bypass ref synchronization for event listeners
-    const view_switcher_context = useMemo(() => {
-        return {
-            current_active_view_id, active_view_remember_scroll, active_swipe_enabled,
-            active_view_index, views, transition_state, is_transitioning
-        }
-    }, [current_active_view_id, active_view_remember_scroll, active_swipe_enabled, active_view_index, views, transition_state, is_transitioning])
-
-    const view_switcher_context_ref = useRef<ViewSwitcherContext<T>>(view_switcher_context)
-
-    useLayoutEffect(() => {
-        view_switcher_context_ref.current = view_switcher_context
-    }, [view_switcher_context])
+    // Swipe gesture transition engine
+    const {
+        transition_state,
+        is_transitioning,
+        target_view_id,
+        view_elements_ref,
+        handle_transition_end,
+        reset_transition,
+    } = useViewSwipeGesture({
+        switcher_instance_id,
+        views,
+        current_active_view_id,
+        active_view_index,
+        active_swipe_enabled,
+        container_element_ref,
+        scroll_positions_ref,
+        commit_view_change,
+    })
 
     // Window scroll listener: records scroll position and updates toolbar visibility
     useEffect(() => {
         const handle_scroll = () => {
-            const { current_active_view_id: active_id, active_view_remember_scroll, views: current_views } = view_switcher_context_ref.current
-            if (is_switching_view_ref.current || view_switcher_context_ref.current.is_transitioning) return
+            if (is_switching_view_ref.current || is_transitioning) return
 
             const current_scroll_y = window.scrollY
-            if (active_view_remember_scroll){
-                scroll_positions_ref.current[active_id] = current_scroll_y
+            if (active_view_remember_scroll) {
+                scroll_positions_ref.current[current_active_view_id] = current_scroll_y
             }
 
-            const active_view_config = current_views.find((v) => v.id === active_id)
-            const rule = active_view_config?.should_hide_toolbar
-            if (rule !== undefined){
-                const is_visible = evaluate_toolbar_visibility(rule, current_scroll_y)
+            if (should_hide_toolbar !== undefined) {
+                const is_visible = evaluate_toolbar_visibility(should_hide_toolbar, current_scroll_y)
                 view_switcher_controller.set_toolbar_visible(switcher_instance_id, is_visible)
             }
         }
 
         window.addEventListener("scroll", handle_scroll, { passive: true })
         return () => window.removeEventListener("scroll", handle_scroll)
-    }, [switcher_instance_id])
+    }, [switcher_instance_id, current_active_view_id, active_view_remember_scroll, should_hide_toolbar, is_transitioning])
 
-    // Restore scroll position synchronously pre-paint on active view change
+    // Restore scroll position synchronously pre-paint on active view change or transition end
     useLayoutEffect(() => {
         if (is_transitioning) return
 
         is_switching_view_ref.current = true
 
         const target_scroll_y = active_view_remember_scroll ? (scroll_positions_ref.current[current_active_view_id] ?? 0) : 0
-        restore_scroll_position(current_active_view_id, target_scroll_y)
+        window.scrollTo(0, target_scroll_y)
+        scroll_positions_ref.current[current_active_view_id] = target_scroll_y
 
         const is_visible = evaluate_toolbar_visibility(should_hide_toolbar, target_scroll_y)
         view_switcher_controller.set_toolbar_visible(switcher_instance_id, is_visible)
 
         is_switching_view_ref.current = false
-    }, [current_active_view_id, active_view_remember_scroll, restore_scroll_position, is_transitioning, should_hide_toolbar, switcher_instance_id])
+    }, [current_active_view_id, active_view_remember_scroll, is_transitioning, should_hide_toolbar, switcher_instance_id])
 
-    // Lock touchmove document scrolling while transition animation is active
+    // Controller integration
+    const { is_toolbar_visible, has_other_transitioning } = useViewSwitcher(switcher_instance_id)
+
+
+    const switch_view = useCallback((target_view_id: string) => {
+        const target = views.find((v) => v.id === target_view_id)
+        if (!target) return
+        reset_transition()
+        commit_view_change(target.id)
+    }, [views, reset_transition, commit_view_change])
+
+    // Register instance with ViewSwitcherController on mount
     useEffect(() => {
-        if (!is_transitioning) return
-        const prevent_scroll = (e: TouchEvent) => { if (e.cancelable) e.preventDefault() }
-        document.addEventListener("touchmove", prevent_scroll, { passive: false })
-        return () => document.removeEventListener("touchmove", prevent_scroll)
-    }, [is_transitioning])
+        return view_switcher_controller.register(
+            switcher_instance_id,
+            {
+                id: switcher_instance_id,
+                is_toolbar_visible: true,
+                is_transitioning,
+                active_view_id: current_active_view_id,
+                target_view_id,
+            }
+        )
+    }, [switcher_instance_id])
 
-    // Bind horizontal swipe gesture handlers
+    // Keep controller synchronized with instance transition and active view states
     useEffect(() => {
-        const container_element = container_element_ref.current
-        if (!container_element) return
-
-        const swipe_gesture = create_swipe_gesture({
-            enabled: (swipe_direction) => {
-                const { transition_state, active_swipe_enabled, active_view_index, views } = view_switcher_context_ref.current
-
-                // Forbid swipe during iOS overscroll/bounce
-                if (is_in_overscroll()) return false
-
-                if (view_switcher_controller.has_any_transitioning(switcher_instance_id)) return false
-
-                if (transition_state.status === "dragging"){
-                    // warning: iOS Webkit may lose events when the main thread is busy
-                    // this recover the views from getting stuck
-                    set_transition_state({ status: "idle" })
-                    return false
-                }
-
-                if (active_swipe_enabled === false || active_swipe_enabled === "none") return false
-                if (active_swipe_enabled === "left" || active_swipe_enabled === "right"){
-                    if (active_swipe_enabled !== swipe_direction) return false
-                }
-
-                if (swipe_direction === "right" && active_view_index <= 0) return false
-                if (swipe_direction === "left" && active_view_index >= views.length - 1) return false
-
-                return true
-            },
-            on_start: () => {
-                const { transition_state } = view_switcher_context_ref.current
-
-                let active_id = view_switcher_context_ref.current.current_active_view_id
-                let active_scroll_y = scroll_positions_ref.current[active_id] ?? window.scrollY
-
-                if (transition_state.status === "released"){
-                    const final_scroll_y = (transition_state.is_switching_confirmed === false
-                        ? transition_state.active_view_scroll_y
-                        : transition_state.target_view_scroll_y) ?? 0
-                    const final_view_id = transition_state.is_switching_confirmed === false
-                        ? transition_state.active_view_id
-                        : transition_state.target_view_id
-
-                    if (final_view_id){
-                        active_id = final_view_id
-                        active_scroll_y = final_scroll_y
-                    }
-                }
-
-                const views = view_switcher_context_ref.current.views
-                const active_view_index = views.findIndex((v) => v.id === active_id)
-
-                if (active_view_index === -1) return false
-
-                let prev_id: T | undefined
-                let prev_scroll_y = 0
-                if (active_view_index > 0){
-                    prev_id = views[active_view_index - 1].id
-                    prev_scroll_y = scroll_positions_ref.current[prev_id] ?? 0
-                }
-
-                let next_id: T | undefined
-                let next_scroll_y = 0
-                if (active_view_index < views.length - 1){
-                    next_id = views[active_view_index + 1].id
-                    next_scroll_y = scroll_positions_ref.current[next_id] ?? 0
-                }
-
-                if (prev_id || next_id){
-                    let active_height = 0
-                    let active_view_top = 0
-                    const active_child = view_elements_ref.current[active_id]
-                    if (active_child){
-                        active_height = active_child.offsetHeight
-                        const rect = active_child.getBoundingClientRect()
-                        active_view_top = transition_state.status !== "idle"
-                            ? (transition_state.active_view_top ?? 0)
-                            : rect.top + active_scroll_y
-                    }
-
-                    const container_width = container_element.clientWidth || window.innerWidth
-
-                    set_transition_state({
-                        status: "dragging",
-                        active_view_id: active_id,
-                        active_view_index,
-                        active_view_height: active_height,
-                        active_view_scroll_y: active_scroll_y,
-                        active_view_top,
-                        viewport_height: window.innerHeight,
-                        viewport_width: container_width,
-                        prev_view_id: prev_id,
-                        prev_view_scroll_y: prev_scroll_y,
-                        next_view_id: next_id,
-                        next_view_scroll_y: next_scroll_y,
-                    })
-                    return true
-                }
-                return false
-            },
-            on_move: (delta_x) => {
-                const current_transition = view_switcher_context_ref.current.transition_state
-                if (current_transition.status !== "dragging") return
-
-                const { active_view_top, active_view_scroll_y, prev_view_id, prev_view_scroll_y, next_view_id, next_view_scroll_y, viewport_width } = current_transition
-                const { active_swipe_enabled } = view_switcher_context_ref.current
-
-                const effective_translation_x = calculate_effective_translation_x(delta_x, prev_view_id, next_view_id, active_swipe_enabled)
-
-                // Direct DOM transform updates during drag for high 120fps performance without React re-renders
-                const active_el = view_elements_ref.current[current_transition.active_view_id]
-                const prev_el = prev_view_id ? view_elements_ref.current[prev_view_id] : null
-                const next_el = next_view_id ? view_elements_ref.current[next_view_id] : null
-
-                const active_view_top_offset = active_view_top - active_view_scroll_y
-                if (active_el){
-                    active_el.style.transform = `translate3d(${effective_translation_x}px, ${active_view_top_offset}px, 0)`
-                }
-                if (prev_el){
-                    const prev_view_top_offset = active_view_top - (prev_view_scroll_y ?? 0)
-                    prev_el.style.transform = `translate3d(${-viewport_width + effective_translation_x}px, ${prev_view_top_offset}px, 0)`
-                }
-                if (next_el){
-                    const next_view_top_offset = active_view_top - (next_view_scroll_y ?? 0)
-                    next_el.style.transform = `translate3d(${viewport_width + effective_translation_x}px, ${next_view_top_offset}px, 0)`
-                }
-            },
-            on_end: ({ should_complete, direction, diff_x }) => {
-                const current_transition = view_switcher_context_ref.current.transition_state
-                if (current_transition.status === "idle") return
-
-                let final_should_complete = should_complete
-                const { active_view_index, prev_view_id, next_view_id, viewport_width } = current_transition
-
-                let target_id: T | undefined
-                let target_index: number | undefined
-                let target_scroll_y: number | undefined
-                let target_translation_x = 0
-
-                if (should_complete){
-                    if (direction === "left" && next_view_id){
-                        target_id = next_view_id
-                        target_index = active_view_index + 1
-                        target_scroll_y = current_transition.next_view_scroll_y
-                        target_translation_x = -viewport_width
-                    }
-                    else if (direction === "right" && prev_view_id){
-                        target_id = prev_view_id
-                        target_index = active_view_index - 1
-                        target_scroll_y = current_transition.prev_view_scroll_y
-                        target_translation_x = viewport_width
-                    }
-                    else {
-                        final_should_complete = false
-                    }
-                }
-
-                if (final_should_complete && target_id){
-                    if (active_view_id === undefined) set_internal_active_view_id(target_id)
-                    on_view_change?.(target_id)
-                }
-
-                const active_el = view_elements_ref.current[current_transition.active_view_id]
-                const prev_el = prev_view_id ? view_elements_ref.current[prev_view_id] : null
-                const next_el = next_view_id ? view_elements_ref.current[next_view_id] : null
-
-                const { active_swipe_enabled } = view_switcher_context_ref.current
-                const current_translation_x = calculate_effective_translation_x(diff_x, prev_view_id, next_view_id, active_swipe_enabled)
-
-                // Check if current DOM displacement is already within 1px of target_translation_x.
-                // If so, CSS transition will not fire a transitionend event, so reset to idle immediately.
-                if (Math.abs(current_translation_x - target_translation_x) < 1){
-                    if (active_el) active_el.style.transform = ""
-                    if (prev_el) prev_el.style.transform = ""
-                    if (next_el) next_el.style.transform = ""
-
-                    set_transition_state({ status: "idle" })
-                    return
-                }
-
-                const active_view_top_offset = current_transition.active_view_top - current_transition.active_view_scroll_y
-                const release_transition_css = "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)"
-
-                if (active_el){
-                    active_el.style.transition = release_transition_css
-                    active_el.style.transform = `translate3d(${target_translation_x}px, ${active_view_top_offset}px, 0)`
-                }
-                if (prev_el){
-                    const prev_view_top_offset = current_transition.active_view_top - (current_transition.prev_view_scroll_y ?? 0)
-                    prev_el.style.transition = release_transition_css
-                    prev_el.style.transform = `translate3d(${-current_transition.viewport_width + target_translation_x}px, ${prev_view_top_offset}px, 0)`
-                }
-                if (next_el){
-                    const next_view_top_offset = current_transition.active_view_top - (current_transition.next_view_scroll_y ?? 0)
-                    next_el.style.transition = release_transition_css
-                    next_el.style.transform = `translate3d(${current_transition.viewport_width + target_translation_x}px, ${next_view_top_offset}px, 0)`
-                }
-
-                set_transition_state((prev) => prev.status === "idle" ? prev : {
-                    ...prev,
-                    status: "released",
-                    target_view_id: target_id,
-                    target_view_index: target_index,
-                    target_view_scroll_y: target_scroll_y,
-                    target_translation_x,
-                    is_switching_confirmed: final_should_complete,
-                })
-            },
+        view_switcher_controller.update_instance(switcher_instance_id, {
+            is_transitioning,
+            active_view_id: current_active_view_id,
+            target_view_id,
         })
+    }, [switcher_instance_id, transition_state, current_active_view_id, is_transitioning, target_view_id])
 
-        const unbind_gesture = swipe_gesture.bind(container_element)
-        return () => {
-            unbind_gesture()
+
+    // React to event-driven "switch_view" CustomEvent from controller
+    useEffect(() => {
+        const handle_switch = (e: Event) => {
+            const custom_event = e as CustomEvent<{ switcher_id: string; view_id: string }>
+            if (custom_event.detail && custom_event.detail.switcher_id === switcher_instance_id) {
+                switch_view(custom_event.detail.view_id)
+            }
         }
-    }, [])
+        view_switcher_controller.addEventListener("switch_view", handle_switch)
+        return () => {
+            view_switcher_controller.removeEventListener("switch_view", handle_switch)
+        }
+    }, [switcher_instance_id, switch_view])
 
     // Toolbar navigation button click handler
     const handle_toolbar_click = (view_id: T) => {
         if (is_transitioning || view_id === current_active_view_id) return
         if (is_in_overscroll()) return
-        if (view_switcher_controller.has_any_transitioning(switcher_instance_id)) return
+        if (has_other_transitioning) return
 
-        if (active_view_id === undefined) set_internal_active_view_id(view_id)
-        on_view_change?.(view_id)
+        commit_view_change(view_id)
     }
 
     return (
@@ -674,94 +269,17 @@ export function ViewSwitcher<T extends string = string>({
                 )}
             </div>
 
-            {/* Floating Bottom/Top ToolBar */}
-            <div
-                className={join_classes(
-                    toolbar_layout === "top-floating"
-                        ? styles["viewswitcher-toolbar-top"]
-                        : styles["viewswitcher-toolbar-bottom"],
-                    "fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5",
-                    "bg-white/40 dark:bg-black/40 backdrop-blur-md",
-                    "rounded-full",
-                    toolbar_layout === "top-floating" ? "p-0.5" : "p-1",
-                    "border border-black/10 dark:border-white/10 shadow-lg",
-                    styles["viewswitcher-toolbar"],
-                    !is_toolbar_visible && styles["toolbar-hidden"],
-                    toolbar_className
-                )}
-            >
-                <div
-                    className={join_classes(
-                        "rounded-full border border-black/10 dark:border-white/10",
-                        toolbar_layout === "top-floating" ? "p-0.5" : "p-1"
-                    )}
-                >
-                    <div
-                        className={join_classes(
-                            "inline-flex flex-row items-center bg-background/0! backdrop-blur-none!",
-                            toolbar_layout === "top-floating" ? "p-0.5 gap-0.5" : "p-1"
-                        )}
-                    >
-                        {views.map((view) => {
-                            const is_active = view.id === current_active_view_id
-                            return (
-                                <button
-                                    key={view.id}
-                                    type="button"
-                                    className="focus-visible:outline-none disabled:pointer-events-none"
-                                    disabled={is_transitioning || is_active || has_other_transitioning}
-                                    onClick={() => handle_toolbar_click(view.id)}
-                                >
-                                    <HapticContainer>
-                                        <span
-                                            className={join_classes(
-                                                "relative align-middle inline-block px-4 overflow-hidden",
-                                                toolbar_layout === "top-floating" ? "rounded-[14px]" : "rounded-[18px]",
-                                                "transition duration-300 ease-in-out hover:cursor-pointer",
-                                                toolbar_item_className ?? (toolbar_layout === "top-floating" ? "w-16 h-7" : "w-16 h-10")
-                                            )}
-                                        >
-                                            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">
-                                                <span
-                                                    className={join_classes(
-                                                        "flex flex-col items-center justify-center transition-all",
-                                                        is_active
-                                                            ? view.icon
-                                                                ? "text-red-700 dark:text-red-500"
-                                                                : "text-black dark:text-white"
-                                                            : "text-black/50 dark:text-white/50"
-                                                    )}
-                                                >
-                                                    {view.icon}
-                                                    {view.label && (
-                                                        <span
-                                                            className={join_classes(
-                                                                view.icon
-                                                                    ? "text-[9px] mt-0.5 font-medium"
-                                                                    : "text-[10px] sm:text-xs font-semibold",
-                                                                is_active && !view.icon ? "font-bold" : ""
-                                                            )}
-                                                        >
-                                                            {view.label}
-                                                        </span>
-                                                    )}
-                                                </span>
-                                            </span>
-                                        </span>
-                                    </HapticContainer>
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {toolbar_extra_actions && (
-                    <>
-                        <div className="w-px h-6 bg-black/15 dark:bg-white/15" />
-                        <div className="flex items-center justify-center">{toolbar_extra_actions}</div>
-                    </>
-                )}
-            </div>
+            <ViewSwitcherToolbar
+                views={views}
+                active_view_id={current_active_view_id}
+                is_toolbar_visible={is_toolbar_visible}
+                is_navigation_disabled={is_transitioning || has_other_transitioning}
+                on_view_select={handle_toolbar_click}
+                toolbar_layout={toolbar_layout}
+                toolbar_extra_actions={toolbar_extra_actions}
+                toolbar_className={toolbar_className}
+                toolbar_item_className={toolbar_item_className}
+            />
         </div>
     )
 }

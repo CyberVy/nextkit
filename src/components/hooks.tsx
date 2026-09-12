@@ -1,6 +1,82 @@
 import type { RefObject } from "react"
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import type { BaseController, BaseKeyedController } from "@/infra"
 import { is_ios_device } from "@/infra/device.client"
+
+export interface UseControllerOptions<State, Selected = State>{
+    events: string | string[]
+    selector?: (state: State) => Selected
+    server_snapshot?: Selected | (() => Selected)
+}
+
+export function useController<State, Selected = State>(
+    controller: BaseController<State, any>,
+    options: UseControllerOptions<State, Selected>
+): Selected{
+    const { events, selector, server_snapshot } = options
+    const event_keys = Array.isArray(events) ? events : [events]
+    const events_key = event_keys.slice().sort().join(",")
+
+    const subscribe = useCallback((on_store_change: () => void) => {
+        const handler = () => on_store_change()
+        for (const evt of event_keys){
+            controller.addEventListener(evt, handler)
+        }
+        return () => {
+            for (const evt of event_keys){
+                controller.removeEventListener(evt, handler)
+            }
+        }
+    }, [controller, events_key])
+
+    const get_snapshot = useCallback(() => {
+        const st = controller.state
+        return selector ? selector(st) : (st as unknown as Selected)
+    }, [controller, selector])
+
+    const get_server_snapshot = useCallback(() => {
+        if (server_snapshot !== undefined){
+            return typeof server_snapshot === "function"
+                ? (server_snapshot as () => Selected)()
+                : server_snapshot
+        }
+        const st = controller.state
+        return selector ? selector(st) : (st as unknown as Selected)
+    }, [controller, selector, server_snapshot])
+
+    return useSyncExternalStore(subscribe, get_snapshot, get_server_snapshot)
+}
+
+export function useKeyedController<Key extends string | number, Value>(
+    controller: BaseKeyedController<Key, any, any>,
+    key: Key,
+    default_value: Value
+): Value{
+    const key_events = useMemo(() => controller.get_key_events(key), [controller, key])
+    const events_key = key_events.slice().sort().join(",")
+
+    const subscribe = useCallback((on_store_change: () => void) => {
+        const handler = () => on_store_change()
+        for (const evt of key_events){
+            controller.addEventListener(evt, handler)
+        }
+        return () => {
+            for (const evt of key_events){
+                controller.removeEventListener(evt, handler)
+            }
+        }
+    }, [controller, events_key])
+
+    const get_snapshot = useCallback(() => {
+        return controller.get_value(key, default_value)
+    }, [controller, key, default_value])
+
+    const get_server_snapshot = useCallback(() => {
+        return default_value
+    }, [default_value])
+
+    return useSyncExternalStore(subscribe, get_snapshot, get_server_snapshot)
+}
  
 export function useMediaQuery(query: string, initial_value = false): boolean{
     const subscribe = useCallback((callback: () => void) => {
