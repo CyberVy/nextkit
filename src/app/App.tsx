@@ -8,10 +8,10 @@ export default function App(){
 
     return (
         <>
-            {show_launch_animation &&
-                <LaunchAnimation on_finish={() => set_show_launch_animation(false)} />}
-
-            <div className={`${show_launch_animation ? "hidden" : "block"}`}>
+            <div
+                className="select-none"
+                {...(show_launch_animation ? { inert: true } : {})}
+            >
                 <div className="fixed left-1/2 top-1/2 -translate-1/2">
                     <div className="pb-1 border-b dark:border-white/30 mb-1 border-black/30">
                         Hello from Nextkit! {">_"}
@@ -21,6 +21,9 @@ export default function App(){
                 </div>
             </div>
 
+            {show_launch_animation && (
+                <LaunchAnimation on_finish={() => set_show_launch_animation(false)} />
+            )}
         </>
     )
 }
