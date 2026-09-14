@@ -1,6 +1,9 @@
 export const is_dev = process.env.NODE_ENV === "development"
 import { version as package_version } from "../../package.json"
 import type { CacheStorageMap } from "./storage/cache.client"
+import { create_logger } from "./logger"
+
+const logger = create_logger("VersionUpdate")
 const version = `${package_version}${is_dev ? "dev" : ""}`
 export default version
 export const static_resource_cache_name = "static-resource-cache"
@@ -35,13 +38,13 @@ export async function update(static_resource_cache: CacheStorageMap){
                         return fetch(link).then(async (link_response) => {
                             if (link_response.ok || link_response.type === "opaque"){
                                 await static_resource_cache.set(new URL(link, location.origin), link_response)
-                                console.log(`Update: Updated ${link}.`)
+                                logger.info("Updated static asset", { link })
                             }
                             else {
-                                console.warn(`Update: Skip caching failed response for ${link} (status: ${link_response.status})`)
+                                logger.warn("Skipped caching failed response for asset", { link, status: link_response.status })
                             }
                         }).catch((err) => {
-                            console.error(`Update: Failed to update asset ${link}:`, err)
+                            logger.error("Failed to update asset", { link, error: err })
                         })
                     })
 
@@ -50,7 +53,7 @@ export async function update(static_resource_cache: CacheStorageMap){
                 // 2. Atomically update index.html only after all new assets are cached
                 await static_resource_cache.delete(key)
                 await static_resource_cache.set(key, latest_index_html_response)
-                console.log(`Update: Updated /.`)
+                logger.info("Updated root index.html")
 
                 // 3. Delete legacy assets after delay
                 setTimeout(() => {
@@ -62,7 +65,7 @@ export async function update(static_resource_cache: CacheStorageMap){
                             static_resource_cache.delete(keys[index]).then(r => {
                                 if (r) return
                                 return static_resource_cache.delete(keys[index].url)
-                            }).then(() => console.log(`Update: The legacy asset(${link}) is deleted.`))
+                            }).then(() => logger.info("Deleted legacy asset", { link }))
                         }
                     })
                 }, 5000)

@@ -1,5 +1,8 @@
 import { is_ios_device, is_android_device } from "./device.client"
 import localforage from "localforage"
+import { create_logger } from "./logger"
+
+const logger = create_logger("MigrationService")
 
 export type TargetDatabasesConfig = Record<string, string[]>
 
@@ -141,7 +144,7 @@ export class MigrationService{
             return { success: true }
         }
         catch (e){
-            console.error("Failed to restore backup:", e)
+            logger.error("Failed to restore backup", e)
             return { success: false, error: e instanceof Error ? e.message : String(e) }
         }
     }
@@ -173,7 +176,7 @@ export class MigrationService{
                         if (share_err instanceof Error && share_err.name === "AbortError"){
                             return { success: false }
                         }
-                        console.warn("navigator.share failed, trying download fallback:", share_err)
+                        logger.warn("navigator.share failed, falling back to download", { error: share_err })
                     }
                 }
             }
@@ -198,7 +201,7 @@ export class MigrationService{
                         if (picker_err instanceof Error && picker_err.name === "AbortError"){
                             return { success: false }
                         }
-                        console.warn("showSaveFilePicker failed, trying download fallback:", picker_err)
+                        logger.warn("showSaveFilePicker failed, falling back to download", { error: picker_err })
                     }
                 }
             }
@@ -216,7 +219,7 @@ export class MigrationService{
             return { success: true, method: "download" }
         }
         catch (err){
-            console.error("Export file failed:", err)
+            logger.error("Export file failed", err)
             return { success: false, error: err instanceof Error ? err.message : String(err) }
         }
     }

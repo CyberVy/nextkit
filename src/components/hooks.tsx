@@ -2,6 +2,9 @@ import type { RefObject } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import type { BaseController, BaseKeyedController } from "@/infra"
 import { is_ios_device } from "@/infra/device.client"
+import { create_logger } from "@/infra/logger"
+
+const logger = create_logger("Hooks")
 
 export interface UseControllerOptions<State, Selected = State>{
     events: string | string[]
@@ -246,7 +249,7 @@ export function usePersistedState<T>({ initial_value, on_load, on_save }: Persis
                 }
             }
             catch (err){
-                console.error("Failed to load persisted state:", err)
+                logger.error("Failed to load persisted state", err)
             }
             finally {
                 if (active){
@@ -266,11 +269,11 @@ export function usePersistedState<T>({ initial_value, on_load, on_save }: Persis
         try {
             const res = on_save(state)
             if (res && typeof res.catch === "function"){
-                res.catch(err => console.error("Failed to save persisted state:", err))
+                res.catch(err => logger.error("Failed to save persisted state", err))
             }
         }
         catch (err){
-            console.error("Failed to save persisted state:", err)
+            logger.error("Failed to save persisted state", err)
         }
     }, [state, on_save])
 
@@ -318,7 +321,7 @@ export function usePersistedRefAndState<T>({ initial_value, on_load, on_save } :
                 }
             }
             catch (err){
-                console.error("Failed to load persisted state:", err)
+                logger.error("Failed to load persisted state", err)
             }
             finally {
                 if (active){
@@ -338,11 +341,11 @@ export function usePersistedRefAndState<T>({ initial_value, on_load, on_save } :
         try {
             const res = on_save(state)
             if (res && typeof res.catch === "function"){
-                res.catch(err => console.error("Failed to save persisted state:", err))
+                res.catch(err => logger.error("Failed to save persisted state", err))
             }
         }
         catch (err){
-            console.error("Failed to save persisted state:", err)
+            logger.error("Failed to save persisted state", err)
         }
     }, [state, on_save])
 

@@ -1,3 +1,7 @@
+import { create_logger } from "../logger"
+
+const logger = create_logger("CacheStorage")
+
 export class CacheStorageMap{
     private cache_name: string
     private cache_storage: Cache | null = null
@@ -13,7 +17,7 @@ export class CacheStorageMap{
             this.cache_storage = await caches.open(this.cache_name)
         }
         catch (e){
-            console.error(`Failed to open CacheStorage ${this.cache_name}:`, e)
+            logger.error("Failed to open CacheStorage", { cache_name: this.cache_name, error: e })
         }
     }
 
