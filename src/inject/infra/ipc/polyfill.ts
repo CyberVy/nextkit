@@ -1,4 +1,4 @@
-import { is_touch_device } from "@/infra"
+import { is_touch_device } from "@/infra/device.client"
 import { WebviewWindowProxy } from "@/infra/web_ipc.client"
 
 declare global {

@@ -45,3 +45,6 @@ export type { LayoutItem } from "./webview.client"
 
 // base_controller.ts
 export { BaseController, BaseKeyedController } from "./base_controller"
+
+// logger.ts
+export { LogLevel, Logger, create_logger } from "./logger"

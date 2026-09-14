@@ -1,3 +1,7 @@
+import { create_logger } from "./logger"
+
+const logger = create_logger("WebIPC")
+
 export class WebviewWindowProxy{
     constructor(public readonly label: string){}
 
@@ -18,17 +22,19 @@ export class WebviewWindowProxy{
                 label: this.label,
                 message: message
             }).catch((err: any) => {
-                console.warn(`[WebviewWindowProxy] Failed to route postMessage to ${this.label}:`, err)
+                logger.warn("Failed to route postMessage to target webview", { label: this.label, error: err })
             })
         } 
         else {
-            console.warn(`[WebviewWindowProxy] IPC transport not available to post message to ${this.label}`)
+            logger.warn("IPC transport not available to post message", { label: this.label })
         }
     }
 
     close(){
         if (typeof window !== "undefined" && window.__TAURI__?.core?.invoke){
-            window.__TAURI__.core.invoke("destroy_child_webview", { label: this.label }).catch(console.error)
+            window.__TAURI__.core.invoke("destroy_child_webview", { label: this.label }).catch((err) => {
+                logger.error("Failed to destroy child webview", { label: this.label, error: err })
+            })
         }
     }
 }
@@ -149,6 +155,7 @@ export async function web_ipc_call({ target, type, payload = {}, delay = 30000 }
     return new Promise<unknown>((resolve, reject) => {
         const timer = setTimeout(() => {
             listener.removeEventListener("message", callback)
+            logger.warn("IPC request timed out", { type, target: String(target), id })
             reject(new Error(`IPC request timeout for type: ${type}`))
         }, delay)
 
@@ -186,12 +193,17 @@ export function handle_web_ipc({ type, handler, listener = typeof self !== "unde
         if (event_data.type !== type) return
         if (!msg_event.source) return
 
-        const result = await handler(event_data.payload)
-        if (is_window(msg_event.source)){
-            msg_event.source.postMessage({ id: event_data.id, result } as IPCResponse, "*")
+        try {
+            const result = await handler(event_data.payload)
+            if (is_window(msg_event.source)){
+                msg_event.source.postMessage({ id: event_data.id, result } as IPCResponse, "*")
+            }
+            else {
+                (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as IPCResponse)
+            }
         }
-        else {
-            (msg_event.source as MessagePort | Client | ServiceWorker).postMessage({ id: event_data.id, result } as IPCResponse)
+        catch (err){
+            logger.error("Error executing WebIPC handler", { type, id: event_data.id, error: err })
         }
     }
 

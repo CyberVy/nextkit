@@ -1,4 +1,7 @@
 import { is_in_native } from "@/infra/device.client"
+import { create_logger } from "./logger"
+
+const logger = create_logger("SmartFetch")
 
 export type NestedRecordValue<T> = NestedRecord<T> | T | NestedRecordValue<T>[]
 export interface NestedRecord<T> {
@@ -17,11 +20,7 @@ export function scan_record_object<T>(node: NestedRecordValue<T>, target_key?:st
                 r.push(node_item)
             }
 
-            if (typeof node_item === "string" || typeof node_item === "number"){
-                // console.log("value",key,node_item)
-            }
-            else if (typeof node_item === "object"){
-                // console.log("node",key,node_item)
+            if (typeof node_item === "object" && node_item !== null){
                 visit(node_item)
             }
         }
@@ -69,6 +68,8 @@ export async function smart_fetch(input : string | URL | Request, init?: Request
             request_body = String(init.body)
         }
     }
+
+    logger.debug("Executing smart_fetch", { url, method: request_method, is_native: is_in_native() && !cors_proxy })
 
     if (is_in_native() && !cors_proxy && window.__TAURI__?.core?.invoke){
         const native_headers: Record<string, string | number> = {}

@@ -1,4 +1,7 @@
 import { web_ipc_call } from "@/infra/web_ipc.client"
+import { create_logger } from "@/infra/logger"
+
+const logger = create_logger("InjectUtils")
 
 export function execute_after_dom_content_loaded(callback: () => void){
     if (document.readyState === "loading"){
@@ -34,6 +37,6 @@ export function notify_injection_success_of_window(_window: Window){
         target: _window,
         type: "on_injection_success",
         payload: { origin: location.href }
-    }).catch((err: any) => console.warn(err))
+    }).catch((err: any) => logger.warn("Failed to notify injection success", err))
 }
 
