@@ -6,7 +6,7 @@
 
 - **True Cross-Platform**: Write once, deploy everywhere—Web, PWA, and Native (Windows, macOS, Linux, iOS, and Android).
 - **Web-First Philosophy**: Leverages the power of modern web standards to provide a seamless experience across all platforms.
-- **Next.js Power**: Built on the latest Next.js 15+ for optimized routing, rendering, and developer experience.
+- **Vite + React 19**: Powered by React 19 and Vite for instant HMR and high-performance builds.
 - **Native Performance**: Uses **Tauri 2.0** to provide native system access and small binary sizes with a Rust-based backend.
 - **PWA Ready**: Includes a built-in Service Worker architecture for offline capabilities and installation.
 
@@ -18,7 +18,29 @@
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/), [Rust](https://www.rust-lang.org/)
 
-## Getting Started
+## Quick Start / Create New App
+
+Scaffold a new project using the interactive wizard (zero configuration required):
+
+```bash
+# Using npm
+npm create nextkit
+
+# Or using npx / pnpm / bun
+npx create-nextkit
+pnpm create nextkit
+bun create nextkit
+```
+
+When working inside this repository, you can run the interactive wizard directly:
+
+```bash
+npm run create
+# Or specify directory directly:
+npm run create -- ../my-app
+```
+
+## Getting Started (Developing Nextkit)
 
 ### Prerequisites
 #### Web
@@ -46,9 +68,11 @@ Development scripts are managed via `package.json`.
 
 | Command               | Description                                                                   |
 |:----------------------|:------------------------------------------------------------------------------|
+| `npm run create`      | Launches the interactive project creation wizard.                             |
 | `npm run dev`         | Starts the Vite dev server (port 4000), Service Worker watcher, and Debug Bridge. |
 | `npm run build`       | Builds the static export of the site and minifies the Service Worker.         |
 | `npm run start`       | Serves the production build locally (from the `dist` directory).              |
+| `npm run check`       | Runs Oxlint and TypeScript compiler check concurrently.                       |
 | `npm run tauri <cmd>` | Executes Tauri commands (e.g., `npm run tauri dev` or `npm run tauri build`). |
 
 ### Running Native App

@@ -4,7 +4,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { execSync, spawn } from "node:child_process";
+import { execSync } from "node:child_process";
+import readline from "node:readline/promises";
+import { stdin, stdout } from "node:process";
 
 // cli/lib/cli_builder.ts
 function to_snake_case(input) {
@@ -263,18 +265,25 @@ var source_root = path.resolve(__dirname, "..");
 if (!fs.existsSync(path.join(source_root, "package.json"))) {
   source_root = path.resolve(__dirname, "../..");
 }
-var IGNORED_PATHS = [
+var IGNORED_EXACT_OR_DIR = [
   "node_modules",
-  ".next",
-  "out",
+  "dist",
+  ".debug",
   "src-tauri/target",
+  "src-tauri/gen",
   ".git",
   ".idea",
-  ".DS_Store",
+  ".vscode",
   "tsconfig.tsbuildinfo",
   "draft",
-  "cli"
+  "cli/index.ts",
+  "cli/lib",
+  "cli/dist"
 ];
+var IGNORED_FILE_NAMES = /* @__PURE__ */ new Set([
+  ".DS_Store",
+  "Thumbs.db"
+]);
 function copy_recursive(src, dest, filter) {
   if (!filter(src)) {
     return;
@@ -297,56 +306,135 @@ function to_title_case(str) {
   return str.replace(/[_-]+/g, " ").replace(/\b[a-z]/g, (char) => char.toUpperCase());
 }
 function to_valid_identifier(str) {
-  const clean = str.toLowerCase().replace(/[^a-z0-9.]/g, "");
-  return clean;
+  return str.toLowerCase().replace(/[^a-z0-9.]/g, "");
 }
-async function main() {
-  const cli = create_cli();
-  cli.command("init", "Create a new Nextkit project from this template.\n\nPositionals:\n  <directory>               Target directory path where the project will be created (e.g. '../my-app')").option("-t, --title <title>", { description: "App display title (e.g. 'My App')" }).option("-i, --identifier <id>", { description: "Tauri bundle identifier (e.g. 'com.company.app')" }).option("-d, --description <desc>", { description: "Project description" }).option("-p, --port <port>", { description: "Development server port (default: 4000)" }).option("-f, --force", { description: "Force overwrite target directory if it exists" }).action((ctx) => {
-    const [target_arg] = ctx.args;
+function detect_package_manager() {
+  const user_agent = process.env.npm_config_user_agent || "";
+  if (user_agent.startsWith("pnpm")) return "pnpm";
+  if (user_agent.startsWith("yarn")) return "yarn";
+  if (user_agent.startsWith("bun")) return "bun";
+  return "npm";
+}
+async function prompt_text(rl, question, default_val) {
+  const display = default_val ? `${question} (${default_val}): ` : `${question}: `;
+  const answer = (await rl.question(display)).trim();
+  return answer || (default_val ?? "");
+}
+async function prompt_confirm(rl, question, default_yes = true) {
+  const hint = default_yes ? "(Y/n)" : "(y/N)";
+  const answer = (await rl.question(`${question} ${hint}: `)).trim().toLowerCase();
+  if (!answer) return default_yes;
+  return answer === "y" || answer === "yes";
+}
+async function handle_create_project(ctx) {
+  const is_interactive = Boolean(stdin.isTTY && !ctx.options.yes);
+  const rl = is_interactive ? readline.createInterface({ input: stdin, output: stdout }) : null;
+  try {
+    let target_arg = ctx.args[0];
     if (!target_arg) {
-      throw new Error("Missing target directory argument: nextkit init <directory>");
+      if (rl) {
+        target_arg = await prompt_text(rl, "? Project directory or name", "my-nextkit-app");
+      } else {
+        target_arg = "my-nextkit-app";
+      }
     }
     const dest_path = path.resolve(process.cwd(), target_arg);
     const folder_name = path.basename(dest_path);
     const kebab_name = to_kebab_case(folder_name);
-    const title = ctx.options.title ?? to_title_case(folder_name);
-    const identifier = ctx.options.identifier ?? `com.example.${kebab_name.replace(/-/g, "")}`;
-    const description = ctx.options.description ?? "A cross-platform native application built with Nextkit";
-    const port = ctx.options.port ?? "4000";
-    const force = !!ctx.options.force;
-    console.log(`
-\u{1F680} Initializing new Nextkit project at: ${dest_path}`);
-    console.log(`   * Package Name: ${kebab_name}`);
-    console.log(`   * App Title:    ${title}`);
-    console.log(`   * Identifier:   ${identifier}`);
-    console.log(`   * Description:  ${description}`);
-    console.log(`   * Dev Port:     ${port}
-`);
+    const force = Boolean(ctx.options.force);
     if (fs.existsSync(dest_path)) {
-      if (force) {
-        console.log(`\u26A0\uFE0F  Target directory exists, removing due to --force...`);
-        fs.rmSync(dest_path, { recursive: true, force: true });
-      } else {
-        throw new Error(`Target directory already exists: ${dest_path}. Use -f or --force to overwrite.`);
+      const entries = fs.readdirSync(dest_path);
+      if (entries.length > 0) {
+        if (force) {
+          console.log(`[nextkit] Target directory exists, removing due to force flag: ${dest_path}`);
+          fs.rmSync(dest_path, { recursive: true, force: true });
+        } else if (rl) {
+          const should_overwrite = await prompt_confirm(
+            rl,
+            `! Target directory "${folder_name}" is not empty. Overwrite?`,
+            false
+          );
+          if (!should_overwrite) {
+            console.log("[nextkit] Operation cancelled.");
+            return;
+          }
+          console.log(`[nextkit] Removing existing directory: ${dest_path}`);
+          fs.rmSync(dest_path, { recursive: true, force: true });
+        } else {
+          throw new Error(`Target directory already exists and is not empty: ${dest_path}. Use -f or --force to overwrite.`);
+        }
       }
     }
-    console.log("\u{1F4C2} Copying template files...");
+    const default_title = to_title_case(folder_name);
+    let title = ctx.options.title;
+    if (!title) {
+      if (rl) {
+        title = await prompt_text(rl, "? App display title", default_title);
+      } else {
+        title = default_title;
+      }
+    }
+    const default_identifier = `com.example.${kebab_name.replace(/-/g, "")}`;
+    let identifier = ctx.options.identifier;
+    if (!identifier) {
+      if (rl) {
+        identifier = await prompt_text(rl, "? Tauri bundle identifier", default_identifier);
+      } else {
+        identifier = default_identifier;
+      }
+    }
+    identifier = to_valid_identifier(identifier);
+    let port = ctx.options.port;
+    if (!port) {
+      if (rl) {
+        port = await prompt_text(rl, "? Development server port", "4000");
+      } else {
+        port = "4000";
+      }
+    }
+    const description = ctx.options.description || "A cross-platform application built with Nextkit";
+    let should_git = true;
+    if (ctx.options.no_git) {
+      should_git = false;
+    } else if (ctx.options.git) {
+      should_git = true;
+    } else if (rl) {
+      should_git = await prompt_confirm(rl, "? Initialize a git repository?", true);
+    }
+    const pkg_manager = detect_package_manager();
+    let should_install = false;
+    if (ctx.options.no_install) {
+      should_install = false;
+    } else if (ctx.options.install) {
+      should_install = true;
+    } else if (rl) {
+      should_install = await prompt_confirm(rl, `? Install dependencies with ${pkg_manager}?`, true);
+    }
+    console.log(`
+[nextkit] Initializing new Nextkit project:`);
+    console.log(`  * Directory:   ${dest_path}`);
+    console.log(`  * Package:     ${kebab_name}`);
+    console.log(`  * Title:       ${title}`);
+    console.log(`  * Identifier:  ${identifier}`);
+    console.log(`  * Port:        ${port}
+`);
+    console.log("[nextkit] Copying template files...");
     fs.mkdirSync(dest_path, { recursive: true });
     const filter = (src) => {
+      const file_name = path.basename(src);
+      if (IGNORED_FILE_NAMES.has(file_name)) return false;
       const relative = path.relative(source_root, src);
       if (!relative) return true;
-      return !IGNORED_PATHS.some((ignored) => {
-        const normalized_ignored = ignored.replace(/\//g, path.sep);
-        const normalized_relative = relative.replace(/\//g, path.sep);
-        return normalized_relative === normalized_ignored || normalized_relative.startsWith(normalized_ignored + path.sep);
+      const normalized_relative = relative.split(path.sep).join("/");
+      return !IGNORED_EXACT_OR_DIR.some((ignored) => {
+        return normalized_relative === ignored || normalized_relative.startsWith(ignored + "/");
       });
     };
     copy_recursive(source_root, dest_path, filter);
-    console.log("\u2699\uFE0F  Configuring identifiers...");
-    const pkgPath = path.join(dest_path, "package.json");
-    if (fs.existsSync(pkgPath)) {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+    console.log("[nextkit] Configuring project metadata...");
+    const pkg_path = path.join(dest_path, "package.json");
+    if (fs.existsSync(pkg_path)) {
+      const pkg = JSON.parse(fs.readFileSync(pkg_path, "utf-8"));
       pkg.name = kebab_name;
       pkg.title = title;
       pkg.description = description;
@@ -355,16 +443,20 @@ async function main() {
       if (pkg.scripts) {
         delete pkg.scripts.cli;
         delete pkg.scripts["build:cli"];
+        delete pkg.scripts.create;
         delete pkg.scripts.prepare;
         if (typeof pkg.scripts.dev === "string") {
-          pkg.scripts.dev = pkg.scripts.dev.replace(/-p 4000\b/g, `-p ${port}`);
+          pkg.scripts.dev = pkg.scripts.dev.replace(/--port=\d+/g, `--port=${port}`);
+        }
+        if (typeof pkg.scripts.start === "string") {
+          pkg.scripts.start = pkg.scripts.start.replace(/--port \d+/g, `--port ${port}`);
         }
       }
-      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+      fs.writeFileSync(pkg_path, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
     }
-    const lockPath = path.join(dest_path, "package-lock.json");
-    if (fs.existsSync(lockPath)) {
-      const lock = JSON.parse(fs.readFileSync(lockPath, "utf-8"));
+    const lock_path = path.join(dest_path, "package-lock.json");
+    if (fs.existsSync(lock_path)) {
+      const lock = JSON.parse(fs.readFileSync(lock_path, "utf-8"));
       if (lock.name) lock.name = kebab_name;
       if (lock.packages && lock.packages[""]) {
         lock.packages[""].name = kebab_name;
@@ -372,20 +464,21 @@ async function main() {
         lock.packages[""].description = description;
         lock.packages[""].version = "0.1.0";
       }
-      fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + "\n", "utf-8");
+      fs.writeFileSync(lock_path, JSON.stringify(lock, null, 2) + "\n", "utf-8");
     }
-    const manifestPath = path.join(dest_path, "public/manifest.json");
-    if (fs.existsSync(manifestPath)) {
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+    const manifest_path = path.join(dest_path, "public/manifest.json");
+    if (fs.existsSync(manifest_path)) {
+      const manifest = JSON.parse(fs.readFileSync(manifest_path, "utf-8"));
       manifest.name = title;
       manifest.short_name = title;
-      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf-8");
+      manifest.description = description;
+      fs.writeFileSync(manifest_path, JSON.stringify(manifest, null, 2) + "\n", "utf-8");
     }
-    const tauriConfPath = path.join(dest_path, "src-tauri/tauri.conf.json");
-    if (fs.existsSync(tauriConfPath)) {
-      const conf = JSON.parse(fs.readFileSync(tauriConfPath, "utf-8"));
+    const tauri_conf_path = path.join(dest_path, "src-tauri/tauri.conf.json");
+    if (fs.existsSync(tauri_conf_path)) {
+      const conf = JSON.parse(fs.readFileSync(tauri_conf_path, "utf-8"));
       conf.productName = title;
-      conf.identifier = to_valid_identifier(identifier);
+      conf.identifier = identifier;
       if (conf.build) {
         conf.build.devUrl = `http://localhost:${port}`;
       }
@@ -396,74 +489,102 @@ async function main() {
           }
         }
       }
-      fs.writeFileSync(tauriConfPath, JSON.stringify(conf, null, 2) + "\n", "utf-8");
+      fs.writeFileSync(tauri_conf_path, JSON.stringify(conf, null, 2) + "\n", "utf-8");
     }
-    const pagePath = path.join(dest_path, "src/app/page.tsx");
-    if (fs.existsSync(pagePath)) {
-      let pageContent = fs.readFileSync(pagePath, "utf-8");
-      pageContent = pageContent.replace(/Hello from Nextkit!/g, `Hello from ${title}!`);
-      fs.writeFileSync(pagePath, pageContent, "utf-8");
+    const cargo_path = path.join(dest_path, "src-tauri/Cargo.toml");
+    if (fs.existsSync(cargo_path)) {
+      let cargo_content = fs.readFileSync(cargo_path, "utf-8");
+      cargo_content = cargo_content.replace(
+        /description = ".*?"/,
+        `description = "${description.replace(/"/g, '\\"')}"`
+      );
+      fs.writeFileSync(cargo_path, cargo_content, "utf-8");
     }
-    try {
-      execSync("git init", { cwd: dest_path, stdio: "ignore" });
-      console.log("\u2728 Initialized a new Git repository.");
-    } catch {
-      console.log("\u26A0\uFE0F  Failed to initialize Git repository (git command not found).");
+    const index_html_path = path.join(dest_path, "src/app/index.html");
+    if (fs.existsSync(index_html_path)) {
+      let html_content = fs.readFileSync(index_html_path, "utf-8");
+      html_content = html_content.replace(/<title>.*?<\/title>/, `<title>${title}</title>`).replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${description}" />`).replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${title}" />`).replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${description}" />`);
+      fs.writeFileSync(index_html_path, html_content, "utf-8");
+    }
+    const native_index_html_path = path.join(dest_path, "src/app/native_entry/index.html");
+    if (fs.existsSync(native_index_html_path)) {
+      let native_html = fs.readFileSync(native_index_html_path, "utf-8");
+      native_html = native_html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+      fs.writeFileSync(native_index_html_path, native_html, "utf-8");
+    }
+    const app_tsx_path = path.join(dest_path, "src/app/App.tsx");
+    if (fs.existsSync(app_tsx_path)) {
+      let app_content = fs.readFileSync(app_tsx_path, "utf-8");
+      app_content = app_content.replace(/Hello from Nextkit!/g, `Hello from ${title}!`);
+      fs.writeFileSync(app_tsx_path, app_content, "utf-8");
+    }
+    if (should_git) {
+      try {
+        execSync("git init", { cwd: dest_path, stdio: "ignore" });
+        console.log("[nextkit] Initialized a new Git repository.");
+      } catch {
+        console.log("[nextkit] Warning: Failed to initialize Git repository.");
+      }
+    }
+    if (should_install) {
+      console.log(`[nextkit] Installing dependencies via ${pkg_manager}...`);
+      try {
+        execSync(`${pkg_manager} install`, { cwd: dest_path, stdio: "inherit" });
+        console.log("[nextkit] Dependencies installed successfully.");
+      } catch {
+        console.log(`[nextkit] Warning: Failed to install dependencies via ${pkg_manager}.`);
+      }
     }
     console.log(`
-\u{1F389} Project initialized successfully at ${dest_path}`);
+[nextkit] Project initialized successfully at ${dest_path}`);
     console.log("\nTo get started:");
-    console.log(`  cd ${target_arg}`);
-    console.log("  npm install");
-    console.log("  npm run dev");
+    const relative_dest = path.relative(process.cwd(), dest_path);
+    if (relative_dest && relative_dest !== ".") {
+      console.log(`  cd ${relative_dest}`);
+    }
+    if (!should_install) {
+      console.log(`  ${pkg_manager} install`);
+    }
+    console.log(`  ${pkg_manager} run dev          # Start web dev server and SW watcher`);
+    console.log(`  ${pkg_manager} run tauri dev    # Start native desktop app`);
     console.log("");
-  });
-  cli.command("dev", "Start development servers").option("-p, --port <port>", { description: "Next.js dev port (default: 4000)" }).action((ctx) => {
-    const port = ctx.options.port ?? "4000";
-    console.log("\u{1F680} Starting Nextkit development servers...");
-    const sw_proc = spawn("npx", [
-      "esbuild",
-      "src/sw/main.worker.ts",
-      "--bundle",
-      "--format=esm",
-      "--target=esnext",
-      "--outfile=public/sw.js",
-      "--watch=forever",
-      "--banner:js=// Generated by src/sw/main.worker.ts"
-    ], { stdio: "inherit", shell: true });
-    const next_proc = spawn("npx", ["next", "dev", "-p", port], { stdio: "inherit", shell: true });
-    const cleanup = () => {
-      console.log("\nStopping servers...");
-      sw_proc.kill();
-      next_proc.kill();
-      process.exit(0);
-    };
-    process.on("SIGINT", cleanup);
-    process.on("SIGTERM", cleanup);
-  });
+  } finally {
+    if (rl) {
+      rl.close();
+    }
+  }
+}
+async function main() {
+  const cli = create_cli();
+  cli.command("create", "Create a new Nextkit project from this template.\n\nPositionals:\n  <directory>               Target directory path where the project will be created (e.g. '../my-app')").option("-t, --title <title>", { description: "App display title (e.g. 'My App')" }).option("-i, --identifier <id>", { description: "Tauri bundle identifier (e.g. 'com.company.app')" }).option("-d, --description <desc>", { description: "Project description" }).option("-p, --port <port>", { description: "Development server port (default: 4000)" }).option("-f, --force", { description: "Force overwrite target directory if it exists" }).option("-y, --yes", { description: "Skip prompts and use defaults" }).option("-g, --git", { description: "Initialize a git repository" }).option("--no-git", { description: "Do not initialize a git repository" }).option("--install", { description: "Install dependencies automatically" }).option("--no-install", { description: "Do not install dependencies" }).action(handle_create_project);
+  cli.command("init", "Alias for create").option("-t, --title <title>", { description: "App display title (e.g. 'My App')" }).option("-i, --identifier <id>", { description: "Tauri bundle identifier (e.g. 'com.company.app')" }).option("-d, --description <desc>", { description: "Project description" }).option("-p, --port <port>", { description: "Development server port (default: 4000)" }).option("-f, --force", { description: "Force overwrite target directory if it exists" }).option("-y, --yes", { description: "Skip prompts and use defaults" }).option("-g, --git", { description: "Initialize a git repository" }).option("--no-git", { description: "Do not initialize a git repository" }).option("--install", { description: "Install dependencies automatically" }).option("--no-install", { description: "Do not install dependencies" }).action(handle_create_project);
   cli.command("clean", "Clean up generated files and caches").action(() => {
     const targets = [
-      ".next",
-      "out",
+      "dist",
+      ".debug",
       "node_modules",
       "src-tauri/target",
       "src-tauri/gen",
       "tsconfig.tsbuildinfo"
     ];
-    console.log("\u{1F9F9} Cleaning up project caches...");
+    console.log("[nextkit] Cleaning up project caches...");
     for (const target of targets) {
       const target_path = path.resolve(source_root, target);
       if (fs.existsSync(target_path)) {
-        console.log(`Removing ${target}...`);
+        console.log(`[nextkit] Removing ${target}...`);
         fs.rmSync(target_path, { recursive: true, force: true });
       }
     }
-    console.log("\u2728 Project cleaned successfully!");
+    console.log("[nextkit] Project cleaned successfully.");
   });
-  await cli.run(process.argv.slice(2));
+  const raw_args = process.argv.slice(2);
+  const first_arg = raw_args[0];
+  const is_known_command = Boolean(first_arg && ["create", "init", "clean", "-h", "--help"].includes(first_arg));
+  const args_to_run = is_known_command ? raw_args : ["create", ...raw_args];
+  await cli.run(args_to_run);
 }
 main().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`\u274C Error: ${message}`);
+  console.error(`[nextkit] Error: ${message}`);
   process.exitCode = 1;
 });
