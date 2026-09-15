@@ -5,10 +5,11 @@
   "version": "0.1.0",
   "private": true,
   "bin": {
-    "nextkit": "./cli/dist/index.js"
+    "nextkit": "./cli/dist/index.js",
+    "create-nextkit": "./cli/dist/index.js"
   },
   "scripts": {
-    "cli": "node cli/dist/index.js",
+    "create": "tsx cli/index.ts",
     "build:cli": "esbuild cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=cli/dist/index.js --banner:js=\"#!/usr/bin/env node\"",
     "prepare": "npm run build:cli",
     "tauri": "cargo tauri",
