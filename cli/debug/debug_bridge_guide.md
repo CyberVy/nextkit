@@ -30,19 +30,10 @@ The communication runs purely on standard web protocols (Server-Sent Events & HT
 ### Components List
 * **`cli/debug/generate_debug_bridge.ts`** (Configuration task): Finds an available TCP port (starting from `9999`) and saves the port parameter to `.debug/config.json`. It does not generate a JavaScript file.
 * **`cli/debug/debug_bridge_template.js`** (Browser Script Template): The JavaScript client template that runs inside the browser, intercepting logs and evaluating incoming commands.
-* **`debug_bridge_plugin` in `vite.config.ts`** (Development Script Server): Handles `/debug_bridge.js` during development, reads `.debug/config.json`, injects the selected port into the template, and returns the resulting JavaScript directly without writing it to `public/`.
+* **`debug_bridge_plugin` in `vite.config.ts`** (Development Script Server & Injector): Injects `<script src="/debug_bridge.js">` non-intrusively via `transformIndexHtml` (head-prepend) during development (`apply: "serve"`), serves `/debug_bridge.js` dynamically from the client template with the selected port, and leaves production HTML completely untouched.
 * **`cli/debug/launch.ts`** (Active Server): A long-running HTTP server that reads the port configuration from `.debug/config.json`, manages the SSE stream, bridges evaluation requests synchronously, and appends logs to local history files.
 * **`cli/debug/eval.js`** (CLI Helper): A lightweight evaluation utility that allows developers or agents to synchronously execute code in the browser.
-* **`src/app/index.html`** (Script Anchor): Anchors the script dynamically in development:
-  ```html
-  <script type="module">
-    if (import.meta.env.DEV) {
-      const script = document.createElement("script");
-      script.src = "/debug_bridge.js";
-      document.body.appendChild(script);
-    }
-  </script>
-  ```
+* **`src/app/index.html`** (Production HTML Entry): 100% clean of debug tooling. Zero intrusion into source code or production artifacts.
 * **`.debug/`** (Ignored Data Directory): Contains the runtime configuration and persistent session log files:
   - `config.json`: The port configuration parameter for the debug bridge.
   - `logs.jsonl`: The browser console outputs and uncaught exceptions.

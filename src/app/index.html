@@ -30,12 +30,5 @@
     <body class="antialiased">
         <div id="root"></div>
         <script type="module" src="./main.tsx"></script>
-        <script type="module">
-            if (import.meta.env.DEV) {
-                const script = document.createElement("script");
-                script.src = "/debug_bridge.js";
-                document.body.appendChild(script);
-            }
-        </script>
     </body>
 </html>
