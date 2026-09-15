@@ -6,6 +6,16 @@ import fs from "node:fs"
 function debug_bridge_plugin(): Plugin{
     return {
         name: "debug-bridge",
+        apply: "serve",
+        transformIndexHtml(_html, ctx){
+            return [
+                {
+                    tag: "script",
+                    attrs: { src: "/debug_bridge.js" },
+                    injectTo: "head-prepend"
+                }
+            ]
+        },
         configureServer(server){
             const config_path = path.resolve(import.meta.dirname, ".debug/config.json")
             const template_path = path.resolve(import.meta.dirname, "cli/debug/debug_bridge_template.js")
