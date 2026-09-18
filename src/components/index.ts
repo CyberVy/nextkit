@@ -1,6 +1,7 @@
-// Array.tsx
-export { StringArray, ListToButtons } from "./composite/Array"
-export type { StringArrayProps } from "./composite/Array"
+// FilterChips.tsx
+export { FilterChips } from "./composite/FilterChips"
+export type { FilterChipsProps } from "./composite/FilterChips"
+
 
 // Buttons.tsx
 export { NaiveButton, ButtonGroup } from "./base/Buttons"
@@ -20,8 +21,8 @@ export { Image } from "./composite/Image"
 export type { ImageProps } from "./composite/Image"
 
 // LabeledRow.tsx
-export { LabeledRow } from "./composite/LabeledRow"
-export type { LabeledRowProps } from "./composite/LabeledRow"
+export { LabeledRow, LabeledRowSkeleton } from "./composite/LabeledRow"
+export type { LabeledRowProps, LabeledRowSkeletonProps } from "./composite/LabeledRow"
 
 // LazyLoader.tsx
 export { LazyContainer } from "./base/LazyLoader"
@@ -68,7 +69,7 @@ export type { UseControllerOptions } from "./hooks"
 
 
 // icons.tsx
-export { SearchIcon } from "./icons"
+export { SearchIcon, BackIcon, ForwardIcon, SettingIcon, CloseIcon, ChevronDownIcon, FilterIcon } from "./icons"
 
 // ViewSwitcher.tsx
 export { ViewSwitcher, view_switcher_controller, ViewSwitcherController, useViewSwitcher, useViewSwitcherRegistry } from "./composite/ViewSwitcher"
