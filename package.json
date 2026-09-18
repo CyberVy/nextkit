@@ -14,7 +14,7 @@
     "prepare": "npm run build:cli",
     "tauri": "cargo tauri",
     "dev:debug_bridge": "tsx cli/debug/generate_debug_bridge.ts",
-    "dev": "tsx cli/dev/dev.ts --port=4000",
+    "dev": "vite",
     "build": "vite build",
     "start": "vite preview --port 4000 --outDir dist",
     "lint": "oxlint src cli --deny-warnings",
