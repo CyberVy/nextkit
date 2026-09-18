@@ -99,4 +99,16 @@ const LabeledRow = React.memo(function LabeledRow({
     )
 })
 
-export { LabeledRow }
+export type LabeledRowSkeletonProps = {
+    className?: string
+}
+
+const LabeledRowSkeleton = React.memo(function LabeledRowSkeleton({
+    className = ""
+}: LabeledRowSkeletonProps){
+    return (
+        <div className={`h-15.25 sm:h-17.5 w-full rounded-xl bg-black/5 dark:bg-white/5 select-none pointer-events-none ${className}`} />
+    )
+})
+
+export { LabeledRow, LabeledRowSkeleton }
