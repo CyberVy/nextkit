@@ -13,6 +13,7 @@
     "build:cli": "esbuild cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=cli/dist/index.js --banner:js=\"#!/usr/bin/env node\"",
     "prepare": "npm run build:cli",
     "tauri": "cargo tauri",
+    "debug:lazy-container": "tsx cli/debug/tests/lazy_container_dimensions.ts",
     "dev": "vite",
     "build": "vite build",
     "start": "vite preview --port 4000 --outDir dist",
