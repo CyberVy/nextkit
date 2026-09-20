@@ -114,6 +114,7 @@ export default defineConfig({
     },
     server: {
         port: 4000,
+        strictPort: true,
         host: "0.0.0.0",
         fs: {
             allow: [path.resolve(import.meta.dirname)]
