@@ -19,7 +19,9 @@ const IGNORED_EXACT_OR_DIR = [
     "dist",
     ".debug",
     "src-tauri/target",
-    "src-tauri/gen",
+    "src-tauri/gen/schemas",
+    "src-tauri/gen/apple/build",
+    "src-tauri/gen/apple/Externals",
     ".git",
     ".idea",
     ".vscode",
@@ -29,6 +31,11 @@ const IGNORED_EXACT_OR_DIR = [
     "cli/lib",
     "cli/dist",
 ]
+
+const IGNORED_DIR_NAMES = new Set([
+    "xcuserdata",
+    ".idea",
+])
 
 const IGNORED_FILE_NAMES = new Set([
     ".DS_Store",
@@ -213,7 +220,10 @@ async function handle_create_project(ctx: CommandContext){
             const relative = path.relative(source_root, src)
             if (!relative) return true
 
-            const normalized_relative = relative.split(path.sep).join("/")
+            const segments = relative.split(path.sep)
+            if (segments.some((seg) => IGNORED_DIR_NAMES.has(seg))) return false
+
+            const normalized_relative = segments.join("/")
             return !IGNORED_EXACT_OR_DIR.some((ignored) => {
                 return normalized_relative === ignored || normalized_relative.startsWith(ignored + "/")
             })
@@ -331,6 +341,35 @@ async function handle_create_project(ctx: CommandContext){
             fs.writeFileSync(app_tsx_path, app_content, "utf-8")
         }
 
+        // 9. src-tauri/gen/apple/project.yml
+        const project_yml_path = path.join(dest_path, "src-tauri/gen/apple/project.yml")
+        if (fs.existsSync(project_yml_path)){
+            let yml_content = fs.readFileSync(project_yml_path, "utf-8")
+            yml_content = yml_content
+                .replace(/bundleIdPrefix: .*/, `bundleIdPrefix: ${identifier}`)
+                .replace(/PRODUCT_NAME: .*/, `PRODUCT_NAME: ${title}`)
+                .replace(/PRODUCT_BUNDLE_IDENTIFIER: .*/, `PRODUCT_BUNDLE_IDENTIFIER: ${identifier}`)
+            fs.writeFileSync(project_yml_path, yml_content, "utf-8")
+        }
+
+        // 10. src-tauri/gen/apple/app.xcodeproj
+        const pbxproj_path = path.join(dest_path, "src-tauri/gen/apple/app.xcodeproj/project.pbxproj")
+        if (fs.existsSync(pbxproj_path)){
+            let pbx_content = fs.readFileSync(pbxproj_path, "utf-8")
+            pbx_content = pbx_content
+                .replaceAll("PRODUCT_BUNDLE_IDENTIFIER = com.xsolutiontech.nextkit;", `PRODUCT_BUNDLE_IDENTIFIER = ${identifier};`)
+                .replaceAll("PRODUCT_NAME = Nextkit;", `PRODUCT_NAME = ${title};`)
+                .replaceAll("Nextkit.app", `${title}.app`)
+            fs.writeFileSync(pbxproj_path, pbx_content, "utf-8")
+        }
+
+        const scheme_path = path.join(dest_path, "src-tauri/gen/apple/app.xcodeproj/xcshareddata/xcschemes/app_iOS.xcscheme")
+        if (fs.existsSync(scheme_path)){
+            let scheme_content = fs.readFileSync(scheme_path, "utf-8")
+            scheme_content = scheme_content.replaceAll('BuildableName = "Nextkit.app"', `BuildableName = "${title}.app"`)
+            fs.writeFileSync(scheme_path, scheme_content, "utf-8")
+        }
+
         // Git initialization
         if (should_git){
             try {
@@ -413,7 +452,11 @@ async function main(){
                 ".debug",
                 "node_modules",
                 "src-tauri/target",
-                "src-tauri/gen",
+                "src-tauri/gen/schemas",
+                "src-tauri/gen/apple/build",
+                "src-tauri/gen/apple/Externals",
+                "src-tauri/gen/apple/app.xcodeproj/project.xcworkspace/xcuserdata",
+                "src-tauri/gen/apple/app.xcodeproj/xcuserdata",
                 "tsconfig.tsbuildinfo"
             ]
 
