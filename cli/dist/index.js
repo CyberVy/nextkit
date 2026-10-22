@@ -42,8 +42,6 @@ var Command = class {
     this.name = name;
     this.description = description;
   }
-  name;
-  description;
   option_configs = [];
   handler;
   /** Register one option for this command; description is used by built-in help output. */
@@ -106,7 +104,9 @@ var CLI = class {
     });
   }
   has_manual_help_option(option_configs) {
-    return option_configs.some((option_config) => option_config.short_flag === "h" || option_config.long_flag === "help");
+    return option_configs.some(
+      (option_config) => option_config.short_flag === "h" || option_config.long_flag === "help"
+    );
   }
   has_help_token(tokens) {
     for (const token of tokens) {
@@ -282,14 +282,8 @@ var IGNORED_EXACT_OR_DIR = [
   "cli/lib",
   "cli/dist"
 ];
-var IGNORED_DIR_NAMES = /* @__PURE__ */ new Set([
-  "xcuserdata",
-  ".idea"
-]);
-var IGNORED_FILE_NAMES = /* @__PURE__ */ new Set([
-  ".DS_Store",
-  "Thumbs.db"
-]);
+var IGNORED_DIR_NAMES = /* @__PURE__ */ new Set(["xcuserdata", ".idea"]);
+var IGNORED_FILE_NAMES = /* @__PURE__ */ new Set([".DS_Store", "Thumbs.db"]);
 function copy_recursive(src, dest, filter) {
   if (!filter(src)) {
     return;
@@ -367,7 +361,9 @@ async function handle_create_project(ctx) {
           console.log(`[nextkit] Removing existing directory: ${dest_path}`);
           fs.rmSync(dest_path, { recursive: true, force: true });
         } else {
-          throw new Error(`Target directory already exists and is not empty: ${dest_path}. Use -f or --force to overwrite.`);
+          throw new Error(
+            `Target directory already exists and is not empty: ${dest_path}. Use -f or --force to overwrite.`
+          );
         }
       }
     }
@@ -511,7 +507,16 @@ async function handle_create_project(ctx) {
     const index_html_path = path.join(dest_path, "src/app/index.html");
     if (fs.existsSync(index_html_path)) {
       let html_content = fs.readFileSync(index_html_path, "utf-8");
-      html_content = html_content.replace(/<title>.*?<\/title>/, `<title>${title}</title>`).replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${description}" />`).replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${title}" />`).replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${description}" />`);
+      html_content = html_content.replace(/<title>.*?<\/title>/, `<title>${title}</title>`).replace(
+        /<meta name="description" content=".*?" \/>/,
+        `<meta name="description" content="${description}" />`
+      ).replace(
+        /<meta property="og:title" content=".*?" \/>/,
+        `<meta property="og:title" content="${title}" />`
+      ).replace(
+        /<meta property="og:description" content=".*?" \/>/,
+        `<meta property="og:description" content="${description}" />`
+      );
       fs.writeFileSync(index_html_path, html_content, "utf-8");
     }
     const native_index_html_path = path.join(dest_path, "src/app/native_entry/index.html");
@@ -535,13 +540,22 @@ async function handle_create_project(ctx) {
     const pbxproj_path = path.join(dest_path, "src-tauri/gen/apple/app.xcodeproj/project.pbxproj");
     if (fs.existsSync(pbxproj_path)) {
       let pbx_content = fs.readFileSync(pbxproj_path, "utf-8");
-      pbx_content = pbx_content.replaceAll("PRODUCT_BUNDLE_IDENTIFIER = com.xsolutiontech.nextkit;", `PRODUCT_BUNDLE_IDENTIFIER = ${identifier};`).replaceAll("PRODUCT_NAME = Nextkit;", `PRODUCT_NAME = ${title};`).replaceAll("Nextkit.app", `${title}.app`);
+      pbx_content = pbx_content.replaceAll(
+        "PRODUCT_BUNDLE_IDENTIFIER = com.xsolutiontech.nextkit;",
+        `PRODUCT_BUNDLE_IDENTIFIER = ${identifier};`
+      ).replaceAll("PRODUCT_NAME = Nextkit;", `PRODUCT_NAME = ${title};`).replaceAll("Nextkit.app", `${title}.app`);
       fs.writeFileSync(pbxproj_path, pbx_content, "utf-8");
     }
-    const scheme_path = path.join(dest_path, "src-tauri/gen/apple/app.xcodeproj/xcshareddata/xcschemes/app_iOS.xcscheme");
+    const scheme_path = path.join(
+      dest_path,
+      "src-tauri/gen/apple/app.xcodeproj/xcshareddata/xcschemes/app_iOS.xcscheme"
+    );
     if (fs.existsSync(scheme_path)) {
       let scheme_content = fs.readFileSync(scheme_path, "utf-8");
-      scheme_content = scheme_content.replaceAll('BuildableName = "Nextkit.app"', `BuildableName = "${title}.app"`);
+      scheme_content = scheme_content.replaceAll(
+        'BuildableName = "Nextkit.app"',
+        `BuildableName = "${title}.app"`
+      );
       fs.writeFileSync(scheme_path, scheme_content, "utf-8");
     }
     if (should_git) {
@@ -582,7 +596,10 @@ async function handle_create_project(ctx) {
 }
 async function main() {
   const cli = create_cli();
-  cli.command("create", "Create a new Nextkit project from this template.\n\nPositionals:\n  <directory>               Target directory path where the project will be created (e.g. '../my-app')").option("-t, --title <title>", { description: "App display title (e.g. 'My App')" }).option("-i, --identifier <id>", { description: "Tauri bundle identifier (e.g. 'com.company.app')" }).option("-d, --description <desc>", { description: "Project description" }).option("-p, --port <port>", { description: "Development server port (default: 4000)" }).option("-f, --force", { description: "Force overwrite target directory if it exists" }).option("-y, --yes", { description: "Skip prompts and use defaults" }).option("-g, --git", { description: "Initialize a git repository" }).option("--no-git", { description: "Do not initialize a git repository" }).option("--install", { description: "Install dependencies automatically" }).option("--no-install", { description: "Do not install dependencies" }).action(handle_create_project);
+  cli.command(
+    "create",
+    "Create a new Nextkit project from this template.\n\nPositionals:\n  <directory>               Target directory path where the project will be created (e.g. '../my-app')"
+  ).option("-t, --title <title>", { description: "App display title (e.g. 'My App')" }).option("-i, --identifier <id>", { description: "Tauri bundle identifier (e.g. 'com.company.app')" }).option("-d, --description <desc>", { description: "Project description" }).option("-p, --port <port>", { description: "Development server port (default: 4000)" }).option("-f, --force", { description: "Force overwrite target directory if it exists" }).option("-y, --yes", { description: "Skip prompts and use defaults" }).option("-g, --git", { description: "Initialize a git repository" }).option("--no-git", { description: "Do not initialize a git repository" }).option("--install", { description: "Install dependencies automatically" }).option("--no-install", { description: "Do not install dependencies" }).action(handle_create_project);
   cli.command("init", "Alias for create").option("-t, --title <title>", { description: "App display title (e.g. 'My App')" }).option("-i, --identifier <id>", { description: "Tauri bundle identifier (e.g. 'com.company.app')" }).option("-d, --description <desc>", { description: "Project description" }).option("-p, --port <port>", { description: "Development server port (default: 4000)" }).option("-f, --force", { description: "Force overwrite target directory if it exists" }).option("-y, --yes", { description: "Skip prompts and use defaults" }).option("-g, --git", { description: "Initialize a git repository" }).option("--no-git", { description: "Do not initialize a git repository" }).option("--install", { description: "Install dependencies automatically" }).option("--no-install", { description: "Do not install dependencies" }).action(handle_create_project);
   cli.command("clean", "Clean up generated files and caches").action(() => {
     const targets = [
