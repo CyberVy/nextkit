@@ -40,6 +40,18 @@ npm run create
 npm run create -- ../my-app
 ```
 
+### Attach to an Existing Project
+
+To add a Nextkit `frontend/` + `src-tauri/` client into an existing project (preserving its existing `src/` and `package.json`):
+
+```bash
+npx nextkit attach ../my-existing-project
+# Or from inside Nextkit:
+npm run attach -- ../my-existing-project
+```
+
+The `attach` command copies `frontend/`, `src-tauri/`, `public/`, `scripts/`, `cli/debug/`, and frontend tooling configs, keeps your existing `src/` untouched, excludes client/tooling paths (`frontend`, `src-tauri`, `cli`, `vite.config.ts`, etc.) from your existing root `tsconfig.json` (isolating `@/` via `frontend/tsconfig.json`), and merges missing client scripts and dependencies into `package.json`.
+
 ## Getting Started (Developing Nextkit)
 
 ### Prerequisites
@@ -69,6 +81,7 @@ Development scripts are managed via `package.json`.
 | Command               | Description                                                                   |
 |:----------------------|:------------------------------------------------------------------------------|
 | `npm run create`      | Launches the interactive project creation wizard.                             |
+| `npm run attach`      | Attaches a Nextkit client (`frontend/` + `src-tauri/`) to an existing project.|
 | `npm run dev`         | Starts the Vite dev server (port 4000), Service Worker watcher, and Debug Bridge. |
 | `npm run build`       | Builds the static export of the site and minifies the Service Worker.         |
 | `npm run start`       | Serves the production build locally (from the `dist` directory).              |
@@ -101,12 +114,14 @@ npm run tauri android build
 
 ## Project Structure
 
-- `src/app/`: Application UI entry points, HTML shells, and root App components.
-- `src/blocks/`: Business-facing React UI blocks composed from base components.
-- `src/components/`: Base reusable React components and UI infrastructure.
-- `src/core/`: Core domain logic and app-specific pure logic.
-- `src/infra/`: Infrastructure, platform adapters, shared types, and utility libraries.
-- `src/sw/`: Service Worker source code.
+- `frontend/`: Browser/WebView frontend workspace (isolated TypeScript project via `frontend/tsconfig.json`, `@/` -> `frontend/`).
+    - `frontend/app/`: Application UI entry points, HTML shells, and root App components.
+    - `frontend/blocks/`: Business-facing React UI blocks composed from base components.
+    - `frontend/components/`: Base reusable React components and UI infrastructure.
+    - `frontend/core/`: Core domain logic and app-specific pure logic.
+    - `frontend/infra/`: Infrastructure, platform adapters, shared types, and utility libraries.
+    - `frontend/sw/`: Service Worker source code.
+- `src/` (optional in attached projects): Host/core source code checked by root `tsconfig.json` (`@/` -> `src/`), kept separate from `frontend/`.
 - `src-tauri/`: Rust backend and native configuration.
 - `public/`: Static assets, including icons and the bundled `sw.js`.
 
