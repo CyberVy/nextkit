@@ -1,7 +1,5 @@
 import { useState } from "react"
 import { LaunchAnimation } from "@/blocks/LaunchAnimation"
-import { Device } from "@/components"
-import { Version } from "@/components"
 
 export default function App() {
     const [show_launch_animation, set_show_launch_animation] = useState(true)
@@ -10,11 +8,7 @@ export default function App() {
         <>
             <div className="select-none" {...(show_launch_animation ? { inert: true } : {})}>
                 <div className="fixed left-1/2 top-1/2 -translate-1/2">
-                    <div className="pb-1 border-b dark:border-white/30 mb-1 border-black/30">
-                        Hello from Nextkit! {">_"}
-                    </div>
-                    <Version />
-                    <Device />
+                    <div>Hello from Nextkit! {">_"}</div>
                 </div>
             </div>
 
