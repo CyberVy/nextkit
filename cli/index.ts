@@ -113,8 +113,6 @@ const ATTACH_OPTIONAL_FILES = ["Cargo.toml", "AGENTS.md"]
 const ATTACH_GITIGNORE_ENTRIES = [
     "/dist/",
     "/target/",
-    "/public/sw.js",
-    "/public/debug_bridge.js",
     "/.debug",
     "*.tsbuildinfo"
 ]
